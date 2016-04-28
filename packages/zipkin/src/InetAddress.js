@@ -1,0 +1,27 @@
+const networkAddress = require('network-address');
+
+class InetAddress {
+  constructor(addr) {
+    this.addr = addr;
+  }
+  toInt() {
+    // e.g. 10.57.50.83
+    // should become
+    // 171520595
+    const parts = this.addr.split('.');
+
+    // The jshint tool always complains about using bitwise operators,
+    // but in this case it's actually intentional, so we disable the warning:
+    // jshint bitwise: false
+    return parts[0] << 24 | parts[1] << 16 | parts[2] << 8 | parts[3];
+  }
+  toString() {
+    return `InetAddress(${this.addr})`;
+  }
+}
+
+InetAddress.getLocalAddress = function getLocalAddress() {
+  return new InetAddress(networkAddress.ipv4());
+};
+
+module.exports = InetAddress;

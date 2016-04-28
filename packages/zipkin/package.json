@@ -1,0 +1,19 @@
+{
+  "name": "zipkin",
+  "version": "0.1.0",
+  "description": "The core tracer for zipkin.js",
+  "main": "index.js",
+  "scripts": {
+    "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift"
+  },
+  "author": "OpenZipkin",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "base64-js": "^1.1.2",
+    "continuation-local-storage": "^3.1.7",
+    "network-address": "^1.1.0",
+    "thrift": "^0.9.3"
+  },
+  "devDependencies": {
+  }
+}

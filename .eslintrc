@@ -1,0 +1,19 @@
+{
+  "extends": "airbnb",
+  "rules": {
+    "comma-dangle": "off",
+    "func-names": "off",
+    "object-curly-spacing": [2, "never"],
+    "space-before-function-paren": [2, "never"],
+    "eqeqeq": [2, "allow-null"],
+    "no-else-return": "off",
+    "prefer-arrow-callback": ["error", { "allowNamedFunctions": true }],
+    "no-underscore-dangle": "off",
+    "import/no-unresolved": [2, {
+      "ignore": ["url"] }
+    ]
+  },
+  "env": {
+    "node": true
+  }
+}
