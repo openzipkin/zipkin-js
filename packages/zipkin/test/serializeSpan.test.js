@@ -1,4 +1,4 @@
-const TraceId = require('../src/traceId');
+const TraceId = require('../src/TraceId');
 const serializeSpan = require('../src/serializeSpan');
 const {
   MutableSpan,

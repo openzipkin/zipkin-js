@@ -1,5 +1,5 @@
 const Annotation = require('./src/annotation');
-const TraceId = require('./src/traceId');
+const TraceId = require('./src/TraceId');
 const HttpHeaders = require('./src/httpHeaders');
 const InetAddress = require('./src/InetAddress');
 const option = require('./src/option');
