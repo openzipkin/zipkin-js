@@ -1,7 +1,7 @@
 const {createNamespace, getNamespace} = require('continuation-local-storage');
 const randomTraceId = require('./randomTraceId');
 const Annotation = require('./annotation');
-const TraceId = require('./traceId');
+const TraceId = require('./TraceId');
 const {now} = require('./time');
 const {Some, None, fromNullable} = require('./option');
 
