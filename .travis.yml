@@ -11,6 +11,7 @@ script:
 compiler: clang-3.6
 env:
   - CXX=clang-3.6
+  - KAFKA_PLEASE_LOG=verbose
 addons:
   apt:
     sources:
