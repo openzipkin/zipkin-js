@@ -8,7 +8,8 @@
   "scripts": {
     "lint": "node node_modules/eslint/bin/eslint.js packages",
     "test": "node node_modules/mocha/bin/mocha",
-    "lerna-bootstrap": "node node_modules/lerna/bin/lerna.js bootstrap"
+    "lerna-bootstrap": "node node_modules/lerna/bin/lerna.js bootstrap",
+    "lerna-publish": "node node_modules/lerna/bin/lerna.js publish --force-publish *"
   },
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "repository": "https://github.com/openzipkin/zipkin-js",

@@ -65,3 +65,7 @@ Running tests: npm test
 
 Running code style linting: npm run lint
 
+## Publishing
+
+npm run lerna-publish
+
