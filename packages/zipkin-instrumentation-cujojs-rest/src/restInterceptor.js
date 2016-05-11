@@ -4,7 +4,7 @@ const {
   trace,
   HttpHeaders: Header,
   Annotation
-} = require('zipkin');
+} = require('zipkin-core');
 
 function getRequestMethod(req) {
   let method = 'get';

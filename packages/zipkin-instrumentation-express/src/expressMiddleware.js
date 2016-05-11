@@ -4,7 +4,7 @@ const {
   HttpHeaders: Header,
   option: {Some, None},
   TraceId
-} = require('zipkin');
+} = require('zipkin-core');
 const url = require('url');
 
 function containsRequiredHeaders(req) {

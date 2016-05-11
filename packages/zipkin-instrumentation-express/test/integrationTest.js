@@ -1,5 +1,5 @@
 const sinon = require('sinon');
-const {trace} = require('zipkin');
+const {trace} = require('zipkin-core');
 const fetch = require('node-fetch');
 const express = require('express');
 const middleware = require('../src/expressMiddleware');

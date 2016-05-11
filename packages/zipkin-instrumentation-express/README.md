@@ -6,7 +6,7 @@ An express middleware that adds Zipkin tracing to the application.
 
 ```javascript
 const express = require('express');
-const {trace} = require('zipkin');
+const {trace} = require('zipkin-core');
 const zipkinMiddleware = require('zipkin-instrumentation-express');
 
 trace.pushTracer(ConsoleTracer);

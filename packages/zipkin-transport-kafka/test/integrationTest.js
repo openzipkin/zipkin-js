@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const kafka = require('kafka-node');
-const {trace, ZipkinTracer, Annotation} = require('zipkin');
+const {trace, ZipkinTracer, Annotation} = require('zipkin-core');
 const KafkaLogger = require('../src/KafkaLogger');
 const makeKafkaServer = require('kafka-please');
 
