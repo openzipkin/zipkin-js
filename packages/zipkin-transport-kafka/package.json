@@ -15,6 +15,6 @@
     "zipkin": "~0.1.0"
   },
   "devDependencies": {
-    "kafka-please": "^0.1.4"
+    "kafka-please": "^0.1.5"
   }
 }
