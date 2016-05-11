@@ -2,7 +2,7 @@ const sinon = require('sinon');
 const trace = require('../src/trace');
 const ZipkinTracer = require('../src/ZipkinTracer');
 const TraceId = require('../src/TraceId');
-const Annotation = require('../src/Annotation');
+const Annotation = require('../src/annotation');
 const InetAddress = require('../src/InetAddress');
 const {Some, None} = require('../src/option');
 
