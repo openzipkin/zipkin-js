@@ -1,6 +1,6 @@
 {
   "name": "zipkin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The core tracer for zipkin.js",
   "main": "index.js",
   "scripts": {
@@ -16,6 +16,6 @@
     "network-address": "^1.1.0",
     "thrift": "^0.9.3"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
+
