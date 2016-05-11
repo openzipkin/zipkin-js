@@ -4,10 +4,12 @@
   "description": "The core tracer for zipkin.js",
   "main": "index.js",
   "scripts": {
-    "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift"
+    "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
+    "test": "echo \"Error: Tests should be run from the root directory"
   },
-  "author": "OpenZipkin",
+  "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "base64-js": "^1.1.2",
     "continuation-local-storage": "^3.1.7",

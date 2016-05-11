@@ -10,6 +10,8 @@
     "test": "node node_modules/mocha/bin/mocha",
     "lerna-bootstrap": "node node_modules/lerna/bin/lerna.js bootstrap"
   },
+  "author": "Openzipkin <openzipkin.alt@gmail.com>",
+  "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "chai": "^3.5.0",
     "eslint": "^2.8.0",
