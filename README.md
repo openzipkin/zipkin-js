@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/openzipkin/zipkin-js.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-js)
+
 # Zipkin.js
 
 This is a library for instrumenting Node.js applications. It uses a lot of
