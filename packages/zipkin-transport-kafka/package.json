@@ -9,8 +9,7 @@
   "author": "OpenZipkin",
   "license": "Apache-2.0",
   "dependencies": {
-    "kafka-node": "^0.3.2",
-    "scribe": "0.0.9"
+    "kafka-node": "^0.3.2"
   },
   "peerDependencies": {
     "zipkin": "~0.1.0"
