@@ -7,13 +7,17 @@ const ZipkinTracer = require('./src/ZipkinTracer');
 const consoleTracer = require('./src/consoleTracer');
 const trace = require('./src/trace');
 const serializeSpan = require('./src/serializeSpan');
+const sampler = require('./src/sampler');
 
-module.exports.trace = trace;
-module.exports.TraceId = TraceId;
-module.exports.option = option;
-module.exports.Annotation = Annotation;
-module.exports.InetAddress = InetAddress;
-module.exports.HttpHeaders = HttpHeaders;
-module.exports.ZipkinTracer = ZipkinTracer;
-module.exports.consoleTracer = consoleTracer;
-module.exports.serializeSpan = serializeSpan;
+module.exports = {
+  trace,
+  TraceId,
+  option,
+  Annotation,
+  InetAddress,
+  HttpHeaders,
+  ZipkinTracer,
+  consoleTracer,
+  serializeSpan,
+  sampler
+};
