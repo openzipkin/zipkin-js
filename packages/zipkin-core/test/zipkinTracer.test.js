@@ -73,7 +73,7 @@ describe('The raw tracer', () => {
           sampled: new Some(true)
         }));
         trace.recordAnnotation(new Annotation.ServerRecv());
-        trace.recordServiceName("test-service");
+        trace.recordServiceName('test-service');
         trace.recordAnnotation(new Annotation.ServerSend());
       });
       expect(logSpan.calledOnce).to.equal(sample);
