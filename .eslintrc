@@ -11,7 +11,8 @@
     "no-underscore-dangle": "off",
     "import/no-unresolved": [2, {
       "ignore": ["url"] }
-    ]
+    ],
+    "radix": ["error", "as-needed"]
   },
   "env": {
     "node": true

@@ -6,17 +6,22 @@ const {
   ZipkinAnnotation,
   BinaryAnnotation
 } = require('./internalRepresentations');
+const {Sampler, alwaysSample} = require('./sampler');
 
 function ZipkinTracer({
   logger,
+  sampler = new Sampler(alwaysSample),
   timeout = 60 * 1000000 // default timeout = 60 seconds
   }) {
   const partialSpans = new Map();
 
   function writeSpan(id) {
-    logger.logSpan(partialSpans.get(id));
+    const spanToWrite = partialSpans.get(id);
     // ready for garbage collection
     partialSpans.delete(id);
+    if (sampler.shouldSample(spanToWrite)) {
+      logger.logSpan(spanToWrite);
+    }
   }
 
   function updateSpanMap(id, updater) {

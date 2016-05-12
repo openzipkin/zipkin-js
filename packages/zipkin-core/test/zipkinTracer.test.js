@@ -9,9 +9,6 @@ const {Some, None} = require('../src/option');
 describe('The raw tracer', () => {
   it('should accumulate annotations into MutableSpans', () => {
     trace.withContext(() => {
-      // let spanHasBeenLogged = false;
-      // let loggedSpan;
-
       const logSpan = sinon.spy();
 
       const tracer = new ZipkinTracer({
@@ -55,5 +52,34 @@ describe('The raw tracer', () => {
       expect(loggedSpan.annotations[0].value).to.equal('sr');
       expect(loggedSpan.annotations[1].value).to.equal('ss');
     });
+  });
+
+  it('should respect the Sampler when filtering which spans to log', () => {
+    function runTest(sample) {
+      const sampler = {
+        shouldSample: () => sample
+      };
+      const logSpan = sinon.spy();
+      const tracer = new ZipkinTracer({
+        logger: {logSpan},
+        sampler
+      });
+      trace.withContext(() => {
+        trace.pushTracer(tracer);
+        trace.setId(new TraceId({
+          traceId: None,
+          parentId: new Some('a'),
+          spanId: 'c',
+          sampled: new Some(true)
+        }));
+        trace.recordAnnotation(new Annotation.ServerRecv());
+        trace.recordServiceName("test-service");
+        trace.recordAnnotation(new Annotation.ServerSend());
+      });
+      expect(logSpan.calledOnce).to.equal(sample);
+    }
+
+    runTest(true);
+    runTest(false);
   });
 });
