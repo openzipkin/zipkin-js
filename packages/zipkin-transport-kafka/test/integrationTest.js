@@ -14,7 +14,8 @@ function waitPromise(length) {
 
 describe('Kafka transport - integration test', () => {
   it('should send trace data to Kafka', function(done) {
-    this.timeout(3000000);
+    this.slow(10 * 1000);
+    this.timeout(60 * 1000);
     return makeKafkaServer().then(kafkaServer => {
       const producerClient = new kafka.Client(
         `localhost:${kafkaServer.zookeeperPort}`,
@@ -58,7 +59,7 @@ describe('Kafka transport - integration test', () => {
             }
           });
         });
-      }).then(() => waitPromise(200)).then(() => {
+      }).then(() => waitPromise(1000)).then(() => {
         client = new kafka.Client(
           `localhost:${kafkaServer.zookeeperPort}`,
           'zipkin-integration-test-consumer'
