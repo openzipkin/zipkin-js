@@ -4,7 +4,11 @@ function randomTraceId() {
   let n = '';
   for (let i = 0; i < 16; i++) {
     const rand = Math.floor(Math.random() * 16);
-    n += digits[rand];
+
+    // avoid leading zeroes
+    if (rand !== 0 || n.length > 0) {
+      n += digits[rand];
+    }
   }
   return n;
 }
