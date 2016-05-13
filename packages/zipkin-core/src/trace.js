@@ -105,6 +105,12 @@ trace.disable = function disable() {
   tracingEnabled = false;
 };
 
+trace.cleanId = function cleanId() {
+  return new TraceId({
+    spanId: randomTraceId()
+  });
+};
+
 trace.nextId = function nextId() {
   const currentId = trace.idOption();
   const _nextId = new TraceId({

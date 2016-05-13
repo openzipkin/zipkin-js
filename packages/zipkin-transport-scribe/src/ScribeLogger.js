@@ -11,7 +11,6 @@ function ScribeLogger({scribeHost, scribePort = 9410, scribeInterval = 1000}) {
   setInterval(() => {
     if (this.queue.length > 0) {
       try {
-        console.log('flush');
         scribeClient.open(err => {
           if (err) {
             console.error('Error writing Zipkin data to Scribe', err);

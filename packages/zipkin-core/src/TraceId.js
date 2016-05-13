@@ -1,7 +1,7 @@
-const {Some, verifyIsOptional} = require('./option');
+const {Some, None, verifyIsOptional} = require('./option');
 
 class TraceId {
-  constructor({traceId, parentId, spanId, sampled, flags = 0}) {
+  constructor({traceId = None, parentId = None, spanId, sampled = None, flags = 0}) {
     verifyIsOptional(traceId);
     verifyIsOptional(parentId);
     verifyIsOptional(sampled);

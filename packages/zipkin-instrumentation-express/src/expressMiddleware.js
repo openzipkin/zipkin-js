@@ -16,6 +16,14 @@ function stringToBoolean(str) {
   return str === '1';
 }
 
+function stringToIntOption(str) {
+  try {
+    return new Some(parseInt(str));
+  } catch (err) {
+    return None;
+  }
+}
+
 module.exports = function expressMiddleware(options) {
   const serviceName = options.serviceName || 'unknown';
   const port = options.port || 0;
@@ -36,7 +44,7 @@ module.exports = function expressMiddleware(options) {
           const traceId = readHeader(Header.TraceId);
           const parentSpanId = readHeader(Header.ParentSpanId);
           const sampled = readHeader(Header.Sampled);
-          const flags = readHeader(Header.Flags).getOrElse(0);
+          const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
           const id = new TraceId({
             traceId,
             parentId: parentSpanId,
@@ -47,8 +55,7 @@ module.exports = function expressMiddleware(options) {
           trace.setId(id);
         });
       } else {
-        trace.setId(trace.nextId());
-
+        trace.setId(trace.cleanId());
         if (req.header(Header.Flags)) {
           const currentId = trace.id();
           const idWithFlags = new TraceId({
@@ -62,6 +69,8 @@ module.exports = function expressMiddleware(options) {
         }
       }
 
+      const id = trace.id();
+
       trace.recordServiceName(serviceName);
       trace.recordRpc(req.method);
       trace.recordBinary('http.url', url.format({
@@ -72,7 +81,10 @@ module.exports = function expressMiddleware(options) {
       trace.recordAnnotation(new Annotation.ServerRecv());
       trace.recordAnnotation(new Annotation.LocalAddr({port}));
 
-      const id = trace.id();
+      if (id.flags !== 0 && id.flags != null) {
+        trace.recordBinary(Header.Flags, id.flags.toString());
+      }
+
       res.on('finish', () => {
         trace.setId(id);
         trace.recordBinary('http.status_code', res.statusCode.toString());
