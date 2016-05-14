@@ -12,6 +12,7 @@
     "import/no-unresolved": [2, {
       "ignore": ["url"] }
     ],
+    "no-return-assign": "off",
     "radix": ["error", "as-needed"]
   },
   "env": {

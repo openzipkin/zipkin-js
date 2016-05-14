@@ -15,7 +15,7 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "chai": "^3.5.0",
-    "eslint": "^2.8.0",
+    "eslint": "^2.10.0",
     "eslint-config-airbnb": "^8.0.0",
     "eslint-plugin-import": "^1.6.0",
     "eslint-plugin-jsx-a11y": "^1.0.2",
