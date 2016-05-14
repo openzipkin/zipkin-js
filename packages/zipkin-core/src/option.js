@@ -49,10 +49,13 @@ Some.prototype.type = 'Some';
 
 // Used to validate input arguments
 function isOptional(data) {
-  return data instanceof Some || data === None;
+  return data != null && (data instanceof Some || data === None || data.type === 'Some' || data.type === 'None');
 }
 
 function verifyIsOptional(data) {
+  if (data == null) {
+    throw new Error('Error: data is not Optional - it\'s null');
+  }
   if (isOptional(data)) {
     if (isOptional(data.value)) {
       throw new Error(`Error: data (${data.value.toString()}) is wrapped in Option twice`);

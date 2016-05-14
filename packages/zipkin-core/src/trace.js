@@ -56,6 +56,25 @@ function shouldSample() {
   return sample;
 }
 
+// This can be used for cls-patching other libraries;
+// e.g. cls-bluebird, cls-q, cls-redis
+trace.getClsNamespace = function getClsNamespace() {
+  return session;
+};
+
+// A last-resort alternative, if you for some reason
+// cannot patch CLS, and you lose the trace context
+// somewhere in your code.
+// Use "const unfreeze = trace.freezeContext()" in the code
+// before you lose your context, and call "unfreeze()" where
+// you lost the context. It will then be restored.
+trace.freezeContext = function freezeContext() {
+  const data = local();
+  return function unfreeze() {
+    setLocal(data);
+  };
+};
+
 trace.setSampleRate = function setSampleRate(rate) {
   sampleRate = rate;
 };

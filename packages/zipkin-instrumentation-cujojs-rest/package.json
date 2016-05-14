@@ -4,7 +4,7 @@
   "description": "Interceptor for instrumenting HTTP calls from the cujoJS rest library",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: Tests should be run from the root directory"
+    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js"
   },
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",

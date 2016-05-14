@@ -5,17 +5,19 @@
   "main": "index.js",
   "scripts": {
     "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
-    "test": "echo \"Error: Tests should be run from the root directory"
+    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js"
   },
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "base64-js": "^1.1.2",
+    "bluebird": "^3.3.5",
+    "cls-bluebird": "^1.0.1",
     "continuation-local-storage": "^3.1.7",
     "network-address": "^1.1.0",
+    "shimmer": "^1.1.0",
     "thrift": "^0.9.3"
   },
   "devDependencies": {}
 }
-
