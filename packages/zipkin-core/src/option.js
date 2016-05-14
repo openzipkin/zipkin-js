@@ -49,7 +49,12 @@ Some.prototype.type = 'Some';
 
 // Used to validate input arguments
 function isOptional(data) {
-  return data != null && (data instanceof Some || data === None || data.type === 'Some' || data.type === 'None');
+  return data != null && (
+      data instanceof Some ||
+      data === None ||
+      data.type === 'Some' ||
+      data.type === 'None'
+    );
 }
 
 function verifyIsOptional(data) {
