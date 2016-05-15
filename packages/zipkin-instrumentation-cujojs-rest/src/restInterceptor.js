@@ -38,7 +38,7 @@ function request(req, {serviceName}) {
       req.headers[Header.ParentSpanId] = psid;
     });
     traceId.sampled.ifPresent(sampled => {
-      req.headers[Header.Sampled] = sampled ? 'true' : 'false';
+      req.headers[Header.Sampled] = sampled ? '1' : '0';
     });
 
     if (trace.isActivelyTracing()) {
@@ -63,7 +63,6 @@ function response(res) {
 }
 
 module.exports = interceptor({
-
   request,
   response
 });

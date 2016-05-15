@@ -1,0 +1,21 @@
+{
+  "name": "zipkin-instrumentation-fetch",
+  "version": "0.1.6",
+  "description": "Interceptor for HTTP clients using the 'fetch' API",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js"
+  },
+  "author": "Openzipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "peerDependencies": {
+    "zipkin-core": "^0.1.6"
+  },
+  "devDependencies": {
+    "express": "^4.13.4",
+    "node-fetch": "^1.5.1",
+    "zipkin-core": "^0.1.6"
+  }
+}
+
