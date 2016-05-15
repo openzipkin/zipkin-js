@@ -8,7 +8,7 @@ new JavaScript features and syntax, so Node.js version 6 or newer is required.
 
 ## Installation:
 
-npm install zipkin-core --save-peer
+`npm install zipkin-core --save`
 
 ## Usage:
 
