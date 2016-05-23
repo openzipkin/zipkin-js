@@ -9,12 +9,11 @@ describe('membached interceptor', () => {
       const memcached = new (zipkinClient(Memcached))('localhost:11211');
       memcached.set('foo', 'bar', 10, err => {
         if (err) {
-          console.error(err);
           done(err);
         } else {
-          memcached.getMulti(['foo', 'fox'], (err, data) => {
-            if (err) {
-              done(err);
+          memcached.getMulti(['foo', 'fox'], (err2, data) => {
+            if (err2) {
+              done(err2);
             } else {
               expect(data).to.deep.equal({foo: 'bar'});
               done();

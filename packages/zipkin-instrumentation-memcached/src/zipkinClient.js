@@ -2,13 +2,13 @@ const {trace, Annotation} = require('zipkin-core');
 
 module.exports = function zipkinClient(Memcached, serviceName = 'memcached') {
   function mkZipkinCallback(callback, id) {
-    return function zipkinCallback(err, data) {
+    return function zipkinCallback(...args) {
       trace.withContext(() => {
         trace.setId(id);
         trace.recordAnnotation(new Annotation.ClientRecv());
       });
-      callback.apply(this, arguments);
-    }
+      callback.apply(this, args);
+    };
   }
   function commonAnnotations(rpc) {
     trace.recordAnnotation(new Annotation.ClientSend());
@@ -41,8 +41,7 @@ module.exports = function zipkinClient(Memcached, serviceName = 'memcached') {
   ];
   methodsToWrap.forEach(({key, annotator}) => {
     const actualFn = ZipkinMemcached.prototype[key];
-    ZipkinMemcached.prototype[key] = function() {
-      const args = [...arguments];
+    ZipkinMemcached.prototype[key] = function(...args) {
       const callback = args.pop();
       let id;
       trace.withNextId(nextId => {
