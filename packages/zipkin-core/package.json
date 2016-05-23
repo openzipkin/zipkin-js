@@ -1,6 +1,6 @@
 {
   "name": "zipkin-core",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "The core tracer for zipkin.js",
   "main": "index.js",
   "scripts": {

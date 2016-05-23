@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-kafka",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Transports Zipkin trace data via Kafka to the collector",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "kafka-node": "^0.3.2"
   },
   "peerDependencies": {
-    "zipkin-core": "^0.1.7"
+    "zipkin-core": "^0.1.8"
   },
   "devDependencies": {
     "kafka-please": "^0.1.5"
