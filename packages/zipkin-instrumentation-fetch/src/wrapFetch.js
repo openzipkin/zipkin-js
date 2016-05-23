@@ -1,4 +1,4 @@
-const {trace, HttpHeaders, Annotation} = require('zipkin-core');
+const {trace, HttpHeaders, Annotation} = require('zipkin');
 
 function wrapFetch(fetch, {serviceName}) {
   return function zipkinfetch(url, opts) {

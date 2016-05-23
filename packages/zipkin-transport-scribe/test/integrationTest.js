@@ -1,4 +1,4 @@
-const {trace, TraceId, ZipkinTracer, Annotation, option: {Some}} = require('zipkin-core');
+const {trace, TraceId, ZipkinTracer, Annotation, option: {Some}} = require('zipkin');
 const thrift = require('thrift');
 const sinon = require('sinon');
 const ScribeLogger = require('../src/ScribeLogger');

@@ -1,4 +1,4 @@
-const {trace, consoleTracer} = require('zipkin-core');
+const {trace, consoleTracer} = require('zipkin');
 const zipkinClient = require('../src/zipkinClient');
 
 const Memcached = require('memcached');

@@ -1,4 +1,4 @@
-const {trace, Annotation} = require('zipkin-core');
+const {trace, Annotation} = require('zipkin');
 
 module.exports = function zipkinClient(Memcached, serviceName = 'memcached') {
   function mkZipkinCallback(callback, id) {

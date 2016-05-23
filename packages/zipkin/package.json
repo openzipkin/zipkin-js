@@ -1,21 +1,20 @@
 {
-  "name": "zipkin-transport-scribe",
+  "name": "zipkin",
   "version": "0.1.8",
-  "description": "Transports Zipkin trace data via Scribe to the collector",
+  "description": "The core tracer for zipkin.js",
   "main": "index.js",
   "scripts": {
+    "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
     "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js"
   },
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "scribe": "0.0.9"
-  },
-  "peerDependencies": {
-    "zipkin": "^0.1.8"
-  },
-  "devDependencies": {
+    "base64-js": "^1.1.2",
+    "continuation-local-storage": "^3.1.7",
+    "network-address": "^1.1.0",
     "thrift": "^0.9.3"
-  }
+  },
+  "devDependencies": {}
 }

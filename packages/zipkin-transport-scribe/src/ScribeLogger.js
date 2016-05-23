@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const {Scribe} = require('scribe');
-const {serializeSpan} = require('zipkin-core');
+const {serializeSpan} = require('zipkin');
 
 function ScribeLogger({scribeHost, scribePort = 9410, scribeInterval = 1000}) {
   const scribeClient = new Scribe(scribeHost, scribePort, {autoReconnect: true});

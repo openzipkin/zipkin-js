@@ -1,4 +1,4 @@
-const {trace} = require('zipkin-core');
+const {trace} = require('zipkin');
 const express = require('express');
 const sinon = require('sinon');
 const rest = require('rest');
