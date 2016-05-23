@@ -42,15 +42,15 @@ function wrapFetch(fetch, {serviceName}) {
             trace.setId(traceId);
             trace.recordBinary('http.status_code', res.status.toString());
             trace.recordAnnotation(new Annotation.ClientRecv());
-            resolve(res);
           });
+          resolve(res);
         }).catch(err => {
           trace.withContext(() => {
             trace.setId(traceId);
             trace.recordBinary('request.error', err.toString());
             trace.recordAnnotation(new Annotation.ClientRecv());
-            reject(err);
           });
+          reject(err);
         });
       });
     });
