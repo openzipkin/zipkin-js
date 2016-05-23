@@ -1,15 +1,14 @@
 {
   "name": "zipkin-core",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Deprecated: zipkin-core has been renamed to zipkin",
   "main": "index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.1.8"
+    "zipkin": "^0.1.9"
   },
   "devDependencies": {}
 }
