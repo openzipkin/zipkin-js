@@ -2,7 +2,7 @@
   "name": "zipkin-instrumentation-memcached",
   "version": "0.1.9",
   "description": "Interceptor for memcached clients",
-  "main": "index.js",
+  "main": "src/zipkinClient.js",
   "scripts": {
     "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js"
   },
