@@ -145,6 +145,14 @@ trace.nextId = function nextId() {
   return _nextId;
 };
 
+trace.withNextId = function withNextId(callback) {
+  trace.withContext(() => {
+    const id = trace.nextId();
+    trace.setId(id);
+    callback(id);
+  });
+};
+
 trace.setId = function setId(traceId, terminal = false) {
   if (!trace.isTerminal()) {
     setState(new State({
