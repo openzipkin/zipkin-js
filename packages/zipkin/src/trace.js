@@ -167,6 +167,23 @@ trace.setTerminalId = function setTerminalId(traceId) {
   trace.setId(traceId, true);
 };
 
+trace.setTracer = function setTracer(tracer) {
+  local().map(state => {
+    setState(new State({
+      id: state.id,
+      termimal: state.terminal,
+      tracers: [tracer]
+    }));
+    return true;
+  }).getOrElse(() => {
+    setState(new State({
+      id: None,
+      terminal: false,
+      tracers: [tracer]
+    }));
+  });
+};
+
 trace.pushTracer = function pushTracer(additionalTracer) {
   local().map(state => {
     setState(new State({
@@ -188,7 +205,7 @@ trace.setState = setState;
 
 trace.letTracer = function letTracer(tracer, f) {
   return trace.withContext(() => {
-    trace.pushTracer(tracer);
+    trace.setTracer(tracer);
     return f();
   });
 };
@@ -222,13 +239,25 @@ trace.record = function record(rec) {
   }
 };
 
+class Record {
+  constructor({traceId, timestamp, annotation, duration}) {
+    this.traceId = traceId;
+    this.timestamp = timestamp;
+    this.annotation = annotation;
+    this.duration = duration;
+  }
+  toString() {
+    return `Record(traceId=${this.traceId.toString()}, annotation=${this.annotation.toString()})`;
+  }
+}
+
 trace.recordAnnotation = function recordAnnotation(ann, duration) {
-  trace.record({
+  trace.record(new Record({
     traceId: trace.id(),
     timestamp: now(),
     annotation: ann,
     duration: fromNullable(duration)
-  });
+  }));
 };
 
 trace.recordMessage = function recordMessage(message, duration) {
