@@ -1,23 +1,23 @@
 const None = {
   type: 'None',
-  map: function map() {
+  map() {
     return None;
   },
-  ifPresent: function ifPresent() {},
-  flatMap: function flatMap() {
+  ifPresent() {},
+  flatMap() {
     return None;
   },
-  getOrElse: function getOrElse(f) {
+  getOrElse(f) {
     if (f instanceof Function) {
       return f();
     } else {
       return f;
     }
   },
-  equals: function equals(other) {
+  equals(other) {
     return other.type === 'None';
   },
-  toString: function toString() {
+  toString() {
     return 'None';
   }
 };
