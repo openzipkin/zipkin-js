@@ -96,6 +96,9 @@ function ZipkinTracer({
       }
     });
   };
+  this.toString = function toString() {
+    return 'ZipkinTracer()';
+  };
 }
 
 module.exports = ZipkinTracer;
