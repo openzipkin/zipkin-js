@@ -11,16 +11,18 @@ const session = getNamespace('zipkin') || createNamespace('zipkin');
 const defaultContext = session.createContext();
 session.enter(defaultContext);
 
-function State({id, terminal, tracers}) {
-  this.id = id;
-  this.terminal = terminal;
-  this.tracers = tracers;
+class State {
+  constructor({id, terminal, tracers}) {
+    this.id = id;
+    this.terminal = terminal;
+    this.tracers = tracers;
+  }
+  toString() {
+    return `State(id=${this.id.toString()}, terminal=${this.terminal}, tracers=[${
+      this.tracers.map(t => t.toString()).join(', ')
+      }])`;
+  }
 }
-State.prototype.toString = function() {
-  return `State(id=${this.id.toString()}, terminal=${this.terminal}, tracers=[${
-    this.tracers.map(t => t.toString()).join(', ')
-    }])`;
-};
 
 const defaultId = new TraceId({
   traceId: None,
