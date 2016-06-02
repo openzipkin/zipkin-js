@@ -13,7 +13,7 @@ const tracer = new Tracer({
 });
 ```
 
-## A not on CLS context vs. explicit context
+## A note on CLS context vs. explicit context
 
 There are known issues and limitations with CLS, so some people might prefer to use `ExplicitContext` instead;
 the drawback then is that you have to pass around a context object manually.

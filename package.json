@@ -11,7 +11,7 @@
     "lerna-bootstrap": "node node_modules/lerna/bin/lerna.js bootstrap",
     "lerna-publish": "node node_modules/lerna/bin/lerna.js publish --force-publish *"
   },
-  "author": "Openzipkin <openzipkin.alt@gmail.com>",
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "chai": "^3.5.0",

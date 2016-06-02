@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js"
   },
-  "author": "Openzipkin <openzipkin.alt@gmail.com>",
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "peerDependencies": {
