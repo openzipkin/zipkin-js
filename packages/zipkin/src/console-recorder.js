@@ -1,13 +1,19 @@
-module.exports = {
+class ConsoleRecorder {
+   /* eslint-disable no-console */
+  constructor(logger = console.log) {
+    this.logger = logger;
+  }
   record(rec) {
-    /* eslint-disable no-console */
     const id = rec.traceId;
-    console.log(
+    this.logger(
       `Record at (spanId=${id.spanId}, parentId=${id.parentId},` +
       ` traceId=${id.traceId}): ${rec.annotation.toString()}`
     );
-  },
+  }
+
   toString() {
     return 'consoleTracer';
   }
-};
+}
+
+module.exports = ConsoleRecorder;

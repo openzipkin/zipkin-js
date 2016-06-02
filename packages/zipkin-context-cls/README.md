@@ -9,11 +9,11 @@ variable everywhere in your application code.
 ```javascript
 const CLSContext = require('zipkin-context-cls');
 const tracer = new Tracer({
-  context: new CLSContext('zipkin')
+  ctxImpl: new CLSContext('zipkin')
 });
 ```
 
 ## A not on CLS context vs. explicit context
 
-There are known issues and limitations with CLS, so some people might prefer to use zipkin-context-explicit instead;
+There are known issues and limitations with CLS, so some people might prefer to use `ExplicitContext` instead;
 the drawback then is that you have to pass around a context object manually.

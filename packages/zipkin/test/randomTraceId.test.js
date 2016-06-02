@@ -1,4 +1,4 @@
-const randomTraceId = require('../src/randomTraceId');
+const randomTraceId = require('../src/tracer/randomTraceId');
 
 describe('random trace id', () => {
   it('should never have leading zeroes', () => {

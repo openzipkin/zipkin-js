@@ -1,5 +1,7 @@
 const None = {
-  type: 'None',
+  get type() {
+    return 'None';
+  },
   map() {
     return None;
   },
@@ -19,8 +21,12 @@ const None = {
   },
   toString() {
     return 'None';
+  },
+  get present() {
+    return false;
   }
 };
+
 
 class Some {
   constructor(value) {
@@ -44,8 +50,13 @@ class Some {
   toString() {
     return `Some(${this.value.toString()})`;
   }
+  get present() {
+    return true;
+  }
+  get type() {
+    return 'Some';
+  }
 }
-Some.prototype.type = 'Some';
 
 // Used to validate input arguments
 function isOptional(data) {
