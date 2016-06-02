@@ -1,4 +1,4 @@
-const {trace} = require('zipkin');
+const {Tracer, ExplicitContext} = require('zipkin');
 const express = require('express');
 const sinon = require('sinon');
 const rest = require('rest');
@@ -16,10 +16,12 @@ describe('cujojs rest interceptor - integration test', () => {
 
     const server = app.listen(0, () => {
       const record = sinon.spy();
-      const tracer = {record};
+      const recorder = {record};
+      const ctxImpl = new ExplicitContext();
+      const tracer = new Tracer({recorder, ctxImpl});
 
-      trace.letTracer(tracer, () => {
-        const client = rest.wrap(restInterceptor, {serviceName: 'service-a'});
+      tracer.scoped(() => {
+        const client = rest.wrap(restInterceptor, {tracer, serviceName: 'service-a'});
         const port = server.address().port;
         const path = `http://127.0.0.1:${port}/abc`;
         client(path).then(successResponse => {

@@ -1,7 +1,6 @@
 /* eslint-disable no-param-reassign */
 const interceptor = require('rest/interceptor');
 const {
-  trace,
   HttpHeaders: Header,
   Annotation
 } = require('zipkin');
@@ -17,18 +16,10 @@ function getRequestMethod(req) {
   return method;
 }
 
-function request(req, {serviceName}) {
-  function recordTraceData(name) {
-    const method = getRequestMethod(req);
-    trace.recordServiceName(name);
-    trace.recordRpc(method.toUpperCase());
-    trace.recordBinary('http.url', req.path);
-    trace.recordAnnotation(new Annotation.ClientSend());
-  }
-
-  trace.withContext(() => {
-    trace.setId(trace.nextId());
-    const traceId = trace.id();
+function request(req, {serviceName, tracer}) {
+  tracer.scoped(() => {
+    tracer.setId(tracer.createChildId());
+    const traceId = tracer.id;
     this.traceId = traceId;
 
     req.headers = req.headers || {};
@@ -41,23 +32,21 @@ function request(req, {serviceName}) {
       req.headers[Header.Sampled] = sampled ? '1' : '0';
     });
 
-    if (trace.isActivelyTracing()) {
-      if (serviceName instanceof Function) {
-        serviceName(req, recordTraceData);
-      } else {
-        recordTraceData(serviceName);
-      }
-    }
+    const method = getRequestMethod(req);
+    tracer.recordServiceName(serviceName);
+    tracer.recordRpc(method.toUpperCase());
+    tracer.recordBinary('http.url', req.path);
+    tracer.recordAnnotation(new Annotation.ClientSend());
   });
 
   return req;
 }
 
-function response(res) {
-  trace.withContext(() => {
-    trace.setId(this.traceId);
-    trace.recordBinary('http.status_code', res.status.code.toString());
-    trace.recordAnnotation(new Annotation.ClientRecv());
+function response(res, {tracer}) {
+  tracer.scoped(() => {
+    tracer.setId(this.traceId);
+    tracer.recordBinary('http.status_code', res.status.code.toString());
+    tracer.recordAnnotation(new Annotation.ClientRecv());
   });
   return res;
 }

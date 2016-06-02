@@ -24,11 +24,9 @@ function stringToIntOption(str) {
   }
 }
 
-module.exports = function expressMiddleware(options) {
-  const serviceName = options.serviceName || 'unknown';
-  const port = options.port || 0;
-  return trace.bindContext(function zipkinExpressMiddleware(req, res, next) {
-    trace.withContext(() => {
+module.exports = function expressMiddleware({tracer, serviceName = 'unknown', port = 0}) {
+  return function zipkinExpressMiddleware(req, res, next) {
+    tracer.scoped(() => {
       function readHeader(header) {
         const val = req.header(header);
         if (val != null) {
@@ -52,12 +50,12 @@ module.exports = function expressMiddleware(options) {
             sampled: sampled.map(stringToBoolean),
             flags
           });
-          trace.setId(id);
+          tracer.setId(id);
         });
       } else {
-        trace.setId(trace.cleanId());
+        tracer.setId(trace.createRootId());
         if (req.header(Header.Flags)) {
-          const currentId = trace.id();
+          const currentId = tracer.id;
           const idWithFlags = new TraceId({
             traceId: currentId.traceId,
             parentId: currentId.parentId,
@@ -65,33 +63,35 @@ module.exports = function expressMiddleware(options) {
             sampled: currentId.sampled,
             flags: readHeader(Header.Flags)
           });
-          trace.setId(idWithFlags);
+          tracer.setId(idWithFlags);
         }
       }
 
-      const id = trace.id();
+      const id = tracer.id;
 
-      trace.recordServiceName(serviceName);
-      trace.recordRpc(req.method);
-      trace.recordBinary('http.url', url.format({
+      tracer.recordServiceName(serviceName);
+      tracer.recordRpc(req.method);
+      tracer.recordBinary('http.url', url.format({
         protocol: req.protocol,
         host: req.get('host'),
         pathname: req.originalUrl
       }));
-      trace.recordAnnotation(new Annotation.ServerRecv());
-      trace.recordAnnotation(new Annotation.LocalAddr({port}));
+      tracer.recordAnnotation(new Annotation.ServerRecv());
+      tracer.recordAnnotation(new Annotation.LocalAddr({port}));
 
       if (id.flags !== 0 && id.flags != null) {
-        trace.recordBinary(Header.Flags, id.flags.toString());
+        tracer.recordBinary(Header.Flags, id.flags.toString());
       }
 
       res.on('finish', () => {
-        trace.setId(id);
-        trace.recordBinary('http.status_code', res.statusCode.toString());
-        trace.recordAnnotation(new Annotation.ServerSend());
+        tracer.scoped(() => {
+          tracer.setId(id);
+          tracer.recordBinary('http.status_code', res.statusCode.toString());
+          tracer.recordAnnotation(new Annotation.ServerSend());
+        });
       });
 
       next();
     });
-  });
+  };
 };

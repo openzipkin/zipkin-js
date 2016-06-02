@@ -1,27 +1,27 @@
-const {trace, Annotation} = require('zipkin');
+const {Annotation} = require('zipkin');
 
-module.exports = function zipkinClient(Memcached, serviceName = 'memcached') {
+module.exports = function zipkinClient(tracer, Memcached, serviceName = 'memcached') {
   function mkZipkinCallback(callback, id) {
     return function zipkinCallback(...args) {
-      trace.withContext(() => {
-        trace.setId(id);
-        trace.recordAnnotation(new Annotation.ClientRecv());
+      tracer.scoped(() => {
+        tracer.setId(id);
+        tracer.recordAnnotation(new Annotation.ClientRecv());
       });
       callback.apply(this, args);
     };
   }
   function commonAnnotations(rpc) {
-    trace.recordAnnotation(new Annotation.ClientSend());
-    trace.recordServiceName(serviceName);
-    trace.recordRpc(rpc);
+    tracer.recordAnnotation(new Annotation.ClientSend());
+    tracer.recordServiceName(serviceName);
+    tracer.recordRpc(rpc);
   }
 
   class ZipkinMemcached extends Memcached {}
   function defaultAnnotator(key) {
-    trace.recordBinary('memcached.key', key);
+    tracer.recordBinary('memcached.key', key);
   }
   function multiAnnotator(keys) {
-    trace.recordBinary('memcached.keys', keys.join(','));
+    tracer.recordBinary('memcached.keys', keys.join(','));
   }
 
   const methodsToWrap = [
@@ -44,14 +44,15 @@ module.exports = function zipkinClient(Memcached, serviceName = 'memcached') {
     ZipkinMemcached.prototype[key] = function(...args) {
       const callback = args.pop();
       let id;
-      trace.withNextId(nextId => {
+      tracer.scoped(() => {
+        id = tracer.createChildId();
+        tracer.setId(id);
         commonAnnotations(key);
         if (annotator) {
           annotator.apply(this, args);
         } else {
           defaultAnnotator.apply(this, args);
         }
-        id = nextId;
       });
       const wrapper = mkZipkinCallback(callback, id);
       const newArgs = [...args, wrapper];

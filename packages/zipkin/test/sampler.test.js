@@ -1,32 +1,41 @@
-const {MutableSpan} = require('../src/internalRepresentations');
-const TraceId = require('../src/TraceId');
-const {Sampler, CountingSampler} = require('../src/sampler');
+const TraceId = require('../src/tracer/TraceId');
+const {Sampler, CountingSampler} = require('../src/tracer/sampler');
 const {Some, None} = require('../src/option');
 
-function makeTestSpan({flags = 0, sampled = None}) {
-  return new MutableSpan(new TraceId({
+const T = new Some(true);
+const F = new Some(false);
+
+function makeTestTraceId({flags = 0, sampled = None}) {
+  return new TraceId({
     traceId: new Some('abc'),
     parentId: new Some('123'),
     spanId: 'fab',
     sampled,
     flags
-  }));
+  });
 }
 
 describe('Sampler', () => {
   it('should respect the debug flag', () => {
     const neverSample = () => false;
     const sampler = new Sampler(neverSample);
-    expect(sampler.shouldSample(makeTestSpan({flags: 1}))).to.equal(true);
+    expect(
+      sampler.shouldSample(makeTestTraceId({flags: 1}))
+    ).to.eql(T);
   });
-  it('should respect the "sampled" property', () => {
+  it('should respect the "sampled" property when true', () => {
     const neverSample = () => false;
     const sampler = new Sampler(neverSample());
-    expect(sampler.shouldSample(makeTestSpan({sampled: new Some(true)}))).to.equal(true);
-
+    expect(
+      sampler.shouldSample(makeTestTraceId({sampled: T}))
+    ).to.eql(T);
+  });
+  it('should respect the "sampled" property when false', () => {
     const alwaysSample = () => true;
     const sampler2 = new Sampler(alwaysSample());
-    expect(sampler2.shouldSample(makeTestSpan({sampled: new Some(false)}))).to.equal(false);
+    expect(
+      sampler2.shouldSample(makeTestTraceId({sampled: F}))
+    ).to.eql(F);
   });
 });
 
@@ -43,30 +52,30 @@ describe('CountingSampler', () => {
 
   it('should count, and sample every fourth sample (sample rate 0.25)', () => {
     const sampler = new CountingSampler(0.25);
-    const s = () => sampler.shouldSample(makeTestSpan({}));
+    const s = () => sampler.shouldSample(makeTestTraceId({}));
 
     const sampled = [s(), s(), s(), s(), s(), s(), s(), s(), s()];
-    const expected = [true, false, false, false, true, false, false, false, true];
+    const expected = [T, F, F, F, T, F, F, F, T];
 
     expect(sampled).to.deep.equal(expected);
   });
 
   it('should count, and sample every second sample (sample rate 0.5)', () => {
     const sampler = new CountingSampler(0.5);
-    const s = () => sampler.shouldSample(makeTestSpan({}));
+    const s = () => sampler.shouldSample(makeTestTraceId({}));
 
     const sampled = [s(), s(), s(), s(), s(), s(), s(), s(), s()];
-    const expected = [true, false, true, false, true, false, true, false, true];
+    const expected = [T, F, T, F, T, F, T, F, T];
 
     expect(sampled).to.deep.equal(expected);
   });
 
   it('should not sample when sample rate is 0', () => {
     const sampler = new CountingSampler(0);
-    const s = () => sampler.shouldSample(makeTestSpan({}));
+    const s = () => sampler.shouldSample(makeTestTraceId({}));
 
     const sampled = [s(), s(), s(), s(), s(), s(), s(), s(), s()];
-    const expected = [false, false, false, false, false, false, false, false, false];
+    const expected = [F, F, F, F, F, F, F, F, F];
 
     expect(sampled).to.deep.equal(expected);
   });
