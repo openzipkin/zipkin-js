@@ -1,4 +1,4 @@
-const {Some, None, verifyIsOptional} = require('./option');
+const {Some, None, verifyIsOptional} = require('../option');
 
 class TraceId {
   constructor(params) {

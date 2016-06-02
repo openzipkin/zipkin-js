@@ -1,4 +1,4 @@
-const {trace} = require('zipkin');
+const {Tracer, ExplicitContext} = require('zipkin');
 const express = require('express');
 const nodeFetch = require('node-fetch');
 const sinon = require('sinon');
@@ -22,18 +22,19 @@ describe('wrapFetch', () => {
   });
 
   it('should add instrumentation to "fetch"', function(done) {
-    const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service'});
-
     const record = sinon.spy();
-    const tracer = {record};
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
 
-    trace.letTracer(tracer, () => {
-      const id = trace.nextId();
-      trace.setId(id);
+    const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service', tracer});
+
+    ctxImpl.scoped(() => {
+      const id = tracer.createChildId();
+      tracer.setId(id);
+
       const path = `http://127.0.0.1:${this.port}/user`;
-      fetch(path, {
-        method: 'post'
-      })
+      fetch(path, {method: 'post'})
         .then(res => res.json())
         .then(data => {
           const annotations = record.args.map(args => args[0]);
@@ -67,7 +68,9 @@ describe('wrapFetch', () => {
 
           const spanIdOnServer = data.spanId;
           expect(spanIdOnServer).to.equal(spanId);
-        }).then(done).catch(done);
+        })
+        .then(done)
+        .catch(done);
     });
   });
 });

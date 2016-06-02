@@ -7,6 +7,10 @@ module.exports = class CLSContext {
     this._session.enter(defaultContext);
   }
 
+  setContext(ctx) {
+    this._session.set('zipkin', ctx);
+  }
+
   getContext() {
     const currentCtx = this._session.get('zipkin');
     if (currentCtx != null) {
@@ -16,12 +20,18 @@ module.exports = class CLSContext {
     }
   }
 
-  letContext(ctx, callable) {
+  scoped(callable) {
     let result;
     this._session.run(() => {
-      this._session.set('zipkin', ctx);
       result = callable();
     });
     return result;
+  }
+
+  letContext(ctx, callable) {
+    return this.scoped(() => {
+      this.setContext(ctx);
+      return callable();
+    });
   }
 };

@@ -1,4 +1,11 @@
-const {trace, TraceId, ZipkinTracer, Annotation, option: {Some}} = require('zipkin');
+const {
+  Tracer,
+  TraceId,
+  BatchRecorder,
+  Annotation,
+  ExplicitContext,
+  option: {Some}
+} = require('zipkin');
 const thrift = require('thrift');
 const sinon = require('sinon');
 const ScribeLogger = require('../src/ScribeLogger');
@@ -21,11 +28,16 @@ describe('Scribe transport - integration test', () => {
     });
     const scribeServer = server.listen(0, () => {
       const port = scribeServer.address().port;
-      trace.letTracer(new ZipkinTracer({logger: new ScribeLogger({
+      const logger = new ScribeLogger({
         scribeHost: '127.0.0.1',
         scribePort: port,
         scribeInterval: 1
-      })}), () => {
+      });
+
+      const ctxImpl = new ExplicitContext();
+      const recorder = new BatchRecorder({logger});
+      const tracer = new Tracer({recorder, ctxImpl});
+      ctxImpl.scoped(() => {
         const id = new TraceId({
           traceId: new Some('abc'),
           parentId: new Some('def'),
@@ -33,9 +45,9 @@ describe('Scribe transport - integration test', () => {
           sampled: new Some(true),
           flags: 0
         });
-        trace.setId(id);
-        trace.recordAnnotation(new Annotation.ClientSend());
-        trace.recordAnnotation(new Annotation.ClientRecv());
+        tracer.setId(id);
+        tracer.recordAnnotation(new Annotation.ClientSend());
+        tracer.recordAnnotation(new Annotation.ClientRecv());
         setTimeout(() => {
           scribeServer.close();
           expect(logSpy.getCall(0).args[0][0].message).to.include(
