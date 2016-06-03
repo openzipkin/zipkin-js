@@ -24,7 +24,7 @@ class Tracer {
   }
 
   scoped(callback) {
-    this._ctxImpl.scoped(callback);
+    return this._ctxImpl.scoped(callback);
   }
 
   createRootId() {
@@ -55,6 +55,14 @@ class Tracer {
       childId._sampled = this.sampler.shouldSample(childId);
     }
     return childId;
+  }
+
+  letChildId(callable) {
+      return this.scoped(() => {
+        const traceId = this.createChildId();
+        this.setId(traceId);
+        return callable(traceId);
+      });
   }
 
   setId(traceId) {
