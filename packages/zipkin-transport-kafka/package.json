@@ -12,10 +12,8 @@
   "dependencies": {
     "kafka-node": "^0.3.2"
   },
-  "peerDependencies": {
-    "zipkin": "^0.1.9"
-  },
   "devDependencies": {
-    "kafka-please": "^0.1.5"
+    "kafka-please": "^0.1.5",
+    "zipkin": "^0.1.9"
   }
 }

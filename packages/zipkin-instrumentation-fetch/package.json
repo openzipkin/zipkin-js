@@ -9,9 +9,6 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
-  "peerDependencies": {
-    "zipkin": "^0.1.9"
-  },
   "devDependencies": {
     "express": "^4.13.4",
     "node-fetch": "^1.5.1",

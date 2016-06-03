@@ -11,9 +11,7 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "express": "^4.13.4",
-    "rest": "^1.3.2"
-  },
-  "peerDependencies": {
+    "rest": "^1.3.2",
     "zipkin": "^0.1.9"
   }
 }

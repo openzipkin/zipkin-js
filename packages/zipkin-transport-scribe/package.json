@@ -12,10 +12,8 @@
   "dependencies": {
     "scribe": "0.0.9"
   },
-  "peerDependencies": {
-    "zipkin": "^0.1.9"
-  },
   "devDependencies": {
-    "thrift": "^0.9.3"
+    "thrift": "^0.9.3",
+    "zipkin": "^0.1.9"
   }
 }
