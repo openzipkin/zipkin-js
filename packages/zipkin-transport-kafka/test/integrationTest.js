@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const kafka = require('kafka-node');
-const {trace, ZipkinTracer, Annotation} = require('zipkin');
+const {Tracer, BatchRecorder, Annotation, ExplicitContext} = require('zipkin');
 const KafkaLogger = require('../src/KafkaLogger');
 const makeKafkaServer = require('kafka-please');
 
@@ -30,14 +30,14 @@ describe('Kafka transport - integration test', () => {
         const closeProducerClient = () => new Promise(resolve => producerClient.close(resolve));
         const closeClient = () => {
           return client ?
-          new Promise(resolve => client.close(resolve))
-          : Promise.resolve();
+            new Promise(resolve => client.close(resolve))
+            : Promise.resolve();
         };
 
         const closeKafkaLogger = () => {
           return kafkaLogger ?
-          kafkaLogger.close() :
-          Promise.resolve();
+            kafkaLogger.close() :
+            Promise.resolve();
         };
 
         closeKafkaLogger()
@@ -92,17 +92,18 @@ describe('Kafka transport - integration test', () => {
             connectionString: `localhost:${kafkaServer.zookeeperPort}`
           }
         });
-        const tracer = new ZipkinTracer({logger: kafkaLogger});
 
-        trace.letTracer(tracer, () => {
-          trace.withContext(() => {
-            trace.recordAnnotation(new Annotation.ServerRecv());
-            trace.recordServiceName('my-service');
-            trace.recordRpc('GET');
-            trace.recordBinary('http.url', 'http://example.com');
-            trace.recordBinary('http.response_code', '200');
-            trace.recordAnnotation(new Annotation.ServerSend());
-          });
+        const ctxImpl = new ExplicitContext();
+        const recorder = new BatchRecorder({logger: kafkaLogger});
+        const tracer = new Tracer({recorder, ctxImpl});
+
+        ctxImpl.scoped(() => {
+          tracer.recordAnnotation(new Annotation.ServerRecv());
+          tracer.recordServiceName('my-service');
+          tracer.recordRpc('GET');
+          tracer.recordBinary('http.url', 'http://example.com');
+          tracer.recordBinary('http.response_code', '200');
+          tracer.recordAnnotation(new Annotation.ServerSend());
         });
       });
     }).catch(err => {

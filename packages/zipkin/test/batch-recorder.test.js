@@ -1,21 +1,22 @@
 const sinon = require('sinon');
-const trace = require('../src/trace');
-const ZipkinTracer = require('../src/ZipkinTracer');
-const TraceId = require('../src/TraceId');
+const Tracer = require('../src/tracer');
+const BatchRecorder = require('../src/batch-recorder');
+const TraceId = require('../src/tracer/TraceId');
 const Annotation = require('../src/annotation');
 const InetAddress = require('../src/InetAddress');
 const {Some, None} = require('../src/option');
+const ExplicitContext = require('../src/explicit-context');
 
-describe('The raw tracer', () => {
+describe('Batch Recorder', () => {
   it('should accumulate annotations into MutableSpans', () => {
-    trace.withContext(() => {
-      const logSpan = sinon.spy();
+    const logSpan = sinon.spy();
 
-      const tracer = new ZipkinTracer({
-        logger: {logSpan}
-      });
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
 
-      trace.pushTracer(tracer);
+    ctxImpl.scoped(() => {
       trace.setId(new TraceId({
         traceId: None,
         parentId: new Some('a'),
@@ -52,34 +53,5 @@ describe('The raw tracer', () => {
       expect(loggedSpan.annotations[0].value).to.equal('sr');
       expect(loggedSpan.annotations[1].value).to.equal('ss');
     });
-  });
-
-  it('should respect the Sampler when filtering which spans to log', () => {
-    function runTest(sample) {
-      const sampler = {
-        shouldSample: () => sample
-      };
-      const logSpan = sinon.spy();
-      const tracer = new ZipkinTracer({
-        logger: {logSpan},
-        sampler
-      });
-      trace.withContext(() => {
-        trace.pushTracer(tracer);
-        trace.setId(new TraceId({
-          traceId: None,
-          parentId: new Some('a'),
-          spanId: 'c',
-          sampled: new Some(true)
-        }));
-        trace.recordAnnotation(new Annotation.ServerRecv());
-        trace.recordServiceName('test-service');
-        trace.recordAnnotation(new Annotation.ServerSend());
-      });
-      expect(logSpan.calledOnce).to.equal(sample);
-    }
-
-    runTest(true);
-    runTest(false);
   });
 });

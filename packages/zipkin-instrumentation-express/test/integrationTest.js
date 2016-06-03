@@ -1,24 +1,31 @@
 const sinon = require('sinon');
-const {trace} = require('zipkin');
+const {Tracer, ExplicitContext} = require('zipkin');
 const fetch = require('node-fetch');
 const express = require('express');
 const middleware = require('../src/expressMiddleware');
 
 describe('express middleware - integration test', () => {
+  it.skip('should create traceId', () => {});
   it('should receive trace info from the client', done => {
     const record = sinon.spy();
-    const tracer = {record};
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
 
-    trace.letTracer(tracer, () => {
+    ctxImpl.scoped(() => {
       const app = express();
       app.use(middleware({
+        tracer,
         serviceName: 'service-a'
       }));
       app.post('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
+        const ctx = ctxImpl.getContext();
         setTimeout(() => {
-          trace.recordBinary('message', 'hello from within app');
-          res.status(202).json({status: 'OK'});
+          ctxImpl.letContext(ctx, () => {
+            tracer.recordBinary('message', 'hello from within app');
+            res.status(202).json({status: 'OK'});
+          });
         }, 10);
       });
       const server = app.listen(0, () => {
@@ -67,7 +74,8 @@ describe('express middleware - integration test', () => {
 
           expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
           done();
-        }).catch(err => {
+        })
+        .catch(err => {
           server.close();
           done(err);
         });

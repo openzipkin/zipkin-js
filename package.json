@@ -11,12 +11,12 @@
     "lerna-bootstrap": "node node_modules/lerna/bin/lerna.js bootstrap",
     "lerna-publish": "node node_modules/lerna/bin/lerna.js publish --force-publish *"
   },
-  "author": "Openzipkin <openzipkin.alt@gmail.com>",
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "chai": "^3.5.0",
     "eslint": "^2.10.0",
-    "eslint-config-airbnb": "^8.0.0",
+    "eslint-config-airbnb": "^9.0.0",
     "eslint-plugin-import": "^1.6.0",
     "eslint-plugin-jsx-a11y": "^1.0.2",
     "eslint-plugin-react": "^5.0.1",

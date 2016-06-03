@@ -1,15 +1,17 @@
-// Determines whether or not a span should be sampled.
+const {Some} = require('../option');
+// Determines whether or not a traceId should be sampled.
 // If no sample decision is already made (by a debug flag, or
 // the "sampled" property is set), it will use evaluator,
-// which is a function Span => Boolean, and returns true if
-// the span should be sampled (stored in Zipkin).
+// which is a function traceId => Boolean, and returns true if
+// the traceId should be sampled (stored in Zipkin).
 class Sampler {
   constructor(evaluator) {
     this.evaluator = evaluator;
   }
 
-  shouldSample(span) {
-    return span.traceId.sampled.getOrElse(() => this.evaluator(span));
+  shouldSample(traceId) {
+    const result = traceId.sampled.getOrElse(() => this.evaluator(traceId));
+    return new Some(result);
   }
 
   toString() {
@@ -17,12 +19,12 @@ class Sampler {
   }
 }
 
-function neverSample(span) { // eslint-disable-line no-unused-vars
+function neverSample(traceId) { // eslint-disable-line no-unused-vars
   return false;
 }
 neverSample.toString = () => 'never sample';
 
-function alwaysSample(span) { // eslint-disable-line no-unused-vars
+function alwaysSample(traceId) { // eslint-disable-line no-unused-vars
   return true;
 }
 alwaysSample.toString = () => 'always sample';
@@ -35,7 +37,7 @@ function makeCountingEvaluator(sampleRate) {
   } else {
     let counter = 0;
     const limit = parseInt(1 / sampleRate);
-    const counting = function counting(span) { // eslint-disable-line no-unused-vars
+    const counting = function counting(traceId) { // eslint-disable-line no-unused-vars
       counter = counter % limit;
       const shouldSample = counter === 0;
       counter++;
