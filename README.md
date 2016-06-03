@@ -10,62 +10,49 @@ new JavaScript features and syntax, so Node.js version 6 or newer is required.
 
 `npm install zipkin --save`
 
-## Usage:
-
-```javascript
-const {tracer, consoleTracer} = require('zipkin');
-
-tracer.pushTracer(consoleTracer);
-```
 
 ## Instrumentations
 
 Various Node.js libraries have been instrumented with Zipkin support.
-In this project:
+Every instrumentation has an npm package called zipkin-instrumentation-*.
 
-- express
-- cujojs/rest
+At the time of writing, zipkin-js instruments these libraries:
+
+- cujojs/rest (zipkin-instrumentation-cujojs-rest)
+- express (zipkin-instrumentation-express)
+- fetch (zipkin-instrumentation-fetch)
+- memcached (zipkin-instrumentation-memcached)
+
+Every module has a README.md file that describes how to use it.
 
 ## Transports
 
-You can choose between multiple transports; for now,
-scribe and kafka transports are implemented. They can
-be used like this:
+You can choose between multiple transports; they are npm packages called zipkin-transport-*,
+where * is e.g. "kafka" or "scribe". Every package has its own README.md which describes how to use it.
 
-Scribe:
-
-```javascript
-const ScribeTracer = require('zipkin-transport-scribe');
-tracer.pushTracer(new ScribeTracer({
-  host: 'localhost',
-  port: 9410
-});
-```
-
-Kafka
-
-```javascript
-const KafkaTracer = require('zipkin-transport-kafka');
-tracer.pushTracer(new KafkaTracer({
-  clientOpts: {connectionString: 'localhost:2181'}
-});
-```
 
 ## Developing
 
-The code base is a monorepo. We use [Lerna](https://github.com/kittens/lerna) for managing inter-module
-dependencies, which makes it easier to develop coordinated changes.
+The code base is a monorepo. We use [Lerna](https://lernajs.io/) for managing inter-module
+dependencies, which makes it easier to develop coordinated changes between the modules.
+Instead of running lerna directly, the commands are wrapped with npm; `npm run lerna-bootstrap`
+and `npm run lerna-publish`.
 
-To setup, run:
+To setup the development environment, run:
 
+```
 npm install
 npm run lerna-bootstrap
+```
 
-Running tests: npm test
+Running tests: `npm test`
 
-Running code style linting: npm run lint
+Note that the memcached integration test requires you to have a local memcached instance running.
+The Kafka integration test will start an embedded Kafka server for the test, which requires you to have
+Java installed on your machine.
+
+Running code style linting: `npm run lint`
 
 ## Publishing
 
-npm run lerna-publish
-
+Log in to npm with the "OpenZipkin" user. Then, run `npm run lerna-publish`.
