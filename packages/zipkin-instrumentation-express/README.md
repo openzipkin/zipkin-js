@@ -6,13 +6,16 @@ An express middleware that adds Zipkin tracing to the application.
 
 ```javascript
 const express = require('express');
-const {trace} = require('zipkin');
+const {Tracer} = require('zipkin');
 const zipkinMiddleware = require('zipkin-instrumentation-express');
 
-trace.pushTracer(ConsoleTracer);
+const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+
 const app = express();
+
+// Add the Zipkin middleware
 app.use(zipkinMiddleware({
-  serviceName: 'service-a', // name of this application
-  port: 8080 // port this application is listening on
+  tracer,
+  serviceName: 'service-a' // name of this application
 }));
 ```

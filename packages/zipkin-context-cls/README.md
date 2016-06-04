@@ -9,7 +9,8 @@ variable everywhere in your application code.
 ```javascript
 const CLSContext = require('zipkin-context-cls');
 const tracer = new Tracer({
-  ctxImpl: new CLSContext('zipkin')
+  ctxImpl: new CLSContext('zipkin'),
+  recorder // typically Kafka or Scribe
 });
 ```
 
