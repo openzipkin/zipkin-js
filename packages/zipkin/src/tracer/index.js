@@ -58,11 +58,11 @@ class Tracer {
   }
 
   letChildId(callable) {
-      return this.scoped(() => {
-        const traceId = this.createChildId();
-        this.setId(traceId);
-        return callable(traceId);
-      });
+    return this.scoped(() => {
+      const traceId = this.createChildId();
+      this.setId(traceId);
+      return callable(traceId);
+    });
   }
 
   setId(traceId) {

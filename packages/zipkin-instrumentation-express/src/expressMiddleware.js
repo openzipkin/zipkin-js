@@ -1,5 +1,4 @@
 const {
-  trace,
   Annotation,
   HttpHeaders: Header,
   option: {Some, None},
