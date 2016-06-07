@@ -53,7 +53,7 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
           tracer.setId(id);
         });
       } else {
-        tracer.setId(trace.createRootId());
+        tracer.setId(tracer.createRootId());
         if (req.header(Header.Flags)) {
           const currentId = tracer.id;
           const idWithFlags = new TraceId({
