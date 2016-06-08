@@ -6,8 +6,11 @@ An express middleware that adds Zipkin tracing to the application.
 
 ```javascript
 const express = require('express');
-const {Tracer} = require('zipkin');
-const zipkinMiddleware = require('zipkin-instrumentation-express');
+const {Tracer, ExplicitContext, ConsoleRecorder} = require('zipkin');
+const zipkinMiddleware = require('zipkin-instrumentation-express').expressMiddleware;
+
+const ctxImpl = new ExplicitContext();
+const recorder = new ConsoleRecorder();
 
 const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
 
