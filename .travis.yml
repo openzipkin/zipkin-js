@@ -17,11 +17,12 @@ env:
 addons:
   apt:
     sources:
-      - llvm-toolchain-precise-3.6
       - ubuntu-toolchain-r-test
+      #- llvm-toolchain-precise-3.7
     packages:
-      - clang-3.6
-      - g++-4.8
+      - libgnome-keyring-dev
+      #- clang-3.7
+      - clang
 
 # === This is setup for automatic deploy to npm when we push tags.
 # === It's commented out because it probably won't work too well with Lerna.
