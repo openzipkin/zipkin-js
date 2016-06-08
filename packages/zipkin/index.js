@@ -2,6 +2,7 @@ const option = require('./src/option');
 
 const Annotation = require('./src/annotation');
 const Tracer = require('./src/tracer');
+const createNoopTracer = require('./src/tracer/noop');
 const TraceId = require('./src/tracer/TraceId');
 const sampler = require('./src/tracer/sampler');
 
@@ -16,6 +17,7 @@ const ExplicitContext = require('./src/explicit-context');
 
 module.exports = {
   Tracer,
+  createNoopTracer,
   TraceId,
   option,
   Annotation,
