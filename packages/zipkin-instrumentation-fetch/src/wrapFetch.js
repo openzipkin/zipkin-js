@@ -16,7 +16,7 @@ function getHeaders(traceId, opts) {
 }
 
 function wrapFetch(fetch, {serviceName, tracer}) {
-  return function zipkinfetch(url, opts) {
+  return function zipkinfetch(url, opts = {}) {
     return new Promise((resolve, reject) => {
       tracer.scoped(() => {
         tracer.setId(tracer.createChildId());
