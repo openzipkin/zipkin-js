@@ -1,0 +1,11 @@
+install:
+  - choco install nodejs memcached
+  - node --version
+  - npm --version
+  - npm install
+  - npm run lerna-bootstrap
+environment:
+  KAFKA_PLEASE_LOG: verbose
+build_script:
+  - npm run lint
+  - npm test
