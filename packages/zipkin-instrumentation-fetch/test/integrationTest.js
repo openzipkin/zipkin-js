@@ -1,4 +1,4 @@
-const {Tracer, ExplicitContext} = require('zipkin');
+const {Tracer, ExplicitContext, createNoopTracer} = require('zipkin');
 const express = require('express');
 const nodeFetch = require('node-fetch');
 const sinon = require('sinon');
@@ -11,6 +11,7 @@ describe('wrapFetch', () => {
       traceId: req.header('X-B3-TraceId') || '?',
       spanId: req.header('X-B3-SpanId') || '?'
     }));
+    app.get('/user', (req, res) => res.status(202).json({}));
     this.server = app.listen(0, () => {
       this.port = this.server.address().port;
       done();
@@ -72,5 +73,19 @@ describe('wrapFetch', () => {
         .then(done)
         .catch(done);
     });
+  });
+
+
+  it('should not throw when using fetch without options', function(done) {
+    const tracer = createNoopTracer();
+    const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service', tracer});
+
+    const path = `http://127.0.0.1:${this.port}/user`;
+    fetch(path)
+      .then(res => res.json())
+      .then(() => {
+        done();
+      })
+      .catch(done);
   });
 });
