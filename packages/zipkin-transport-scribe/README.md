@@ -8,7 +8,7 @@ This is a module that sends Zipkin trace data from zipkin-js to Scribe or Fluent
 
 ```javascript
 const {Tracer, BatchRecorder} = require('zipkin');
-const ScribeLogger = require('zipkin-transport-scribe');
+const {ScribeLogger} = require('zipkin-transport-scribe');
 
 const scribeRecorder = new BatchRecorder({
   logger: new ScribeLogger({
