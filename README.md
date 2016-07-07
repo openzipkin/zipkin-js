@@ -22,6 +22,7 @@ At the time of writing, zipkin-js instruments these libraries:
 
 - cujojs/rest (zipkin-instrumentation-cujojs-rest)
 - express (zipkin-instrumentation-express)
+- restify (zipkin-instrumentation-restify)
 - fetch (zipkin-instrumentation-fetch)
 - memcached (zipkin-instrumentation-memcached)
 
