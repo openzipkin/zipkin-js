@@ -1,0 +1,43 @@
+/* eslint-disable no-console */
+const fetch = require('node-fetch');
+
+class HttpLogger {
+  constructor({endpoint, httpInterval = 1000}) {
+    this.endpoint = endpoint;
+    this.queue = [];
+
+    const timer = setInterval(() => {
+      this.processQueue();
+    }, httpInterval);
+    timer.unref();
+  }
+
+  logSpan(span) {
+    this.queue.push(span.toJSON());
+  }
+
+  processQueue() {
+    if (this.queue.length > 0) {
+      const postBody = JSON.stringify(this.queue);
+      fetch(this.endpoint, {
+        method: 'POST',
+        body: postBody,
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).then((response) => {
+        if (response.status !== 202) {
+          console.error('Unexpected response while sending Zipkin data, status:' +
+            `${response.status}, body: ${postBody}`);
+        }
+        this.queue.length = 0;
+      }).catch((error) => {
+        console.error('Error sending Zipkin data', error);
+        this.queue.length = 0;
+      });
+    }
+  }
+}
+
+module.exports = HttpLogger;
