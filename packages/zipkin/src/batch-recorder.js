@@ -18,13 +18,14 @@ class BatchRecorder {
 
     // read through the partials spans regularly
     // and collect any timed-out ones
-    setInterval(() => {
+    const timer = setInterval(() => {
       this.partialSpans.forEach((span, id) => {
         if (this._timedOut(span)) {
           this._writeSpan(id);
         }
       });
     }, 1000);
+    timer.unref();
   }
 
   _writeSpan(id) {
