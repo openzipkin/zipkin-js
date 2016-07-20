@@ -9,14 +9,14 @@ This is a module that sends Zipkin trace data to a configurable HTTP endpoint.
 const {Tracer, BatchRecorder} = require('zipkin');
 const {HttpLogger} = require('zipkin-transport-http');
 
-const httpRecorder = new BatchRecorder({
+const recorder = new BatchRecorder({
   logger: new HttpLogger({
     endpoint: 'http://localhost:9411/api/v1/spans'
   })
 });
 
 const tracer = new Tracer({
-  httpRecorder,
+  recorder,
   ctxImpl // this would typically be a CLSContext or ExplicitContext
 });
 ```
