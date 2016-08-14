@@ -25,7 +25,9 @@ class BatchRecorder {
         }
       });
     }, 1000);
-    timer.unref();
+    if (timer.unref) { // unref might not be available in browsers
+      timer.unref(); // Allows Node to terminate instead of blocking on timer
+    }
   }
 
   _writeSpan(id) {
