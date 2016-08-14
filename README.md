@@ -31,7 +31,7 @@ Every module has a README.md file that describes how to use it.
 ## Transports
 
 You can choose between multiple transports; they are npm packages called zipkin-transport-*,
-where * is e.g. "kafka" or "scribe". Every package has its own README.md which describes how to use it.
+where * is e.g. "http", "kafka" or "scribe". Every package has its own README.md which describes how to use it.
 
 
 ## Developing
