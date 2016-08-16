@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-memcached",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Interceptor for memcached clients",
   "main": "src/zipkinClient.js",
   "scripts": {
@@ -11,6 +11,6 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "memcached": "^2.2.2",
-    "zipkin": "^0.2.5"
+    "zipkin": "^0.2.6"
   }
 }
