@@ -5,6 +5,7 @@ class HttpLogger {
   constructor({endpoint, httpInterval = 1000}) {
     this.endpoint = endpoint;
     this.queue = [];
+    this.httpInterval = httpInterval;
 
     const timer = setInterval(() => {
       this.processQueue();
@@ -16,6 +17,10 @@ class HttpLogger {
 
   logSpan(span) {
     this.queue.push(span.toJSON());
+
+    // Schedule a timeout so logs will also be processed
+    // when the node process is about to exit
+    this.timeoutTimer = setTimeout(() => {}, this.httpInterval);
   }
 
   processQueue() {
@@ -34,6 +39,11 @@ class HttpLogger {
             `${response.status}, body: ${postBody}`);
         }
         this.queue.length = 0;
+
+        // Clear the timeout timer when the queue is empty so
+        // if the node process is about to exit, it is not hold back by the timeout
+        clearTimeout(this.timeoutTimer);
+        this.timeoutTimer = null;
       }).catch((error) => {
         console.error('Error sending Zipkin data', error);
         this.queue.length = 0;
