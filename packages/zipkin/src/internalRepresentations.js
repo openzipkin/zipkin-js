@@ -26,11 +26,10 @@ Endpoint.prototype.toJSON = function toJSON() {
   };
 };
 
-function ZipkinAnnotation({timestamp, value, endpoint, duration}) {
+function ZipkinAnnotation({timestamp, value, endpoint}) {
   this.timestamp = timestamp;
   this.value = value;
   this.endpoint = endpoint;
-  this.duration = duration;
 }
 
 ZipkinAnnotation.prototype.toThrift = function toThrift() {
@@ -41,9 +40,6 @@ ZipkinAnnotation.prototype.toThrift = function toThrift() {
   if (this.endpoint) {
     res.host = this.endpoint.toThrift();
   }
-  if (this.duration) {
-    res.duration = this.duration; // must be in micros
-  }
   return res;
 };
 ZipkinAnnotation.prototype.toJSON = function toJSON() {
@@ -53,9 +49,6 @@ ZipkinAnnotation.prototype.toJSON = function toJSON() {
   };
   if (this.endpoint) {
     res.endpoint = this.endpoint.toJSON();
-  }
-  if (this.duration) {
-    res.duration = this.duration;
   }
   return res;
 };
