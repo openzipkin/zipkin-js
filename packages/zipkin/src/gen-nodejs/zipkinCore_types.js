@@ -104,7 +104,6 @@ Annotation = module.exports.Annotation = function(args) {
   this.timestamp = null;
   this.value = null;
   this.host = null;
-  this.duration = null;
   if (args) {
     if (args.timestamp !== undefined && args.timestamp !== null) {
       this.timestamp = args.timestamp;
@@ -114,9 +113,6 @@ Annotation = module.exports.Annotation = function(args) {
     }
     if (args.host !== undefined && args.host !== null) {
       this.host = new ttypes.Endpoint(args.host);
-    }
-    if (args.duration !== undefined && args.duration !== null) {
-      this.duration = args.duration;
     }
   }
 };
@@ -156,13 +152,6 @@ Annotation.prototype.read = function(input) {
         input.skip(ftype);
       }
       break;
-      case 4:
-      if (ftype == Thrift.Type.I32) {
-        this.duration = input.readI32();
-      } else {
-        input.skip(ftype);
-      }
-      break;
       default:
         input.skip(ftype);
     }
@@ -187,11 +176,6 @@ Annotation.prototype.write = function(output) {
   if (this.host !== null && this.host !== undefined) {
     output.writeFieldBegin('host', Thrift.Type.STRUCT, 3);
     this.host.write(output);
-    output.writeFieldEnd();
-  }
-  if (this.duration !== null && this.duration !== undefined) {
-    output.writeFieldBegin('duration', Thrift.Type.I32, 4);
-    output.writeI32(this.duration);
     output.writeFieldEnd();
   }
   output.writeFieldStop();

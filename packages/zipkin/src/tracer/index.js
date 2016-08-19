@@ -73,18 +73,17 @@ class Tracer {
     return this._ctxImpl.getContext() || this._defaultTraceId;
   }
 
-  recordAnnotation(annotation, duration) {
+  recordAnnotation(annotation) {
     this.recorder.record(new Record({
       traceId: this.id,
       timestamp: now(),
-      annotation,
-      duration: fromNullable(duration)
+      annotation
     }));
   }
 
-  recordMessage(message, duration) {
+  recordMessage(message) {
     this.recordAnnotation(
-      new Annotation.Message(message), duration
+      new Annotation.Message(message)
     );
   }
 
