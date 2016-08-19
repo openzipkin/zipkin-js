@@ -1,4 +1,5 @@
 const sinon = require('sinon');
+const lolex = require('lolex');
 const Tracer = require('../src/tracer');
 const BatchRecorder = require('../src/batch-recorder');
 const TraceId = require('../src/tracer/TraceId');
@@ -53,5 +54,66 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.annotations[0].value).to.equal('sr');
       expect(loggedSpan.annotations[1].value).to.equal('ss');
     });
+  });
+
+  it('should set MutableSpan.started to first record', () => {
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.setId(new TraceId({
+        traceId: None,
+        parentId: new Some('a'),
+        spanId: 'c',
+        sampled: new Some(true)
+      }));
+      const clock = lolex.install(12345678);
+      trace.recordServiceName('SmoothieStore');
+
+      clock.tick(1); // everything else is beyond this
+      trace.recordRpc('buySmoothie');
+      trace.recordBinary('taste', 'banana');
+      trace.recordAnnotation(new Annotation.ServerRecv());
+      trace.recordAnnotation(new Annotation.ServerSend());
+
+      const loggedSpan = logSpan.getCall(0).args[0];
+
+      expect(loggedSpan.started).to.equal(12345678000);
+
+      clock.uninstall();
+    });
+  });
+
+  it('should flush Spans not finished within a minute timeout', () => {
+    const clock = lolex.install();
+
+    const logSpan = sinon.spy();
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.setId(new TraceId({
+        traceId: None,
+        parentId: new Some('a'),
+        spanId: 'c',
+        sampled: new Some(true)
+      }));
+
+      trace.recordServiceName('SmoothieStore');
+
+      clock.tick('02'); // polling interval is every second
+      expect(logSpan.calledOnce).to.equal(false);
+
+      clock.tick('01:00'); // 1 minute is the default timeout
+      expect(logSpan.calledOnce).to.equal(true);
+    });
+
+    clock.uninstall();
   });
 });

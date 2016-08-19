@@ -1,6 +1,8 @@
 const sinon = require('sinon');
+const lolex = require('lolex');
 
 const Tracer = require('../src/tracer');
+const Annotation = require('../src/annotation');
 const {Sampler} = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
 const {Some} = require('../src/option');
@@ -60,5 +62,24 @@ describe('Tracer', () => {
 
   it('should set sampled flag when shouldSample is false', done => {
     runTest(false, done);
+  });
+
+  it('should log timestamps in microseconds', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      const clock = lolex.install(12345678);
+      trace.recordAnnotation(new Annotation.ServerSend());
+      clock.tick(1); // everything else is beyond this
+      trace.recordMessage('error');
+
+      expect(record.getCall(0).args[0].timestamp).to.equal(12345678000);
+      expect(record.getCall(1).args[0].timestamp).to.equal(12345679000);
+
+      clock.uninstall();
+    });
   });
 });

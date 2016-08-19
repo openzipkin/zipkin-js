@@ -1,4 +1,4 @@
+// Returns the current time in epoch microseconds
 module.exports.now = function now() {
-  const d = new Date();
-  return d.getTime() * 1000 + d.getMilliseconds();
+  return new Date().getTime() * 1000;
 };
