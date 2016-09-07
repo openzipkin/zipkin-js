@@ -19,7 +19,7 @@ const kafkaRecorder = new BatchRecorder({
 });
 
 const tracer = new Tracer({
-  kafkaRecorder,
+  recorder: kafkaRecorder,
   ctxImpl // this would typically be a CLSContext or ExplicitContext
 });
 ```
