@@ -82,4 +82,48 @@ describe('express middleware - integration test', () => {
       });
     });
   });
+  it('should properly report the URL with a query string', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    ctxImpl.scoped(() => {
+      const app = express();
+      app.use(middleware({
+        tracer,
+        serviceName: 'service-a'
+      }));
+      app.get('/foo', (req, res) => {
+        // Use setTimeout to test that the trace context is propagated into the callback
+        const ctx = ctxImpl.getContext();
+        setTimeout(() => {
+          ctxImpl.letContext(ctx, () => {
+            tracer.recordBinary('message', 'hello from within app');
+            res.status(202).json({status: 'OK'});
+          });
+        }, 10);
+      });
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const url = `http://127.0.0.1:${port}/foo?abc=123`;
+        fetch(url, {
+          method: 'get'
+        }).then(res => res.json()).then(() => {
+          server.close();
+
+          const annotations = record.args.map(args => args[0]);
+
+          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[2].annotation.key).to.equal('http.url');
+          expect(annotations[2].annotation.value).to.equal(url);
+          done();
+        })
+        .catch(err => {
+          server.close();
+          done(err);
+        });
+      });
+    });
+  });
 });
