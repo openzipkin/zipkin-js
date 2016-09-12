@@ -23,6 +23,16 @@ function stringToIntOption(str) {
   }
 }
 
+function formatRequestUrl(req) {
+  const parsed = url.parse(req.originalUrl);
+  return url.format({
+    protocol: req.protocol,
+    host: req.get('host'),
+    pathname: parsed.pathname,
+    search: parsed.search
+  });
+}
+
 module.exports = function expressMiddleware({tracer, serviceName = 'unknown', port = 0}) {
   return function zipkinExpressMiddleware(req, res, next) {
     tracer.scoped(() => {
@@ -70,11 +80,7 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
 
       tracer.recordServiceName(serviceName);
       tracer.recordRpc(req.method);
-      tracer.recordBinary('http.url', url.format({
-        protocol: req.protocol,
-        host: req.get('host'),
-        pathname: req.originalUrl
-      }));
+      tracer.recordBinary('http.url', formatRequestUrl(req));
       tracer.recordAnnotation(new Annotation.ServerRecv());
       tracer.recordAnnotation(new Annotation.LocalAddr({port}));
 
