@@ -1,12 +1,21 @@
 const {Some, None, verifyIsOptional} = require('../option');
 
+// truncates a 128 bit hex-encoded trace ID to its lower 64 bits
+function coerceTo64Bit(str) {
+  if (str.length <= 16) {
+    return str;
+  } else {
+    return str.substr(str.length - 16);
+  }
+}
+
 class TraceId {
   constructor(params) {
     const {traceId = None, parentId = None, spanId, sampled = None, flags = 0} = params;
     verifyIsOptional(traceId);
     verifyIsOptional(parentId);
     verifyIsOptional(sampled);
-    this._traceId = traceId;
+    this._traceId = traceId.map(coerceTo64Bit);
     this._parentId = parentId;
     this._spanId = spanId;
     this._sampled = sampled;

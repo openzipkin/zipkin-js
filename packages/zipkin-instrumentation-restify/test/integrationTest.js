@@ -82,4 +82,56 @@ describe('restify middleware - integration test', () => {
       });
     });
   });
+
+  // Once zipkin supports it, we can add a flag to propagate and report 128-bit
+  // trace identifiers. Until then, tolerantly read them.
+  // https://github.com/openzipkin/zipkin/issues/1298
+  it('should drop high bits of a 128bit X-B3-TraceId', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    ctxImpl.scoped(() => {
+      const app = restify.createServer();
+      app.use(middleware({
+        tracer,
+        serviceName: 'service-a'
+      }));
+      app.post('/foo', (req, res, next) => {
+        // Use setTimeout to test that the trace context is propagated into the callback
+        const ctx = ctxImpl.getContext();
+        setTimeout(() => {
+          ctxImpl.letContext(ctx, () => {
+            tracer.recordBinary('message', 'hello from within app');
+            res.send(202, {status: 'OK'});
+          });
+        }, 10);
+        return next();
+      });
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const url = `http://127.0.0.1:${port}/foo`;
+        fetch(url, {
+          method: 'post',
+          headers: {
+            'X-B3-TraceId': '863ac35c9f6413ad48485a3953bb6124',
+            'X-B3-SpanId': '48485a3953bb6124',
+            'X-B3-Flags': '1'
+          }
+        }).then(res => res.json()).then(() => {
+          server.close();
+
+          const annotations = record.args.map(args => args[0]);
+
+          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('48485a3953bb6124'));
+          done();
+        })
+        .catch(err => {
+          server.close();
+          done(err);
+        });
+      });
+    });
+  });
 });
