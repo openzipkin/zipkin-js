@@ -2,7 +2,7 @@ const sinon = require('sinon');
 const {Tracer, ExplicitContext} = require('zipkin');
 const zipkinClient = require('../src/zipkinClient');
 
-const membachedConnectionOptions = {
+const memcachedConnectionOptions = {
   timeout: 1000,
   idle: 1000,
   failures: 0,
@@ -13,10 +13,10 @@ const membachedConnectionOptions = {
 const Memcached = require('memcached');
 
 function getMemcached(tracer) {
-  return new (zipkinClient(tracer, Memcached))('localhost:11211', membachedConnectionOptions);
+  return new (zipkinClient(tracer, Memcached))('localhost:11211', memcachedConnectionOptions);
 }
 
-describe('membached interceptor', () => {
+describe('memcached interceptor', () => {
   it('should add zipkin annotations', (done) => {
     const ctxImpl = new ExplicitContext();
     const recorder = {record: sinon.spy()};
