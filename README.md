@@ -25,6 +25,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [fetch](packages/zipkin-instrumentation-fetch) (zipkin-instrumentation-fetch)
 - [hapi](packages/zipkin-instrumentation-hapi) (zipkin-instrumentation-hapi)
 - [memcached](packages/zipkin-instrumentation-memcached) (zipkin-instrumentation-memcached)
+- [redis](packages/zipkin-instrumentation-redis) (zipkin-instrumentation-redis)
 - [restify](packages/zipkin-instrumentation-restify) (zipkin-instrumentation-restify)
 
 Every module has a README.md file that describes how to use it.
