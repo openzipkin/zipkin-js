@@ -10,6 +10,7 @@ script:
 
 services:
   - memcached
+  - redis
 
 compiler: clang-3.6
 env:
