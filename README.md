@@ -20,19 +20,26 @@ Every instrumentation has an npm package called zipkin-instrumentation-*.
 
 At the time of writing, zipkin-js instruments these libraries:
 
-- cujojs/rest (zipkin-instrumentation-cujojs-rest)
-- express (zipkin-instrumentation-express)
-- restify (zipkin-instrumentation-restify)
-- fetch (zipkin-instrumentation-fetch)
-- memcached (zipkin-instrumentation-memcached)
-- hapi.js (zipkin-instrumentation-hapi)
+- [cujojs/rest](packages/zipkin-instrumentation-cujojs-rest) (zipkin-instrumentation-cujojs-rest)
+- [express](packages/zipkin-instrumentation-express) (zipkin-instrumentation-express)
+- [fetch](packages/zipkin-instrumentation-fetch) (zipkin-instrumentation-fetch)
+- [hapi](packages/zipkin-instrumentation-hapi) (zipkin-instrumentation-hapi)
+- [memcached](packages/zipkin-instrumentation-memcached) (zipkin-instrumentation-memcached)
+- [restify](packages/zipkin-instrumentation-restify) (zipkin-instrumentation-restify)
 
 Every module has a README.md file that describes how to use it.
 
 ## Transports
 
-You can choose between multiple transports; they are npm packages called zipkin-transport-*,
-where * is e.g. "http", "kafka" or "scribe". Every package has its own README.md which describes how to use it.
+You can choose between multiple transports; they are npm packages called zipkin-transport-*.
+
+Currently, the following transports are available:
+
+- [http](packages/zipkin-transport-http)
+- [kafka](packages/zipkin-transport-kafka)
+- [scribe](packages/zipkin-transport-scribe)
+
+Every package has its own README.md which describes how to use it.
 
 
 ## Developing
