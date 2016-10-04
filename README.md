@@ -59,4 +59,6 @@ Running code style linting: `npm run lint`
 
 ## Publishing
 
-Log in to npm with the "OpenZipkin" user. Then, run `npm run lerna-publish`.
+If you are a user waiting for a merged feature to get released, nag us on the related pull request or [gitter](https://gitter.im/openzipkin/zipkin).
+
+The actual publish process is easy: Log in to npm with the "OpenZipkin" user. Then, run `npm run lerna-publish`.
