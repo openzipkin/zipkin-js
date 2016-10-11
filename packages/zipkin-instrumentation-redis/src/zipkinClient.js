@@ -14,7 +14,6 @@ module.exports = function zipkinClient(tracer, redis, options, serviceName = 're
     tracer.recordAnnotation(new Annotation.ClientSend());
     tracer.recordServiceName(serviceName);
     tracer.recordRpc(rpc);
-    tracer.recordBinary('redis.key', rpc);
   }
 
 

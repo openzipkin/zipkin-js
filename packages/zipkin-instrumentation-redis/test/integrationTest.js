@@ -29,7 +29,7 @@ describe('redis interceptor', () => {
         redis.get('ping', () => {
           const annotations = recorder.record.args.map(args => args[0]);
           const firstAnn = annotations[0];
-          expect(annotations).to.have.length(10);
+          expect(annotations).to.have.length(8);
 
           function runTest(start, stop) {
             let lastSpanId;
@@ -41,12 +41,12 @@ describe('redis interceptor', () => {
             });
           }
 
-          runTest(0, 5);
-          runTest(5, 10);
+          runTest(0, 4);
+          runTest(4, 8);
 
           expect(
             annotations[0].traceId.spanId
-          ).not.to.equal(annotations[5].traceId.spanId);
+          ).not.to.equal(annotations[4].traceId.spanId);
 
           annotations.forEach(ann => {
             expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
