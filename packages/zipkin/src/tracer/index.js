@@ -21,6 +21,8 @@ class Tracer {
     this.sampler = sampler;
     this._ctxImpl = ctxImpl;
     this._defaultTraceId = this.createRootId();
+    this._startTimestamp = now();
+    this._startTick = process && process.hrtime ? process.hrtime() : undefined;
   }
 
   scoped(callback) {
@@ -76,7 +78,7 @@ class Tracer {
   recordAnnotation(annotation) {
     this.recorder.record(new Record({
       traceId: this.id,
-      timestamp: now(),
+      timestamp: now(this._startTimestamp, this._startTick),
       annotation
     }));
   }

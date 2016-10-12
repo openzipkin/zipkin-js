@@ -45,7 +45,7 @@ class BatchRecorder {
       span = new MutableSpan(id);
     }
     updater(span);
-    if (span.complete) {
+    if (span.endTimestamp) {
       this._writeSpan(id);
     } else {
       this.partialSpans.set(id, span);
@@ -53,7 +53,7 @@ class BatchRecorder {
   }
 
   _timedOut(span) {
-    return span.started + this.timeout < now();
+    return span.startTimestamp + this.timeout < now();
   }
 
 

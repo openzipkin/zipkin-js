@@ -1,3 +1,4 @@
+const lolex = require('lolex');
 const ExplicitContext = require('../src/explicit-context.js');
 
 describe('ExplicitContext', () => {
@@ -43,6 +44,8 @@ describe('ExplicitContext', () => {
   });
 
   it('does not support async context', done => {
+    const clock = lolex.install();
+
     const ctx = new ExplicitContext();
     function callback() {
       expect(ctx.getContext()).to.equal(null);
@@ -51,5 +54,8 @@ describe('ExplicitContext', () => {
     ctx.letContext('foo', () => {
       setTimeout(callback, 10);
     });
+
+    clock.tick(10);
+    clock.uninstall();
   });
 });

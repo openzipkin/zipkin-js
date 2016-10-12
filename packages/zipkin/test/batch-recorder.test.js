@@ -44,7 +44,6 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.traceId.traceId).to.equal('a');
       expect(loggedSpan.traceId.parentId).to.equal('a');
       expect(loggedSpan.traceId.spanId).to.equal('c');
-      expect(loggedSpan.complete).to.equal(true);
       expect(loggedSpan.name).to.eql(new Some('buySmoothie'));
       expect(loggedSpan.service).to.eql(new Some('SmoothieStore'));
       expect(loggedSpan.endpoint.host).to.equal(2130706433);
@@ -56,7 +55,8 @@ describe('Batch Recorder', () => {
     });
   });
 
-  it('should set MutableSpan.started to first record', () => {
+  it('should set MutableSpan.startTimestamp to first record', () => {
+    const clock = lolex.install(12345678);
     const logSpan = sinon.spy();
 
     const ctxImpl = new ExplicitContext();
@@ -71,10 +71,7 @@ describe('Batch Recorder', () => {
         spanId: 'c',
         sampled: new Some(true)
       }));
-      const clock = lolex.install(12345678);
       trace.recordServiceName('SmoothieStore');
-
-      clock.tick(1); // everything else is beyond this
       trace.recordRpc('buySmoothie');
       trace.recordBinary('taste', 'banana');
       trace.recordAnnotation(new Annotation.ServerRecv());
@@ -82,7 +79,7 @@ describe('Batch Recorder', () => {
 
       const loggedSpan = logSpan.getCall(0).args[0];
 
-      expect(loggedSpan.started).to.equal(12345678000);
+      expect(loggedSpan.startTimestamp).to.equal(12345678000);
 
       clock.uninstall();
     });

@@ -85,8 +85,8 @@ BinaryAnnotation.prototype.toJSON = function toJSON() {
 
 function MutableSpan(traceId) {
   this.traceId = traceId;
-  this.complete = false;
-  this.started = now();
+  this.startTimestamp = now();
+  this.startTick = process && process.hrtime ? process.hrtime() : undefined;
   this.name = None;
   this.service = None;
   this.endpoint = new Endpoint({});
@@ -100,11 +100,11 @@ MutableSpan.prototype.setServiceName = function setServiceName(name) {
   this.service = new Some(name);
 };
 MutableSpan.prototype.addAnnotation = function addAnnotation(ann) {
-  if (!this.complete && (
+  if (!this.endTimestamp && (
         ann.value === thriftTypes.CLIENT_RECV ||
         ann.value === thriftTypes.SERVER_SEND
         )) {
-    this.complete = true;
+    this.endTimestamp = now(this.startTimestamp, this.startTick);
   }
   this.annotations.push(ann);
 };
@@ -157,17 +157,25 @@ MutableSpan.prototype.toThrift = function toThrift() {
   return span;
 };
 MutableSpan.prototype.toJSON = function toJSON() {
+  let startedSpan = true;
   const trace = this.traceId;
   const spanJson = {
     traceId: trace.traceId,
     name: this.name.getOrElse('Unknown'),
-    id: trace.spanId,
-    timestamp: this.started
+    id: trace.spanId
   };
   trace._parentId.ifPresent(id => {
     spanJson.parentId = id;
   });
   spanJson.annotations = this.annotations.map(ann => {
+    // In the RPC span model, the client owns the timestamp and duration of the
+    // span. If we were propagated an id, we can assume that we shouldn't report
+    // timestamp or duration, rather let the client do that. Worst case we were
+    // propagated an unreported ID and Zipkin backfills timestamp and duration.
+    if (ann.value === thriftTypes.SERVER_RECV) {
+      // TODO: only set this to false when we know we in an existing trace
+      startedSpan = false;
+    }
     const annotationJson = ann.toJSON();
     this.overrideEndpointJSON(annotationJson);
     annotationJson.endpoint.serviceName = this.service.getOrElse('Unknown');
@@ -179,6 +187,12 @@ MutableSpan.prototype.toJSON = function toJSON() {
     annotationJson.endpoint.serviceName = this.service.getOrElse('Unknown');
     return annotationJson;
   });
+
+  // Log timestamp and duration if this tracer started and completed this span.
+  if (startedSpan && this.endTimestamp) {
+    spanJson.timestamp = this.startTimestamp;
+    spanJson.duration = Math.max(this.endTimestamp - this.startTimestamp, 1);
+  }
   return spanJson;
 };
 MutableSpan.prototype.toString = function toString() {
