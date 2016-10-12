@@ -3,7 +3,7 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
-    "lerna": "2.0.0-beta.9"
+    "lerna": "2.0.0-beta.30"
   },
   "scripts": {
     "lint": "node node_modules/eslint/bin/eslint.js packages",
@@ -22,6 +22,7 @@
     "eslint-plugin-react": "^5.0.1",
     "lerna": "^2.0.0-beta.6",
     "mocha": "^2.4.5",
-    "sinon": "^1.17.4"
+    "lolex": "^1.5.1",
+    "sinon": "^1.17.6"
   }
 }

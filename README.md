@@ -42,6 +42,17 @@ Currently, the following transports are available:
 
 Every package has its own README.md which describes how to use it.
 
+## Clock precision
+
+Zipkin timestamps are microsecond, not millisecond granularity. When running in node.js,
+[process.hrtime](https://nodejs.org/api/process.html#process_process_hrtime_time) is used to
+achieve this.
+
+In browsers, microsecond precision requires installing a shim like [browser-process-hrtime](https://github.com/kumavis/browser-process-hrtime):
+```javascript
+// use higher-precision time than milliseconds
+process.hrtime = require('browser-process-hrtime');
+```
 
 ## Developing
 
