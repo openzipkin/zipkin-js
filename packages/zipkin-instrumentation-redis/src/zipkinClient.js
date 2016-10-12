@@ -1,6 +1,17 @@
 const {Annotation} = require('zipkin');
 const redisCommands = require('redis-commands');
-module.exports = function zipkinClient(tracer, redis, options, serviceName = 'redis') {
+module.exports = function zipkinClient(
+  tracer,
+  redis,
+  options,
+  serviceName = 'unknown',
+  remoteServiceName = 'redis'
+) {
+  const sa = {
+    serviceName: remoteServiceName,
+    host: options.host,
+    port: options.port
+  };
   function mkZipkinCallback(callback, id) {
     return function zipkinCallback(...args) {
       tracer.scoped(() => {
@@ -11,9 +22,10 @@ module.exports = function zipkinClient(tracer, redis, options, serviceName = 're
     };
   }
   function commonAnnotations(rpc) {
-    tracer.recordAnnotation(new Annotation.ClientSend());
-    tracer.recordServiceName(serviceName);
     tracer.recordRpc(rpc);
+    tracer.recordAnnotation(new Annotation.ServiceName(serviceName));
+    tracer.recordAnnotation(new Annotation.ServerAddr(sa));
+    tracer.recordAnnotation(new Annotation.ClientSend());
   }
 
 

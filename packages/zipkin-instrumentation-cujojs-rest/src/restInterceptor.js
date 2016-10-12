@@ -16,7 +16,7 @@ function getRequestMethod(req) {
   return method;
 }
 
-function request(req, {serviceName, tracer}) {
+function request(req, {tracer, serviceName = 'unknown', remoteServiceName}) {
   tracer.scoped(() => {
     tracer.setId(tracer.createChildId());
     const traceId = tracer.id;
@@ -37,6 +37,12 @@ function request(req, {serviceName, tracer}) {
     tracer.recordRpc(method.toUpperCase());
     tracer.recordBinary('http.url', req.path);
     tracer.recordAnnotation(new Annotation.ClientSend());
+    if (remoteServiceName) {
+      // TODO: can we get the host and port of the http connection?
+      tracer.recordAnnotation(new Annotation.ServerAddr({
+        serviceName: remoteServiceName
+      }));
+    }
   });
 
   return req;

@@ -29,11 +29,23 @@ describe('redis interceptor', () => {
         redis.get('ping', () => {
           const annotations = recorder.record.args.map(args => args[0]);
           const firstAnn = annotations[0];
-          expect(annotations).to.have.length(8);
+          expect(annotations).to.have.length(10);
 
           function runTest(start, stop) {
+            const spanAnnotations = annotations.slice(start, stop);
+
+            const sn = spanAnnotations[1].annotation;
+            expect(sn.annotationType).to.equal('ServiceName');
+            expect(sn.serviceName).to.equal('unknown');
+
+            const sa = spanAnnotations[2].annotation;
+            expect(sa.annotationType).to.equal('ServerAddr');
+            expect(sa.serviceName).to.equal('redis');
+            expect(sa.host).to.equal(redisConnectionOptions.host);
+            expect(sa.port).to.equal(redisConnectionOptions.port);
+
             let lastSpanId;
-            annotations.slice(start, stop).forEach((ann) => {
+            spanAnnotations.forEach((ann) => {
               if (!lastSpanId) {
                 lastSpanId = ann.traceId.spanId;
               }
@@ -41,12 +53,13 @@ describe('redis interceptor', () => {
             });
           }
 
-          runTest(0, 4);
-          runTest(4, 8);
+          // we expect two spans, run annotations tests for each
+          runTest(0, annotations.length / 2);
+          runTest(annotations.length / 2, annotations.length);
 
           expect(
             annotations[0].traceId.spanId
-          ).not.to.equal(annotations[4].traceId.spanId);
+          ).not.to.equal(annotations[annotations.length / 2].traceId.spanId);
 
           annotations.forEach(ann => {
             expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);

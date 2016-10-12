@@ -33,11 +33,21 @@ describe('memcached interceptor', () => {
           const annotations = recorder.record.args.map(args => args[0]);
           const firstAnn = annotations[0];
 
-          expect(annotations).to.have.length(10);
+          expect(annotations).to.have.length(12);
 
           function runTest(start, stop) {
+            const spanAnnotations = annotations.slice(start, stop);
+
+            const sn = spanAnnotations[1].annotation;
+            expect(sn.annotationType).to.equal('ServiceName');
+            expect(sn.serviceName).to.equal('unknown');
+
+            const sa = spanAnnotations[4].annotation;
+            expect(sa.annotationType).to.equal('ServerAddr');
+            expect(sa.serviceName).to.equal('memcached');
+
             let lastSpanId;
-            annotations.slice(start, stop).forEach((ann) => {
+            spanAnnotations.forEach((ann) => {
               if (!lastSpanId) {
                 lastSpanId = ann.traceId.spanId;
               }
@@ -45,12 +55,13 @@ describe('memcached interceptor', () => {
             });
           }
 
-          runTest(0, 5);
-          runTest(5, 10);
+          // we expect two spans, run annotations tests for each
+          runTest(0, annotations.length / 2);
+          runTest(annotations.length / 2, annotations.length);
 
           expect(
             annotations[0].traceId.spanId
-          ).not.to.equal(annotations[5].traceId.spanId);
+          ).not.to.equal(annotations[annotations.length / 2].traceId.spanId);
 
           annotations.forEach(ann => {
             expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);

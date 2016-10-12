@@ -12,7 +12,7 @@ const {restInterceptor} = require('zipkin-instrumentation-cujojs-rest');
 const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
 
 const nameOfRemoteService = 'youtube';
-const client = rest.wrap(restInterceptor, {tracer, serviceName: nameOfRemoteService});
+const client = rest.wrap(restInterceptor, {tracer, remoteServiceName: nameOfRemoteService});
 
 // Your application code here
 client('http://www.youtube.com/').then(success => {

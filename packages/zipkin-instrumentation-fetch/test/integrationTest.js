@@ -28,7 +28,11 @@ describe('wrapFetch', () => {
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
 
-    const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service', tracer});
+    const fetch = wrapFetch(nodeFetch, {
+      tracer,
+      serviceName: 'caller',
+      remoteServiceName: 'callee'
+    });
 
     ctxImpl.scoped(() => {
       const id = tracer.createChildId();
@@ -47,7 +51,7 @@ describe('wrapFetch', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('user-service');
+          expect(annotations[0].annotation.serviceName).to.equal('caller');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -58,11 +62,14 @@ describe('wrapFetch', () => {
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[4].annotation.key).to.equal('http.status_code');
-          expect(annotations[4].annotation.value).to.equal('202');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[4].annotation.serviceName).to.equal('callee');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('202');
+
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
           const traceIdOnServer = data.traceId;
           expect(traceIdOnServer).to.equal(traceId);

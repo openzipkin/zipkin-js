@@ -45,9 +45,9 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.traceId.parentId).to.equal('a');
       expect(loggedSpan.traceId.spanId).to.equal('c');
       expect(loggedSpan.name).to.eql(new Some('buySmoothie'));
-      expect(loggedSpan.service).to.eql(new Some('SmoothieStore'));
       expect(loggedSpan.endpoint.host).to.equal(2130706433);
       expect(loggedSpan.endpoint.port).to.equal(7070);
+      expect(loggedSpan.service).to.eql(new Some('SmoothieStore'));
       expect(loggedSpan.binaryAnnotations[0].key).to.equal('taste');
       expect(loggedSpan.binaryAnnotations[0].value).to.equal('banana');
       expect(loggedSpan.annotations[0].value).to.equal('sr');
@@ -112,5 +112,47 @@ describe('Batch Recorder', () => {
     });
 
     clock.uninstall();
+  });
+
+  it('should capture ServerAddr event', () => {
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.setId(new TraceId({
+        traceId: None,
+        parentId: new Some('a'),
+        spanId: 'c',
+        sampled: new Some(true)
+      }));
+      trace.recordServiceName('client');
+      trace.recordRpc('call');
+      trace.recordAnnotation(new Annotation.ClientSend());
+      trace.recordAnnotation(new Annotation.ServerAddr({
+        serviceName: 'server',
+        host: new InetAddress('127.0.0.2'),
+        port: 7071
+      }));
+      trace.recordAnnotation(new Annotation.ClientRecv());
+
+      const loggedSpan = logSpan.getCall(0).args[0];
+
+      const spanJson = loggedSpan.toJSON();
+      expect(spanJson.binaryAnnotations).to.deep.equal([
+        {
+          key: 'sa',
+          value: true,
+          endpoint: {
+            serviceName: 'server',
+            ipv4: '127.0.0.2',
+            port: 7071
+          }
+        }
+      ]);
+    });
   });
 });
