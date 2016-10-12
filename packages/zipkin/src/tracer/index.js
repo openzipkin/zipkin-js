@@ -5,7 +5,7 @@ const Annotation = require('../annotation');
 const Record = require('./record');
 const TraceId = require('./TraceId');
 const randomTraceId = require('./randomTraceId');
-const {now} = require('../time');
+const {now, hrtime} = require('../time');
 
 function requiredArg(name) {
   throw new Error(`Tracer: Missing required argument ${name}.`);
@@ -22,7 +22,7 @@ class Tracer {
     this._ctxImpl = ctxImpl;
     this._defaultTraceId = this.createRootId();
     this._startTimestamp = now();
-    this._startTick = process && process.hrtime ? process.hrtime() : undefined;
+    this._startTick = hrtime();
   }
 
   scoped(callback) {

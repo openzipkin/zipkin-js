@@ -1,5 +1,5 @@
 const thriftTypes = require('./gen-nodejs/zipkinCore_types');
-const {now} = require('./time');
+const {now, hrtime} = require('./time');
 const {Some, None} = require('./option');
 
 function Endpoint({host = 0, port = 0}) {
@@ -86,7 +86,7 @@ BinaryAnnotation.prototype.toJSON = function toJSON() {
 function MutableSpan(traceId) {
   this.traceId = traceId;
   this.startTimestamp = now();
-  this.startTick = process && process.hrtime ? process.hrtime() : undefined;
+  this.startTick = hrtime();
   this.name = None;
   this.service = None;
   this.endpoint = new Endpoint({});
