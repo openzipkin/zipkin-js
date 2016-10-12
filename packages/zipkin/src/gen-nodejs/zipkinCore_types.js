@@ -478,3 +478,4 @@ ttypes.CLIENT_SEND = 'cs';
 ttypes.CLIENT_RECV = 'cr';
 ttypes.SERVER_SEND = 'ss';
 ttypes.SERVER_RECV = 'sr';
+ttypes.SERVER_ADDR = 'sa';

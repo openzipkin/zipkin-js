@@ -21,7 +21,11 @@ describe('cujojs rest interceptor - integration test', () => {
       const tracer = new Tracer({recorder, ctxImpl});
 
       tracer.scoped(() => {
-        const client = rest.wrap(restInterceptor, {tracer, serviceName: 'service-a'});
+        const client = rest.wrap(restInterceptor, {
+          tracer,
+          serviceName: 'caller',
+          remoteServiceName: 'callee'
+        });
         const port = server.address().port;
         const path = `http://127.0.0.1:${port}/abc`;
         client(path).then(successResponse => {
@@ -37,7 +41,7 @@ describe('cujojs rest interceptor - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('caller');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('GET');
@@ -48,11 +52,14 @@ describe('cujojs rest interceptor - integration test', () => {
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[4].annotation.key).to.equal('http.status_code');
-          expect(annotations[4].annotation.value).to.equal('202');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[4].annotation.serviceName).to.equal('callee');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('202');
+
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
           const traceIdOnServer = responseData.traceId;
           expect(traceIdOnServer).to.equal(traceId);

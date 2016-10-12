@@ -147,4 +147,32 @@ describe('JSON Formatting', () => {
 
     clock.uninstall();
   });
+
+  it('should set server address on client span', () => {
+    const clientSpan = new MutableSpan(new TraceId({
+      traceId: new Some('a'),
+      parentId: new Some('b'),
+      spanId: 'c',
+      sampled: None
+    }));
+    clientSpan.setName('GET');
+    clientSpan.setServerAddr(new Endpoint({
+      serviceName: 'there',
+      host: 171520596,
+      port: 80
+    }));
+
+    const spanJson = clientSpan.toJSON();
+    expect(spanJson.binaryAnnotations).to.deep.equal([
+      {
+        key: 'sa',
+        value: true,
+        endpoint: {
+          serviceName: 'there',
+          ipv4: '10.57.50.84',
+          port: 80
+        }
+      }
+    ]);
+  });
 });

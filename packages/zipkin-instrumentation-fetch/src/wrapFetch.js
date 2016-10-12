@@ -15,7 +15,7 @@ function getHeaders(traceId, opts) {
   return headers;
 }
 
-function wrapFetch(fetch, {serviceName, tracer}) {
+function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) {
   return function zipkinfetch(url, opts = {}) {
     return new Promise((resolve, reject) => {
       tracer.scoped(() => {
@@ -27,6 +27,12 @@ function wrapFetch(fetch, {serviceName, tracer}) {
         tracer.recordRpc(method.toUpperCase());
         tracer.recordBinary('http.url', url);
         tracer.recordAnnotation(new Annotation.ClientSend());
+        if (remoteServiceName) {
+          // TODO: can we get the host and port of the http connection?
+          tracer.recordAnnotation(new Annotation.ServerAddr({
+            serviceName: remoteServiceName
+          }));
+        }
 
         const headers = getHeaders(traceId, opts);
         const zipkinOpts = Object.assign({}, opts, {headers});

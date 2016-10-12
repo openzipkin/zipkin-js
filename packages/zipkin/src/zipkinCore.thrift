@@ -9,6 +9,7 @@ const string CLIENT_SEND = "cs"
 const string CLIENT_RECV = "cr"
 const string SERVER_SEND = "ss"
 const string SERVER_RECV = "sr"
+const string SERVER_ADDR = "sa"
 
 # this represents a host and port in a network
 struct Endpoint {
@@ -43,4 +44,3 @@ struct Span {
   8: list<BinaryAnnotation> binary_annotations # any binary annotations
   9: optional bool debug = 0       # if true, we DEMAND that this span passes all samplers
 }
-

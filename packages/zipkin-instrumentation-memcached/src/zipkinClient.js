@@ -1,10 +1,20 @@
 const {Annotation} = require('zipkin');
 
-module.exports = function zipkinClient(tracer, Memcached, serviceName = 'memcached') {
+module.exports = function zipkinClient(
+  tracer,
+  Memcached,
+  serviceName = 'unknown',
+  remoteServiceName = 'memcached'
+) {
   function mkZipkinCallback(callback, id) {
     return function zipkinCallback(...args) {
       tracer.scoped(() => {
         tracer.setId(id);
+        // TODO: parse host and port from details in callback
+        // https://github.com/3rd-Eden/memcached#details-object
+        tracer.recordAnnotation(new Annotation.ServerAddr({
+          serviceName: remoteServiceName
+        }));
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
       callback.apply(this, args);
@@ -12,7 +22,7 @@ module.exports = function zipkinClient(tracer, Memcached, serviceName = 'memcach
   }
   function commonAnnotations(rpc) {
     tracer.recordAnnotation(new Annotation.ClientSend());
-    tracer.recordServiceName(serviceName);
+    tracer.recordAnnotation(new Annotation.ServiceName(serviceName));
     tracer.recordRpc(rpc);
   }
 

@@ -107,6 +107,13 @@ class BatchRecorder {
             port: rec.annotation.port
           }));
           break;
+        case 'ServerAddr':
+          span.setServerAddr(new Endpoint({
+            serviceName: rec.annotation.serviceName,
+            host: rec.annotation.host ? rec.annotation.host.toInt() : undefined,
+            port: rec.annotation.port
+          }));
+          break;
         default:
           break;
       }

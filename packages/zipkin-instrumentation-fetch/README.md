@@ -14,7 +14,7 @@ const wrapFetch = require('zipkin-instrumentation-fetch');
 const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
 
 const nameOfRemoteService = 'youtube';
-const zipkinFetch = wrapFetch(fetch, {tracer, serviceName: nameOfRemoteService});
+const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName: nameOfRemoteService});
 
 // Your application code here
 zipkinFetch('http://www.youtube.com/').then(res => res.json()).then(data => ...);

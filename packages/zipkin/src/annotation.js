@@ -39,12 +39,13 @@ ClientAddr.prototype.toString = function() {
   return `ClientAddr(host="${this.host}", port=${this.port})`;
 };
 
-function ServerAddr({host, port}) {
-  this.host = host;
-  this.port = port;
+function ServerAddr({serviceName, host, port}) {
+  this.serviceName = serviceName;
+  this.host = host || undefined;
+  this.port = port || 0;
 }
 ServerAddr.prototype.toString = function() {
-  return `ServerAddr(host="${this.host}", port=${this.port})`;
+  return `ServerAddr(serviceName="${this.serviceName}", host="${this.host}", port=${this.port})`;
 };
 
 function LocalAddr({host, port}) {

@@ -2,25 +2,28 @@ const thriftTypes = require('./gen-nodejs/zipkinCore_types');
 const {now, hrtime} = require('./time');
 const {Some, None} = require('./option');
 
-function Endpoint({host = 0, port = 0}) {
-  this.host = host;
-  this.port = port;
+function Endpoint({serviceName, host, port}) {
+  this.serviceName = serviceName;
+  this.host = host || 0;
+  this.port = port || 0;
 }
 function formatIPv4(host) {
   return host ?
     `${host >> 24 & 255}.${(host >> 16) & 255}.${(host >> 8) & 255}.${host & 255}` : 0;
 }
 Endpoint.prototype.isUnknown = function isUnknown() {
-  return this.host === 0 && this.port === 0;
+  return this.serviceName === undefined || this.host === 0 && this.port === 0;
 };
 Endpoint.prototype.toThrift = function toThrift() {
   return new thriftTypes.Endpoint({
+    service_name: this.serviceName,
     ipv4: this.host,
     port: this.port
   });
 };
 Endpoint.prototype.toJSON = function toJSON() {
   return {
+    serviceName: this.serviceName,
     ipv4: formatIPv4(this.host),
     port: this.port
   };
@@ -83,6 +86,30 @@ BinaryAnnotation.prototype.toJSON = function toJSON() {
   return res;
 };
 
+function Address({key, endpoint}) {
+  this.key = key;
+  this.endpoint = endpoint;
+}
+Address.prototype.toThrift = function toThrift() {
+  const value = new Uint8Array(1);
+  value[0] = 1;
+  const res = new thriftTypes.BinaryAnnotation({
+    key: this.key,
+    value,
+    annotation_type: thriftTypes.AnnotationType.BOOL,
+    host: this.endpoint.toThrift()
+  });
+  return res;
+};
+Address.prototype.toJSON = function toJSON() {
+  const res = {
+    key: this.key,
+    value: true,
+    endpoint: this.endpoint.toJSON()
+  };
+  return res;
+};
+
 function MutableSpan(traceId) {
   this.traceId = traceId;
   this.startTimestamp = now();
@@ -90,6 +117,7 @@ function MutableSpan(traceId) {
   this.name = None;
   this.service = None;
   this.endpoint = new Endpoint({});
+  this.serverAddr = None;
   this.annotations = [];
   this.binaryAnnotations = [];
 }
@@ -98,6 +126,12 @@ MutableSpan.prototype.setName = function setName(name) {
 };
 MutableSpan.prototype.setServiceName = function setServiceName(name) {
   this.service = new Some(name);
+};
+MutableSpan.prototype.setServerAddr = function setServerAddr(ep) {
+  this.serverAddr = new Some(new Address({
+    key: thriftTypes.SERVER_ADDR,
+    endpoint: ep
+  }));
 };
 MutableSpan.prototype.addAnnotation = function addAnnotation(ann) {
   if (!this.endTimestamp && (
@@ -154,6 +188,10 @@ MutableSpan.prototype.toThrift = function toThrift() {
     return a;
   });
 
+  this.serverAddr.ifPresent(sa => {
+    span.binary_annotations.push(sa.toThrift());
+  });
+
   return span;
 };
 MutableSpan.prototype.toJSON = function toJSON() {
@@ -186,6 +224,9 @@ MutableSpan.prototype.toJSON = function toJSON() {
     this.overrideEndpointJSON(annotationJson);
     annotationJson.endpoint.serviceName = this.service.getOrElse('Unknown');
     return annotationJson;
+  });
+  this.serverAddr.ifPresent(sa => {
+    spanJson.binaryAnnotations.push(sa.toJSON());
   });
 
   // Log timestamp and duration if this tracer started and completed this span.
