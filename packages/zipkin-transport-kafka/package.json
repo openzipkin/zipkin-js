@@ -10,7 +10,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "kafka-node": "^0.5.9"
+    "kafka-node": "^1.0.0"
   },
   "devDependencies": {
     "kafka-please": "^0.1.5",
