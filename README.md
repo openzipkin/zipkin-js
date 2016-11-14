@@ -1,7 +1,5 @@
 [![Build Status](https://travis-ci.org/openzipkin/zipkin-js.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-js)
 
-WARNING: This library is still a work in progress. You may encounter a few bugs!
-
 # Zipkin.js
 
 This is a library for instrumenting Node.js applications. It uses a lot of
