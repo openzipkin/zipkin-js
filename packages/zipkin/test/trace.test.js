@@ -82,4 +82,26 @@ describe('Tracer', () => {
     });
     clock.uninstall();
   });
+
+  it('should create fixed-length 64-bit trace ID by default', () => {
+    const recorder = {
+      record: () => {}
+    };
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({ctxImpl, recorder});
+
+    const rootTracerId = tracer.createRootId();
+    expect(rootTracerId.traceId.length).to.eql(16);
+  });
+
+  it('should create fixed-length 128-bit trace ID on traceId128Bit', () => {
+    const recorder = {
+      record: () => {}
+    };
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({ctxImpl, recorder, traceId128Bit: true});
+
+    const rootTracerId = tracer.createRootId();
+    expect(rootTracerId.traceId.length).to.eql(32);
+  });
 });

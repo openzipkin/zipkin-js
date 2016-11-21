@@ -22,6 +22,7 @@ Endpoint = module.exports.Endpoint = function(args) {
   this.ipv4 = null;
   this.port = null;
   this.service_name = null;
+  this.ipv6 = null;
   if (args) {
     if (args.ipv4 !== undefined && args.ipv4 !== null) {
       this.ipv4 = args.ipv4;
@@ -31,6 +32,9 @@ Endpoint = module.exports.Endpoint = function(args) {
     }
     if (args.service_name !== undefined && args.service_name !== null) {
       this.service_name = args.service_name;
+    }
+    if (args.ipv6 !== undefined && args.ipv6 !== null) {
+      this.ipv6 = args.ipv6;
     }
   }
 };
@@ -69,6 +73,13 @@ Endpoint.prototype.read = function(input) {
         input.skip(ftype);
       }
       break;
+      case 4:
+      if (ftype == Thrift.Type.STRING) {
+        this.ipv6 = input.readBinary();
+      } else {
+        input.skip(ftype);
+      }
+      break;
       default:
         input.skip(ftype);
     }
@@ -93,6 +104,11 @@ Endpoint.prototype.write = function(output) {
   if (this.service_name !== null && this.service_name !== undefined) {
     output.writeFieldBegin('service_name', Thrift.Type.STRING, 3);
     output.writeString(this.service_name);
+    output.writeFieldEnd();
+  }
+  if (this.ipv6 !== null && this.ipv6 !== undefined) {
+    output.writeFieldBegin('ipv6', Thrift.Type.STRING, 4);
+    output.writeBinary(this.ipv6);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -290,6 +306,9 @@ Span = module.exports.Span = function(args) {
   this.annotations = null;
   this.binary_annotations = null;
   this.debug = false;
+  this.timestamp = null;
+  this.duration = null;
+  this.trace_id_high = null;
   if (args) {
     if (args.trace_id !== undefined && args.trace_id !== null) {
       this.trace_id = args.trace_id;
@@ -311,6 +330,15 @@ Span = module.exports.Span = function(args) {
     }
     if (args.debug !== undefined && args.debug !== null) {
       this.debug = args.debug;
+    }
+    if (args.timestamp !== undefined && args.timestamp !== null) {
+      this.timestamp = args.timestamp;
+    }
+    if (args.duration !== undefined && args.duration !== null) {
+      this.duration = args.duration;
+    }
+    if (args.trace_id_high !== undefined && args.trace_id_high !== null) {
+      this.trace_id_high = args.trace_id_high;
     }
   }
 };
@@ -405,6 +433,27 @@ Span.prototype.read = function(input) {
         input.skip(ftype);
       }
       break;
+      case 10:
+      if (ftype == Thrift.Type.I64) {
+        this.timestamp = input.readI64();
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 11:
+      if (ftype == Thrift.Type.I64) {
+        this.duration = input.readI64();
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 12:
+      if (ftype == Thrift.Type.I64) {
+        this.trace_id_high = input.readI64();
+      } else {
+        input.skip(ftype);
+      }
+      break;
       default:
         input.skip(ftype);
     }
@@ -469,6 +518,21 @@ Span.prototype.write = function(output) {
     output.writeBool(this.debug);
     output.writeFieldEnd();
   }
+  if (this.timestamp !== null && this.timestamp !== undefined) {
+    output.writeFieldBegin('timestamp', Thrift.Type.I64, 10);
+    output.writeI64(this.timestamp);
+    output.writeFieldEnd();
+  }
+  if (this.duration !== null && this.duration !== undefined) {
+    output.writeFieldBegin('duration', Thrift.Type.I64, 11);
+    output.writeI64(this.duration);
+    output.writeFieldEnd();
+  }
+  if (this.trace_id_high !== null && this.trace_id_high !== undefined) {
+    output.writeFieldBegin('trace_id_high', Thrift.Type.I64, 12);
+    output.writeI64(this.trace_id_high);
+    output.writeFieldEnd();
+  }
   output.writeFieldStop();
   output.writeStructEnd();
   return;
@@ -478,4 +542,20 @@ ttypes.CLIENT_SEND = 'cs';
 ttypes.CLIENT_RECV = 'cr';
 ttypes.SERVER_SEND = 'ss';
 ttypes.SERVER_RECV = 'sr';
+ttypes.WIRE_SEND = 'ws';
+ttypes.WIRE_RECV = 'wr';
+ttypes.CLIENT_SEND_FRAGMENT = 'csf';
+ttypes.CLIENT_RECV_FRAGMENT = 'crf';
+ttypes.SERVER_SEND_FRAGMENT = 'ssf';
+ttypes.SERVER_RECV_FRAGMENT = 'srf';
+ttypes.HTTP_HOST = 'http.host';
+ttypes.HTTP_METHOD = 'http.method';
+ttypes.HTTP_PATH = 'http.path';
+ttypes.HTTP_URL = 'http.url';
+ttypes.HTTP_STATUS_CODE = 'http.status_code';
+ttypes.HTTP_REQUEST_SIZE = 'http.request.size';
+ttypes.HTTP_RESPONSE_SIZE = 'http.response.size';
+ttypes.LOCAL_COMPONENT = 'lc';
+ttypes.ERROR = 'error';
+ttypes.CLIENT_ADDR = 'ca';
 ttypes.SERVER_ADDR = 'sa';

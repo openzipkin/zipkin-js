@@ -106,10 +106,7 @@ describe('hapi middleware - integration test', () => {
     });
   });
 
-  // Once zipkin supports it, we can add a flag to propagate and report 128-bit
-  // trace identifiers. Until then, tolerantly read them.
-  // https://github.com/openzipkin/zipkin/issues/1298
-  it('should drop high bits of a 128bit X-B3-TraceId', done => {
+  it('should accept a 128bit X-B3-TraceId', done => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -132,17 +129,18 @@ describe('hapi middleware - integration test', () => {
         options: {tracer, serviceName: 'service-a'}
       });
 
+      const traceId = '863ac35c9f6413ad48485a3953bb6124';
       const method = 'POST';
       const url = '/foo';
       const headers = {
-        'X-B3-TraceId': '863ac35c9f6413ad48485a3953bb6124',
+        'X-B3-TraceId': traceId,
         'X-B3-SpanId': '48485a3953bb6124',
         'X-B3-Flags': '1'
       };
       server.inject({method, url, headers}, () => {
         const annotations = record.args.map(args => args[0]);
 
-        annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('48485a3953bb6124'));
+        annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
 
         done();
       });
