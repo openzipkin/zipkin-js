@@ -1,4 +1,4 @@
-const {None, fromNullable} = require('../option');
+const {None, Some, fromNullable} = require('../option');
 const {Sampler, alwaysSample} = require('./sampler');
 
 const Annotation = require('../annotation');
@@ -15,10 +15,16 @@ class Tracer {
   constructor({
     ctxImpl = requiredArg('ctxImpl'),
     recorder = requiredArg('recorder'),
-    sampler = new Sampler(alwaysSample)
+    sampler = new Sampler(alwaysSample),
+    // traceID128Bit enables the generation of 128 bit traceIDs in case the tracer
+    // needs to create a root span. By default regular 64 bit traceIDs are used.
+    // Regardless of this setting, the library will propagate and support both
+    // 64 and 128 bit incoming traces from upstream sources.
+    traceId128Bit = false
   }) {
     this.recorder = recorder;
     this.sampler = sampler;
+    this.traceId128Bit = traceId128Bit;
     this._ctxImpl = ctxImpl;
     this._defaultTraceId = this.createRootId();
     this._startTimestamp = now();
@@ -30,10 +36,14 @@ class Tracer {
   }
 
   createRootId() {
+    const rootSpanId = randomTraceId();
+    const traceId = this.traceId128Bit
+      ? new Some(randomTraceId() + rootSpanId)
+      : None;
     const id = new TraceId({
-      traceId: None,
+      traceId,
       parentId: None,
-      spanId: randomTraceId(),
+      spanId: rootSpanId,
       sampled: None,
       flags: 0
     });

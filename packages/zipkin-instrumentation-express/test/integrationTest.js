@@ -128,10 +128,7 @@ describe('express middleware - integration test', () => {
     });
   });
 
-  // Once zipkin supports it, we can add a flag to propagate and report 128-bit
-  // trace identifiers. Until then, tolerantly read them.
-  // https://github.com/openzipkin/zipkin/issues/1298
-  it('should drop high bits of a 128bit X-B3-TraceId', done => {
+  it('should accept a 128bit X-B3-TraceId', done => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -154,12 +151,13 @@ describe('express middleware - integration test', () => {
         }, 10);
       });
       const server = app.listen(0, () => {
+        const traceId = '863ac35c9f6413ad48485a3953bb6124';
         const port = server.address().port;
         const url = `http://127.0.0.1:${port}/foo`;
         fetch(url, {
           method: 'post',
           headers: {
-            'X-B3-TraceId': '863ac35c9f6413ad48485a3953bb6124',
+            'X-B3-TraceId': traceId,
             'X-B3-SpanId': '48485a3953bb6124',
             'X-B3-Flags': '1'
           }
@@ -168,7 +166,7 @@ describe('express middleware - integration test', () => {
 
           const annotations = record.args.map(args => args[0]);
 
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('48485a3953bb6124'));
+          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
         .catch(err => {

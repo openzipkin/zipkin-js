@@ -172,7 +172,13 @@ MutableSpan.prototype.toThrift = function toThrift() {
     span.parent_id = id;
   });
 
-  span.trace_id = this.traceId.traceId;
+  const traceId = this.traceId.traceId;
+  if (traceId.length <= 16) {
+    span.trace_id = traceId;
+  } else {
+    span.trace_id_high = traceId.substr(0, 16);
+    span.trace_id = traceId.substr(traceId.length - 16);
+  }
   span.name = this.name.getOrElse('Unknown');
   span.debug = this.traceId.isDebug();
 
