@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-scribe",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Transports Zipkin trace data via Scribe to the collector",
   "main": "index.js",
   "scripts": {
@@ -14,6 +14,6 @@
   },
   "devDependencies": {
     "thrift": "^0.9.3",
-    "zipkin": "^0.4.0"
+    "zipkin": "^0.5.0"
   }
 }
