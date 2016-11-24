@@ -44,12 +44,12 @@ class BatchRecorder {
     } else {
       span = new MutableSpan(id);
     }
-    updater(span);
-    if (span.endTimestamp) {
-      this._writeSpan(id);
-    } else {
+    updater(span, () => {
       this.partialSpans.set(id, span);
-    }
+      if (span.endTimestamp) {
+        this._writeSpan(id);
+      }
+    });
   }
 
   _timedOut(span) {
@@ -72,52 +72,56 @@ class BatchRecorder {
     }));
   }
 
-  record(rec) {
-    const id = rec.traceId;
+  _updateSpan(span, rec, done) {
+    let updateFn;
+    switch (rec.annotation.annotationType) {
+      case 'ClientSend':
+        this._annotate(span, rec, thriftTypes.CLIENT_SEND);
+        break;
+      case 'ClientRecv':
+        this._annotate(span, rec, thriftTypes.CLIENT_RECV);
+        break;
+      case 'ServerSend':
+        this._annotate(span, rec, thriftTypes.SERVER_SEND);
+        break;
+      case 'ServerRecv':
+        this._annotate(span, rec, thriftTypes.SERVER_RECV);
+        break;
+      case 'Message':
+        this._annotate(span, rec, rec.annotation.message);
+        break;
+      case 'Rpc':
+        span.setName(rec.annotation.name);
+        break;
+      case 'ServiceName':
+        span.setServiceName(rec.annotation.serviceName);
+        break;
+      case 'BinaryAnnotation':
+        this._binaryAnnotate(span, rec.annotation.key, rec.annotation.value);
+        break;
+      case 'LocalAddr':
+        updateFn = () => Endpoint.createEndpoint(rec.annotation, ep => {
+          span.setEndpoint(ep);
+          done();
+        });
+        break;
+      case 'ServerAddr':
+        updateFn = () => Endpoint.createEndpoint(rec.annotation, ep => {
+          span.setServerAddr(ep);
+          done();
+        });
+        break;
+      default:
+        break;
+    }
+    if (!updateFn) {
+      updateFn = () => done();
+    }
+    return updateFn();
+  }
 
-    this._updateSpanMap(id, span => {
-      switch (rec.annotation.annotationType) {
-        case 'ClientSend':
-          this._annotate(span, rec, thriftTypes.CLIENT_SEND);
-          break;
-        case 'ClientRecv':
-          this._annotate(span, rec, thriftTypes.CLIENT_RECV);
-          break;
-        case 'ServerSend':
-          this._annotate(span, rec, thriftTypes.SERVER_SEND);
-          break;
-        case 'ServerRecv':
-          this._annotate(span, rec, thriftTypes.SERVER_RECV);
-          break;
-        case 'Message':
-          this._annotate(span, rec, rec.annotation.message);
-          break;
-        case 'Rpc':
-          span.setName(rec.annotation.name);
-          break;
-        case 'ServiceName':
-          span.setServiceName(rec.annotation.serviceName);
-          break;
-        case 'BinaryAnnotation':
-          this._binaryAnnotate(span, rec.annotation.key, rec.annotation.value);
-          break;
-        case 'LocalAddr':
-          span.setEndpoint(new Endpoint({
-            host: rec.annotation.host.toInt(),
-            port: rec.annotation.port
-          }));
-          break;
-        case 'ServerAddr':
-          span.setServerAddr(new Endpoint({
-            serviceName: rec.annotation.serviceName,
-            host: rec.annotation.host ? rec.annotation.host.toInt() : undefined,
-            port: rec.annotation.port
-          }));
-          break;
-        default:
-          break;
-      }
-    });
+  record(rec) {
+    this._updateSpanMap(rec.traceId, (span, done) => this._updateSpan(span, rec, done));
   }
 
   toString() {
