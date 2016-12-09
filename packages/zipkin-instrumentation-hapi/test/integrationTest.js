@@ -64,6 +64,12 @@ describe('hapi middleware - integration test', () => {
 
         expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
 
+        const ServerRecvTs = annotations[3].timestamp; 
+        const ServerSendTs = annotations[7].timestamp; 
+
+        console.log('recv ts = ' + ServerRecvTs + ', send ts = ' + ServerSendTs);
+        console.log('duration ts = ' + ((ServerSendTs - ServerRecvTs) / 1000));
+
         done();
       });
     });
@@ -141,6 +147,55 @@ describe('hapi middleware - integration test', () => {
         const annotations = record.args.map(args => args[0]);
 
         annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
+
+        done();
+      });
+    });
+  });
+
+
+  it('should record a reasonably accurate span duration', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    const PAUSE_TIME_MILLIS = 50; 
+
+    ctxImpl.scoped(() => {
+      
+      const server = new Hapi.Server();
+      server.connection();
+      server.route({
+        method: 'POST',
+        path: '/foo',
+        config: {
+          handler: (request, reply) => {
+            //pause for 50ms
+            setTimeout(() => reply({status: 'OK'}).code(202), PAUSE_TIME_MILLIS); 
+          }
+        }
+      });
+      server.register({
+        register: middleware,
+        options: {tracer, serviceName: 'service-a'}
+      });
+
+      const method = 'POST';
+      const url = '/foo';
+      const headers = {
+        'X-B3-TraceId': 'aaa',
+        'X-B3-SpanId': 'bbb',
+        'X-B3-Flags': '1'
+      };
+
+      server.inject({method, url, headers}, () => {
+        const annotations = record.args.map((args) => args[0]);
+        const serverRecvTs = annotations[3].timestamp; 
+        const serverSendTs = annotations[7].timestamp; 
+        const durationMillis = (serverSendTs - serverRecvTs) / 1000;
+
+        expect(durationMillis).to.be.greaterThan(PAUSE_TIME_MILLIS); 
 
         done();
       });
