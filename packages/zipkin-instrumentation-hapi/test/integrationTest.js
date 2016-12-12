@@ -64,12 +64,6 @@ describe('hapi middleware - integration test', () => {
 
         expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
 
-        const ServerRecvTs = annotations[3].timestamp; 
-        const ServerSendTs = annotations[7].timestamp; 
-
-        console.log('recv ts = ' + ServerRecvTs + ', send ts = ' + ServerSendTs);
-        console.log('duration ts = ' + ((ServerSendTs - ServerRecvTs) / 1000));
-
         done();
       });
     });
@@ -159,11 +153,9 @@ describe('hapi middleware - integration test', () => {
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
-
-    const PAUSE_TIME_MILLIS = 50; 
+    const PAUSE_TIME_MILLIS = 100;
 
     ctxImpl.scoped(() => {
-      
       const server = new Hapi.Server();
       server.connection();
       server.route({
@@ -171,11 +163,11 @@ describe('hapi middleware - integration test', () => {
         path: '/foo',
         config: {
           handler: (request, reply) => {
-            //pause for 50ms
-            setTimeout(() => reply({status: 'OK'}).code(202), PAUSE_TIME_MILLIS); 
+            setTimeout(() => reply({status: 'OK'}).code(202), PAUSE_TIME_MILLIS);
           }
         }
       });
+
       server.register({
         register: middleware,
         options: {tracer, serviceName: 'service-a'}
@@ -183,19 +175,14 @@ describe('hapi middleware - integration test', () => {
 
       const method = 'POST';
       const url = '/foo';
-      const headers = {
-        'X-B3-TraceId': 'aaa',
-        'X-B3-SpanId': 'bbb',
-        'X-B3-Flags': '1'
-      };
 
-      server.inject({method, url, headers}, () => {
+      server.inject({method, url}, () => {
         const annotations = record.args.map((args) => args[0]);
-        const serverRecvTs = annotations[3].timestamp; 
-        const serverSendTs = annotations[7].timestamp; 
-        const durationMillis = (serverSendTs - serverRecvTs) / 1000;
+        const serverRecvTs = annotations[3].timestamp / 1000.0;
+        const serverSendTs = annotations[6].timestamp / 1000.0;
+        const durationMillis = (serverSendTs - serverRecvTs);
 
-        expect(durationMillis).to.be.greaterThan(PAUSE_TIME_MILLIS); 
+        expect(durationMillis).to.be.greaterThan(PAUSE_TIME_MILLIS);
 
         done();
       });
