@@ -13,7 +13,7 @@ ttypes.ResultCode = {
   'OK' : 0,
   'TRY_LATER' : 1
 };
-LogEntry = module.exports.LogEntry = function(args) {
+var LogEntry = module.exports.LogEntry = function(args) {
   this.category = null;
   this.message = null;
   if (args) {
