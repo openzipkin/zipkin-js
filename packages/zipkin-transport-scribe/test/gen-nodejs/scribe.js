@@ -11,7 +11,7 @@ var Q = thrift.Q;
 var ttypes = require('./scribeServer_types');
 //HELPER FUNCTIONS AND STRUCTURES
 
-scribe_Log_args = function(args) {
+var scribe_Log_args = function(args) {
   this.messages = null;
   if (args) {
     if (args.messages !== undefined && args.messages !== null) {
@@ -87,7 +87,7 @@ scribe_Log_args.prototype.write = function(output) {
   return;
 };
 
-scribe_Log_result = function(args) {
+var scribe_Log_result = function(args) {
   this.success = null;
   if (args) {
     if (args.success !== undefined && args.success !== null) {
@@ -140,7 +140,7 @@ scribe_Log_result.prototype.write = function(output) {
   return;
 };
 
-scribeClient = exports.Client = function(output, pClass) {
+var scribeClient = exports.Client = function(output, pClass) {
     this.output = output;
     this.pClass = pClass;
     this._seqid = 0;
@@ -196,7 +196,7 @@ scribeClient.prototype.recv_Log = function(input,mtype,rseqid) {
   }
   return callback('Log failed: unknown result');
 };
-scribeProcessor = exports.Processor = function(handler) {
+var scribeProcessor = exports.Processor = function(handler) {
   this._handler = handler
 }
 scribeProcessor.prototype.process = function(input, output) {

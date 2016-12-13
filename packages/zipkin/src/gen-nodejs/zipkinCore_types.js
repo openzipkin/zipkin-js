@@ -18,7 +18,7 @@ ttypes.AnnotationType = {
   'DOUBLE' : 5,
   'STRING' : 6
 };
-Endpoint = module.exports.Endpoint = function(args) {
+var Endpoint = module.exports.Endpoint = function(args) {
   this.ipv4 = null;
   this.port = null;
   this.service_name = null;
@@ -116,7 +116,7 @@ Endpoint.prototype.write = function(output) {
   return;
 };
 
-Annotation = module.exports.Annotation = function(args) {
+var Annotation = module.exports.Annotation = function(args) {
   this.timestamp = null;
   this.value = null;
   this.host = null;
@@ -199,7 +199,7 @@ Annotation.prototype.write = function(output) {
   return;
 };
 
-BinaryAnnotation = module.exports.BinaryAnnotation = function(args) {
+var BinaryAnnotation = module.exports.BinaryAnnotation = function(args) {
   this.key = null;
   this.value = null;
   this.annotation_type = null;
@@ -298,7 +298,7 @@ BinaryAnnotation.prototype.write = function(output) {
   return;
 };
 
-Span = module.exports.Span = function(args) {
+var Span = module.exports.Span = function(args) {
   this.trace_id = null;
   this.name = null;
   this.id = null;
