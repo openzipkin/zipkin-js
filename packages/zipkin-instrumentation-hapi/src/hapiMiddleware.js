@@ -34,9 +34,10 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
     return;
   }
 
-  server.ext('onPreResponse', (request, reply) => {
-    const {headers, response} = request;
+  server.ext('onRequest', (request, reply) => {
+    const {headers} = request;
     const readHeader = headerOption.bind(null, headers);
+    const plugins = request.plugins;
 
     tracer.scoped(() => {
       if (readHeader(Header.TraceId) !== None && readHeader(Header.SpanId) !== None) {
@@ -72,6 +73,10 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
 
       const id = tracer.id;
 
+      plugins.zipkin = {
+        traceId: tracer.id
+      };
+
       tracer.recordServiceName(serviceName);
       tracer.recordRpc(request.method.toUpperCase());
       tracer.recordBinary('http.url', url.format(request.url));
@@ -82,13 +87,17 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
         tracer.recordBinary(Header.Flags, id.flags.toString());
       }
 
-      response.once('finish', () => {
-        tracer.scoped(() => {
-          tracer.setId(id);
-          tracer.recordBinary('http.status_code', response.statusCode.toString());
-          tracer.recordAnnotation(new Annotation.ServerSend());
-        });
-      });
+      return reply.continue();
+    });
+  });
+
+  server.ext('onPreResponse', (request, reply) => {
+    const {response} = request;
+
+    tracer.scoped(() => {
+      tracer.setId(request.plugins.zipkin.traceId);
+      tracer.recordBinary('http.status_code', response.statusCode.toString());
+      tracer.recordAnnotation(new Annotation.ServerSend());
     });
 
     return reply.continue();

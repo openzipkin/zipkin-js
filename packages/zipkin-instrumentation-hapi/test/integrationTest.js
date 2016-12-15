@@ -146,4 +146,46 @@ describe('hapi middleware - integration test', () => {
       });
     });
   });
+
+
+  it('should record a reasonably accurate span duration', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+    const PAUSE_TIME_MILLIS = 100;
+
+    ctxImpl.scoped(() => {
+      const server = new Hapi.Server();
+      server.connection();
+      server.route({
+        method: 'POST',
+        path: '/foo',
+        config: {
+          handler: (request, reply) => {
+            setTimeout(() => reply({status: 'OK'}).code(202), PAUSE_TIME_MILLIS);
+          }
+        }
+      });
+
+      server.register({
+        register: middleware,
+        options: {tracer, serviceName: 'service-a'}
+      });
+
+      const method = 'POST';
+      const url = '/foo';
+
+      server.inject({method, url}, () => {
+        const annotations = record.args.map((args) => args[0]);
+        const serverRecvTs = annotations[3].timestamp / 1000.0;
+        const serverSendTs = annotations[6].timestamp / 1000.0;
+        const durationMillis = (serverSendTs - serverRecvTs);
+
+        expect(durationMillis).to.be.greaterThan(PAUSE_TIME_MILLIS);
+
+        done();
+      });
+    });
+  });
 });
