@@ -1,6 +1,6 @@
 const sinon = require('sinon');
 const {Tracer, ExplicitContext} = require('zipkin');
-const fetch = require('node-fetch');
+const fetch = require('isomorphic-fetch');
 const restify = require('restify');
 const middleware = require('../src/restifyMiddleware');
 

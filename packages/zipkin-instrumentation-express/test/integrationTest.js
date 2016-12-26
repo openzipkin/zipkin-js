@@ -1,6 +1,6 @@
 const sinon = require('sinon');
 const {Tracer, ExplicitContext} = require('zipkin');
-const fetch = require('node-fetch');
+const fetch = require('isomorphic-fetch');
 const express = require('express');
 const middleware = require('../src/expressMiddleware');
 
