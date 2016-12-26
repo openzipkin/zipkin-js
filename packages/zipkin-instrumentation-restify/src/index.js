@@ -1,1 +1,1 @@
-module.exports.restifyMiddleware = require('./src/restifyMiddleware');
+module.exports.restifyMiddleware = require('./restifyMiddleware');

@@ -1,1 +1,1 @@
-module.exports.HttpLogger = require('./src/HttpLogger');
+module.exports.HttpLogger = require('./HttpLogger');

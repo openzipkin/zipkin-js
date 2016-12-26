@@ -1,1 +1,1 @@
-module.exports.expressMiddleware = require('./src/expressMiddleware');
+module.exports.expressMiddleware = require('./expressMiddleware');

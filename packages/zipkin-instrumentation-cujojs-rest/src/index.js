@@ -1,1 +1,1 @@
-module.exports.restInterceptor = require('./src/restInterceptor');
+module.exports.restInterceptor = require('./restInterceptor');

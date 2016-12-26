@@ -1,1 +1,1 @@
-module.exports.hapiMiddleware = require('./src/hapiMiddleware');
+module.exports.hapiMiddleware = require('./hapiMiddleware');

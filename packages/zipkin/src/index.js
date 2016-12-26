@@ -1,19 +1,19 @@
-const option = require('./src/option');
+const option = require('./option');
 
-const Annotation = require('./src/annotation');
-const Tracer = require('./src/tracer');
-const createNoopTracer = require('./src/tracer/noop');
-const TraceId = require('./src/tracer/TraceId');
-const sampler = require('./src/tracer/sampler');
+const Annotation = require('./annotation');
+const Tracer = require('./tracer');
+const createNoopTracer = require('./tracer/noop');
+const TraceId = require('./tracer/TraceId');
+const sampler = require('./tracer/sampler');
 
-const HttpHeaders = require('./src/httpHeaders');
-const InetAddress = require('./src/InetAddress');
+const HttpHeaders = require('./httpHeaders');
+const InetAddress = require('./InetAddress');
 
-const BatchRecorder = require('./src/batch-recorder');
-const ConsoleRecorder = require('./src/console-recorder');
+const BatchRecorder = require('./batch-recorder');
+const ConsoleRecorder = require('./console-recorder');
 
-const serializeSpan = require('./src/serializeSpan');
-const ExplicitContext = require('./src/explicit-context');
+const serializeSpan = require('./serializeSpan');
+const ExplicitContext = require('./explicit-context');
 
 module.exports = {
   Tracer,

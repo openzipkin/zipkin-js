@@ -1,1 +1,1 @@
-module.exports.KafkaLogger = require('./src/KafkaLogger');
+module.exports.KafkaLogger = require('./KafkaLogger');

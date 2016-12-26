@@ -1,1 +1,1 @@
-module.exports.ScribeLogger = require('./src/ScribeLogger');
+module.exports.ScribeLogger = require('./ScribeLogger');
