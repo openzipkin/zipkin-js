@@ -70,6 +70,7 @@ module.exports = function restifyMiddleware({tracer, serviceName = 'unknown', po
 
       tracer.recordServiceName(serviceName);
       tracer.recordRpc(req.method);
+      tracer.recordBinary('http.req_id', req.getId());
       tracer.recordBinary('http.url', url.format({
         protocol: req.isSecure() ? 'https' : 'http',
         host: req.header('host'),
