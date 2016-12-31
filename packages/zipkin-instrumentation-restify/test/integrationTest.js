@@ -55,9 +55,9 @@ describe('restify middleware - integration test', () => {
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[2].annotation.key).to.equal('http.url');
           expect(annotations[2].annotation.value).to.equal(url);
-          
+
           expect(annotations[3].annotation.key).to.equal('http.req_id');
-          
+
           expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
 
           expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
