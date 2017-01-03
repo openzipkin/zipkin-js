@@ -82,13 +82,19 @@ module.exports = function restifyMiddleware({tracer, serviceName = 'unknown', po
         tracer.recordBinary(Header.Flags, id.flags.toString());
       }
 
-      res.on('finish', () => {
+      const onCloseOrFinish = () => {
+        res.removeListener('close', onCloseOrFinish);
+        res.removeListener('finish', onCloseOrFinish);
+
         tracer.scoped(() => {
           tracer.setId(id);
           tracer.recordBinary('http.status_code', res.statusCode.toString());
           tracer.recordAnnotation(new Annotation.ServerSend());
         });
-      });
+      };
+
+      res.once('close', onCloseOrFinish);
+      res.once('finish', onCloseOrFinish);
 
       next();
     });
