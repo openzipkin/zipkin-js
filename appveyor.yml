@@ -1,5 +1,5 @@
 install:
-  - choco install nodejs memcached redis
+  - choco install nodejs redis
   - node --version
   - npm --version
   - npm install
