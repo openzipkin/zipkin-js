@@ -2,10 +2,12 @@
   "name": "zipkin",
   "version": "0.5.1",
   "description": "The core tracer for zipkin.js",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
+    "build": "../../node_modules/.bin/babel src -d lib",
     "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
-    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js"
+    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js",
+    "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
