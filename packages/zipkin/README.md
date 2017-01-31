@@ -16,7 +16,7 @@ const xtxImpl = new zipkin.ExplicitContext(); // Alternative; if you want to pas
 const tracer = new zipkin.Tracer({
   ctxImpl,
   recorder: new zipkin.ConsoleRecorder() // For easy debugging. You probably want to use an actual implementation, like Kafka or Scribe.
-  sampler: new Zipkin.CountingSampler(0.01) // sample rate 0.01 will sample 1 % of all incoming requests
+  sampler: new zipkin.CountingSampler(0.01) // sample rate 0.01 will sample 1 % of all incoming requests
   traceId128Bit: true // to generate 128-bit trace IDs. 64-bit (false) is default
 });
 ```
