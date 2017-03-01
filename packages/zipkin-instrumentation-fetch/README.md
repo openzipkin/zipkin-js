@@ -8,7 +8,6 @@ or [node-fetch](https://www.npmjs.com/package/node-fetch) on Node.js.
 
 ```javascript
 const {Tracer} = require('zipkin');
-const rest = require('rest');
 const wrapFetch = require('zipkin-instrumentation-fetch');
 
 const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
