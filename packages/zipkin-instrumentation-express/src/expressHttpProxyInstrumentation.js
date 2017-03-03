@@ -2,16 +2,17 @@ const {HttpHeaders: Header, Annotation} = require('zipkin');
 const url = require('url');
 
 function addZipkinHeaders(req, traceId) {
-  req.headers = req.headers || {};
-  req.headers[Header.TraceId] = traceId.traceId;
-  req.headers[Header.SpanId] = traceId.spanId;
+  const reqWithHeaders = req;
+  reqWithHeaders.headers = req.headers || {};
+  reqWithHeaders.headers[Header.TraceId] = traceId.traceId;
+  reqWithHeaders.headers[Header.SpanId] = traceId.spanId;
   traceId._parentId.ifPresent(psid => {
-    req.headers[Header.ParentSpanId] = psid;
+    reqWithHeaders.headers[Header.ParentSpanId] = psid;
   });
   traceId.sampled.ifPresent(sampled => {
-    req.headers[Header.Sampled] = sampled ? '1' : '0';
+    reqWithHeaders.headers[Header.Sampled] = sampled ? '1' : '0';
   });
-  return req;
+  return reqWithHeaders;
 }
 
 function formatRequestUrl(proxyReq) {
@@ -36,7 +37,8 @@ class ZipkinInstrumentation {
     return this.tracer.scoped(() => {
       this.tracer.setId(this.tracer.createChildId());
       const traceId = this.tracer.id;
-      originalReq.traceId = traceId; // for use later when recording response
+      // for use later when recording response
+      originalReq.traceId = traceId; // eslint-disable-line no-param-reassign
       const proxyReqWithZipkinHeaders = addZipkinHeaders(proxyReq, traceId);
       this._recordRequest(proxyReqWithZipkinHeaders);
       return proxyReqWithZipkinHeaders;
