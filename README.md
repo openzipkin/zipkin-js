@@ -74,6 +74,8 @@ Java installed on your machine.
 
 Running code style linting: `npm run lint`
 
+AppVeyor is currently broken and ignored. PR welcome from those with Windows boxes.
+
 ## Publishing
 
 If you are a user waiting for a merged feature to get released, nag us on the related pull request or [gitter](https://gitter.im/openzipkin/zipkin).

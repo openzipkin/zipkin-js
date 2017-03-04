@@ -1,19 +1,5 @@
-const {HttpHeaders: Header, Annotation} = require('zipkin');
+const {Request, Annotation} = require('zipkin');
 const url = require('url');
-
-function addZipkinHeaders(req, traceId) {
-  const reqWithHeaders = req;
-  reqWithHeaders.headers = req.headers || {};
-  reqWithHeaders.headers[Header.TraceId] = traceId.traceId;
-  reqWithHeaders.headers[Header.SpanId] = traceId.spanId;
-  traceId._parentId.ifPresent(psid => {
-    reqWithHeaders.headers[Header.ParentSpanId] = psid;
-  });
-  traceId.sampled.ifPresent(sampled => {
-    reqWithHeaders.headers[Header.Sampled] = sampled ? '1' : '0';
-  });
-  return reqWithHeaders;
-}
 
 function formatRequestUrl(proxyReq) {
   // Protocol is not available in proxyReq by express-http-proxy
@@ -39,7 +25,7 @@ class ZipkinInstrumentation {
       const traceId = this.tracer.id;
       // for use later when recording response
       originalReq.traceId = traceId; // eslint-disable-line no-param-reassign
-      const proxyReqWithZipkinHeaders = addZipkinHeaders(proxyReq, traceId);
+      const proxyReqWithZipkinHeaders = Request.addZipkinHeaders(proxyReq, traceId);
       this._recordRequest(proxyReqWithZipkinHeaders);
       return proxyReqWithZipkinHeaders;
     });

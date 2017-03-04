@@ -15,6 +15,8 @@ const ConsoleRecorder = require('./console-recorder');
 const serializeSpan = require('./serializeSpan');
 const ExplicitContext = require('./explicit-context');
 
+const Request = require('./request');
+
 module.exports = {
   Tracer,
   createNoopTracer,
@@ -27,5 +29,6 @@ module.exports = {
   ConsoleRecorder,
   serializeSpan,
   ExplicitContext,
-  sampler
+  sampler,
+  Request
 };
