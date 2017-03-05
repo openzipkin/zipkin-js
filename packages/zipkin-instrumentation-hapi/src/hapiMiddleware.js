@@ -93,10 +93,11 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
 
   server.ext('onPreResponse', (request, reply) => {
     const {response} = request;
+    const statusCode = response.isBoom ? response.output.statusCode : response.statusCode;
 
     tracer.scoped(() => {
       tracer.setId(request.plugins.zipkin.traceId);
-      tracer.recordBinary('http.status_code', response.statusCode.toString());
+      tracer.recordBinary('http.status_code', statusCode.toString());
       tracer.recordAnnotation(new Annotation.ServerSend());
     });
 
