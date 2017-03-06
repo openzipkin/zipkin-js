@@ -1,6 +1,6 @@
 const {Tracer, ExplicitContext, createNoopTracer} = require('zipkin');
 const express = require('express');
-const nodeFetch = require('node-fetch');
+const nodeFetch = require('isomorphic-fetch');
 const sinon = require('sinon');
 const wrapFetch = require('../src/wrapFetch');
 

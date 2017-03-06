@@ -13,7 +13,7 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "express": "^4.13.4",
-    "node-fetch": "^1.5.1",
+    "isomorphic-fetch": "^2.2.1",
     "zipkin": "^0.5.1"
   }
 }

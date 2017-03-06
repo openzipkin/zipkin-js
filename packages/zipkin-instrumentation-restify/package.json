@@ -12,7 +12,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "node-fetch": "^1.5.1",
+    "isomorphic-fetch": "^2.2.1",
     "restify": "^4.1.1",
     "zipkin": "^0.5.1"
   }

@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const fetch = require('node-fetch');
+const fetch = require('isomorphic-fetch');
 
 class HttpLogger {
   constructor({endpoint, httpInterval = 1000}) {
