@@ -69,6 +69,32 @@ describe('hapi middleware - integration test', () => {
     });
   });
 
+  it('should not crash on 404', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    ctxImpl.scoped(() => {
+      const server = new Hapi.Server();
+      server.connection();
+      server.register({
+        register: middleware,
+        options: {tracer, serviceName: 'service-a'}
+      });
+
+      const method = 'POST';
+      const url = '/foo';
+      server.inject({method, url}, () => {
+        const annotations = record.args.map((args) => args[0]);
+        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+        expect(annotations[5].annotation.key).to.equal('http.status_code');
+        expect(annotations[5].annotation.value).to.equal('404');
+        done();
+      });
+    });
+  });
+
   it('should properly report the URL with a query string', done => {
     const record = sinon.spy();
     const recorder = {record};
