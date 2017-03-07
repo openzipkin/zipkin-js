@@ -1,7 +1,7 @@
 const expressMiddleware = require('./expressMiddleware');
-const ExpressHttpProxyInstrumentation = require('./expressHttpProxyInstrumentation');
+const wrapExpressHttpProxy = require('./wrapExpressHttpProxy');
 
 module.exports = {
   expressMiddleware,
-  ExpressHttpProxyInstrumentation
+  wrapExpressHttpProxy
 };

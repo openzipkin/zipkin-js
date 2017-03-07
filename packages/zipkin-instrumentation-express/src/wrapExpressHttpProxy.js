@@ -12,8 +12,8 @@ function formatRequestUrl(proxyReq) {
   });
 }
 
-class ZipkinInstrumentation {
-  constructor(tracer, serviceName, remoteServiceName) {
+class ExpressHttpProxyInstrumentation {
+  constructor({tracer, serviceName, remoteServiceName}) {
     this.tracer = tracer;
     this.serviceName = serviceName;
     this.remoteServiceName = remoteServiceName;
@@ -23,8 +23,11 @@ class ZipkinInstrumentation {
     return this.tracer.scoped(() => {
       this.tracer.setId(this.tracer.createChildId());
       const traceId = this.tracer.id;
+
       // for use later when recording response
-      originalReq.traceId = traceId; // eslint-disable-line no-param-reassign
+      const originalReqWithTrace = originalReq;
+      originalReqWithTrace.traceId = traceId;
+
       const proxyReqWithZipkinHeaders = Request.addZipkinHeaders(proxyReq, traceId);
       this._recordRequest(proxyReqWithZipkinHeaders);
       return proxyReqWithZipkinHeaders;
@@ -53,5 +56,31 @@ class ZipkinInstrumentation {
   }
 }
 
+function wrapProxy(proxy, {tracer, serviceName = 'unknown', remoteServiceName}) {
+  return function zipkinProxy(host, options = {}) {
+    const instrumentation = new ExpressHttpProxyInstrumentation({
+      tracer,
+      serviceName,
+      remoteServiceName
+    });
+    const wrappedOptions = options;
+    const wrappedDecorateRequest = wrappedOptions.decorateRequest;
 
-module.exports = ZipkinInstrumentation;
+    wrappedOptions.decorateRequest = (proxyReq, originalReq) => {
+      const wrappedProxyReq = wrappedDecorateRequest(proxyReq, originalReq);
+      return instrumentation.decorateAndRecordRequest(wrappedProxyReq, originalReq);
+    };
+
+    const wrappedIntercept = wrappedOptions.intercept;
+    wrappedOptions.intercept = (rsp, data, originalReq, res, callback) => {
+      const instrumentedCallback = (err, rspd, sent) => {
+        instrumentation.recordResponse(rsp, originalReq);
+        return callback(err, rspd, sent);
+      };
+      wrappedIntercept(rsp, data, originalReq, res, instrumentedCallback);
+    };
+    return proxy(host, wrappedOptions);
+  };
+}
+
+module.exports = wrapProxy;

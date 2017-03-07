@@ -23,54 +23,41 @@ app.use(zipkinMiddleware({
 }));
 ```
 
-## Express Http Proxy
+## Express HTTP Proxy
 
-This library will let you add interceptors to the [express-http-proxy](https://www.npmjs.com/package/express-http-proxy) library.
+This library will wrap [express-http-proxy](https://www.npmjs.com/package/express-http-proxy) to add headers and record traces.
 
 ```javascript
-const proxy = require('express-http-proxy');
 const {ConsoleRecorder, Tracer, ExplicitContext} = require('zipkin');
-const ProxyInstrumentation = require('zipkin-instrumentation-express').ExpressHttpProxyInstrumentation;
+const {wrapExpressHttpProxy} = require('zipkin-instrumentation-express');
+const proxy = require('express-http-proxy');
 
 const ctxImpl = new ExplicitContext();
 const recorder = new ConsoleRecorder();
 const tracer = new Tracer({ctxImpl, recorder});
-const nameOfApp = 'weather-app';
-const nameOfRemoteService = 'weather-api';
-const proxyInstrumentation = new ProxyInstrumentation(tracer, nameOfApp, nameOfRemoteService);
+const serviceName = 'weather-app';
+const remoteServiceName = 'weather-api';
 
-app.use('/api/weather',
-  proxy('http://api.weather.com', {
-    decorateRequest: (proxyReq, originalReq) => proxyInstrumentation.decorateAndRecordRequest(proxyReq, originalReq),
-    intercept: function(rsp, data, originalReq, res, callback) {
-      proxyInstrumentation.recordResponse(rsp, originalReq);
-      callback(null, data);
-    }
+const zipkinProxy = wrapExpressHttpProxy(proxy, {tracer, serviceName, remoteServiceName});
+
+app.use('/api/weather', zipkinProxy('http://api.weather.com', {
+  decorateRequest: (proxyReq, originalReq) => proxyReq.method = 'POST' // You can use express-http-proxy options as usual
 }));
-
 ```
-This can also be combined with Zipkin Express Middleware.
+This can also be combined with Zipkin Express Middleware. Note the use of `zipkin-context-cls`.
 ```javascript
-const proxy = require('express-http-proxy');
 const {ConsoleRecorder, Tracer} = require('zipkin');
-const zipkinMiddleware = require('zipkin-instrumentation-express').expressMiddleware;
-const ProxyInstrumentation = require('zipkin-instrumentation-express').ExpressHttpProxyInstrumentation;
+const {expressMiddleware, wrapExpressHttpProxy} = require('zipkin-instrumentation-express')
 const CLSContext = require('zipkin-context-cls');
+const proxy = require('express-http-proxy');
 
 const ctxImpl = new CLSContext();
 const recorder = new ConsoleRecorder();
 const tracer = new Tracer({ctxImpl, recorder});
-const nameOfApp = 'weather-app';
-const nameOfRemoteService = 'weather-api';
-const proxyInstrumentation = new ProxyInstrumentation(tracer, nameOfApp, nameOfRemoteService);
+const serviceName = 'weather-app';
+const remoteServiceName = 'weather-api';
 
-app.use('/api/weather',
-  zipkinMiddleware({tracer, nameOfApp}),
-  proxy('http://api.weather.com', {
-    decorateRequest: (proxyReq, originalReq) => proxyInstrumentation.decorateAndRecordRequest(proxyReq, originalReq),
-    intercept: function(rsp, data, originalReq, res, callback) {
-      proxyInstrumentation.recordResponse(rsp, originalReq);
-      callback(null, data);
-    }
-}));
+const zipkinProxy = wrapExpressHttpProxy(proxy, {tracer, serviceName, remoteServiceName});
+
+app.use('/api/weather', expressMiddleware({tracer, serviceName}), zipkinProxy('http://api.weather.com'));
 ```
