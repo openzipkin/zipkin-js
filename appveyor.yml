@@ -2,7 +2,7 @@ install:
   - choco install nodejs redis
   - node --version
   - npm --version
-  - npm install
+  - npm install --force
   - npm run lerna-bootstrap
 environment:
   KAFKA_PLEASE_LOG: verbose
