@@ -4,15 +4,17 @@
   "description": "Restify middleware for instrumentation with Zipkin.js",
   "main": "lib/index.js",
   "scripts": {
-    "build": "../../node_modules/.bin/babel src -d lib",
-    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js",
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "node-fetch": "^1.5.1",
+    "babel-cli": "^6.23.0",
+    "mocha": "^3.2.0",
+    "node-fetch": "^1.5.3",
     "restify": "^4.1.1",
     "zipkin": "^0.6.0"
   }

@@ -3,18 +3,20 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
-    "lerna": "2.0.0-beta.30"
+    "lerna": "2.0.0-beta.38"
   },
   "scripts": {
-    "lint": "node node_modules/eslint/bin/eslint.js packages",
-    "test": "node node_modules/mocha/bin/mocha",
-    "lerna-bootstrap": "node node_modules/lerna/bin/lerna.js bootstrap",
-    "lerna-publish": "node node_modules/lerna/bin/lerna.js publish --force-publish *"
+    "lint": "eslint packages",
+    "test": "mocha",
+    "lerna-clean": "lerna clean",
+    "lerna-build": "lerna run build",
+    "lerna-bootstrap": "lerna bootstrap --hoist",
+    "lerna-publish": "lerna publish --force-publish *"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "babel-cli": "^6.18.0",
+    "babel-cli": "^6.23.0",
     "babel-preset-es2015": "^6.18.0",
     "chai": "^3.5.0",
     "eslint": "^2.10.0",
@@ -22,8 +24,7 @@
     "eslint-plugin-import": "^1.6.0",
     "eslint-plugin-jsx-a11y": "^1.0.2",
     "eslint-plugin-react": "^5.0.1",
-    "lerna": "^2.0.0-beta.6",
-    "mocha": "^2.4.5",
+    "mocha": "^3.2.0",
     "lolex": "^1.5.1",
     "sinon": "^1.17.6"
   }

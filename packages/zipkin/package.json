@@ -4,9 +4,9 @@
   "description": "The core tracer for zipkin.js",
   "main": "lib/index.js",
   "scripts": {
-    "build": "../../node_modules/.bin/babel src -d lib",
+    "build": "babel src -d lib",
     "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
-    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js",
+    "test": "mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -17,5 +17,8 @@
     "network-address": "^1.1.0",
     "thrift": "^0.9.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "mocha": "^3.2.0"
+  }
 }
