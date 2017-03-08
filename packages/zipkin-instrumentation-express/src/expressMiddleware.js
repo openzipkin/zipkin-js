@@ -79,7 +79,7 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
       const id = tracer.id;
 
       tracer.recordServiceName(serviceName);
-      tracer.recordRpc(req.method);
+      tracer.recordRpc(req.method.toUpperCase());
       tracer.recordBinary('http.url', formatRequestUrl(req));
       tracer.recordAnnotation(new Annotation.ServerRecv());
       tracer.recordAnnotation(new Annotation.LocalAddr({port}));

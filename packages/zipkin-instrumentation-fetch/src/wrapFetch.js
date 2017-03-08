@@ -1,19 +1,4 @@
-const {HttpHeaders, Annotation} = require('zipkin');
-
-function getHeaders(traceId, opts) {
-  const headers = opts.headers || {};
-  headers[HttpHeaders.TraceId] = traceId.traceId;
-  headers[HttpHeaders.SpanId] = traceId.spanId;
-
-  traceId._parentId.ifPresent(psid => {
-    headers[HttpHeaders.ParentSpanId] = psid;
-  });
-  traceId.sampled.ifPresent(sampled => {
-    headers[HttpHeaders.Sampled] = sampled ? '1' : '0';
-  });
-
-  return headers;
-}
+const {Annotation, Request} = require('zipkin');
 
 function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) {
   return function zipkinfetch(url, opts = {}) {
@@ -34,9 +19,7 @@ function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) 
           }));
         }
 
-        const headers = getHeaders(traceId, opts);
-        const zipkinOpts = Object.assign({}, opts, {headers});
-
+        const zipkinOpts = Request.addZipkinHeaders(opts, traceId);
         fetch(url, zipkinOpts).then(res => {
           tracer.scoped(() => {
             tracer.setId(traceId);

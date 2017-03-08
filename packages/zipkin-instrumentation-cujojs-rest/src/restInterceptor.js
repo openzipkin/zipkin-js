@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
 const interceptor = require('rest/interceptor');
 const {
-  HttpHeaders: Header,
-  Annotation
-} = require('zipkin');
+  Annotation,
+  Request
+  } = require('zipkin');
 
 function getRequestMethod(req) {
   let method = 'get';
@@ -17,25 +17,16 @@ function getRequestMethod(req) {
 }
 
 function request(req, {tracer, serviceName = 'unknown', remoteServiceName}) {
-  tracer.scoped(() => {
+  return tracer.scoped(() => {
     tracer.setId(tracer.createChildId());
     const traceId = tracer.id;
     this.traceId = traceId;
+    const reqWithHeaders = Request.addZipkinHeaders(req, traceId);
 
-    req.headers = req.headers || {};
-    req.headers[Header.TraceId] = traceId.traceId;
-    req.headers[Header.SpanId] = traceId.spanId;
-    traceId._parentId.ifPresent(psid => {
-      req.headers[Header.ParentSpanId] = psid;
-    });
-    traceId.sampled.ifPresent(sampled => {
-      req.headers[Header.Sampled] = sampled ? '1' : '0';
-    });
-
-    const method = getRequestMethod(req);
+    const method = getRequestMethod(reqWithHeaders);
     tracer.recordServiceName(serviceName);
     tracer.recordRpc(method.toUpperCase());
-    tracer.recordBinary('http.url', req.path);
+    tracer.recordBinary('http.url', reqWithHeaders.path);
     tracer.recordAnnotation(new Annotation.ClientSend());
     if (remoteServiceName) {
       // TODO: can we get the host and port of the http connection?
@@ -43,9 +34,8 @@ function request(req, {tracer, serviceName = 'unknown', remoteServiceName}) {
         serviceName: remoteServiceName
       }));
     }
+    return reqWithHeaders;
   });
-
-  return req;
 }
 
 function response(res, {tracer}) {
