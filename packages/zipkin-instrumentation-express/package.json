@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-express",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Express middleware for instrumentation with Zipkin.js",
   "main": "lib/index.js",
   "scripts": {
@@ -14,8 +14,8 @@
   "devDependencies": {
     "express": "^4.13.4",
     "node-fetch": "^1.5.1",
-    "zipkin": "^0.5.1",
-    "zipkin-context-cls": "^0.2.1",
+    "zipkin": "^0.6.0",
+    "zipkin-context-cls": "^0.6.0",
     "express-http-proxy": "^0.11.0"
   }
 }
