@@ -8,7 +8,8 @@ function formatRequestUrl(proxyReq) {
     hostname: proxyReq.hostname,
     port: proxyReq.port,
     pathname: parsedPath.pathname,
-    search: parsedPath.search
+    search: parsedPath.search,
+    slashes: true // https://github.com/nodejs/node/issues/11103
   });
 }
 
