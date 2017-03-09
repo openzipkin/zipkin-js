@@ -4,8 +4,8 @@
   "description": "Transports Zipkin trace data via Scribe to the collector",
   "main": "lib/index.js",
   "scripts": {
-    "build": "../../node_modules/.bin/babel src -d lib",
-    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js",
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -15,7 +15,9 @@
     "scribe": "0.0.9"
   },
   "devDependencies": {
-    "thrift": "^0.9.3",
+    "babel-cli": "^6.23.0",
+    "mocha": "^3.2.0",
+    "thrift": "^0.10.0",
     "zipkin": "^0.6.0"
   }
 }

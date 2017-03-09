@@ -4,16 +4,19 @@
   "description": "Interceptor for HTTP clients using the 'fetch' API",
   "main": "lib/index.js",
   "scripts": {
-    "build": "../../node_modules/.bin/babel src -d lib",
-    "test": "node ../../node_modules/mocha/bin/mocha --require ../../test/helper.js",
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
+    "babel-cli": "^6.23.0",
     "express": "^4.13.4",
     "node-fetch": "^1.5.1",
+    "mocha": "^3.2.0",
+    "node-fetch": "^1.5.3",
     "zipkin": "^0.6.0"
   }
 }

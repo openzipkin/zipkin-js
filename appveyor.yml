@@ -1,5 +1,6 @@
 install:
-  - choco install nodejs redis
+  - choco install redis
+  - choco install nodejs --version 6.9.4
   - node --version
   - npm --version
   - npm install

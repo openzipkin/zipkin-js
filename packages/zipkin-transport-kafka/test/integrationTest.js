@@ -16,7 +16,8 @@ describe('Kafka transport - integration test', () => {
   it('should send trace data to Kafka', function(done) {
     this.slow(10 * 1000);
     this.timeout(60 * 1000);
-    return makeKafkaServer().then(kafkaServer => {
+
+    makeKafkaServer().then(kafkaServer => {
       const producerClient = new kafka.Client(
         `localhost:${kafkaServer.zookeeperPort}`,
         'zipkin-integration-test-producer'

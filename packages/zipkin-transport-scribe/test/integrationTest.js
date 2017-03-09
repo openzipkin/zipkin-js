@@ -50,10 +50,15 @@ describe('Scribe transport - integration test', () => {
         tracer.recordAnnotation(new Annotation.ClientRecv());
         setTimeout(() => {
           scribeServer.close();
-          expect(logSpy.getCall(0).args[0][0].message).to.include(
-            'CgABAAAAAAAACrwLAAMAAAAHVW5rbm93bgoABAAAAAAAAAEj');
+
+          expect(logSpy.called).to.equal(true, 'Logger was not called as expected');
+          const firstCall = logSpy.getCall(0);
+          if (firstCall) {
+            expect(firstCall.args[0][0].message).to.include(
+              'CgABAAAAAAAACrwLAAMAAAAHVW5rbm93bgoABAAAAAAAAAEj');
+          }
           done();
-        }, 50);
+        }, 150);
       });
     });
   });
