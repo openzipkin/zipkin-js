@@ -59,27 +59,47 @@ class ExpressHttpProxyInstrumentation {
 
 function wrapProxy(proxy, {tracer, serviceName = 'unknown', remoteServiceName}) {
   return function zipkinProxy(host, options = {}) {
+    function wrapDecorateRequest(instrumentation, originalDecorateRequest) {
+      return (proxyReq, originalReq) => {
+        let wrappedProxyReq = proxyReq;
+
+        if (typeof originalDecorateRequest === 'function') {
+          wrappedProxyReq = originalDecorateRequest(proxyReq, originalReq);
+        }
+
+        return instrumentation.decorateAndRecordRequest(wrappedProxyReq, originalReq);
+      };
+    }
+
+    function wrapIntercept(instrumentation, originalIntercept) {
+      return (rsp, data, originalReq, res, callback) => {
+        const instrumentedCallback = (err, rspd, sent) => {
+          instrumentation.recordResponse(rsp, originalReq);
+          return callback(err, rspd, sent);
+        };
+
+        if (typeof originalIntercept === 'function') {
+          originalIntercept(rsp, data, originalReq, res, instrumentedCallback);
+        } else {
+          instrumentedCallback(null, data);
+        }
+      };
+    }
+
     const instrumentation = new ExpressHttpProxyInstrumentation({
       tracer,
       serviceName,
       remoteServiceName
     });
+
     const wrappedOptions = options;
-    const wrappedDecorateRequest = wrappedOptions.decorateRequest;
 
-    wrappedOptions.decorateRequest = (proxyReq, originalReq) => {
-      const wrappedProxyReq = wrappedDecorateRequest(proxyReq, originalReq);
-      return instrumentation.decorateAndRecordRequest(wrappedProxyReq, originalReq);
-    };
+    const originalDecorateRequest = wrappedOptions.decorateRequest;
+    wrappedOptions.decorateRequest = wrapDecorateRequest(instrumentation, originalDecorateRequest);
 
-    const wrappedIntercept = wrappedOptions.intercept;
-    wrappedOptions.intercept = (rsp, data, originalReq, res, callback) => {
-      const instrumentedCallback = (err, rspd, sent) => {
-        instrumentation.recordResponse(rsp, originalReq);
-        return callback(err, rspd, sent);
-      };
-      wrappedIntercept(rsp, data, originalReq, res, instrumentedCallback);
-    };
+    const originalIntercept = wrappedOptions.intercept;
+    wrappedOptions.intercept = wrapIntercept(instrumentation, originalIntercept);
+
     return proxy(host, wrappedOptions);
   };
 }
