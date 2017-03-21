@@ -1,7 +1,7 @@
 {
-  "name": "zipkin-instrumentation-express",
+  "name": "zipkin-instrumentation-request",
   "version": "0.6.2",
-  "description": "Express middleware for instrumentation with Zipkin.js",
+  "description": "Instrumentation for request with Zipkin.js",
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
