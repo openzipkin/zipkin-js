@@ -27,7 +27,7 @@ describe('request instrumentation - integration test', () => {
         const apiPort = apiServer.address().port;
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
         const url = `http://127.0.0.1:${apiPort}/weather?index=10&count=300`;
-        zipkinRequest(url, {json: true}, () => {
+        zipkinRequest(url, () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
