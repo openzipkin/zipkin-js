@@ -1,3 +1,1 @@
-const wrapRequest = require('./wrapRequest');
-
-module.exports = wrapRequest;
+module.exports = require('./wrapRequest');

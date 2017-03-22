@@ -14,8 +14,7 @@ function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceNam
       tracer.recordAnnotation(new Annotation.ClientSend());
       if (remoteServiceName) {
         tracer.recordAnnotation(new Annotation.ServerAddr({
-          serviceName: remoteServiceName,
-          port: wrappedOptions.port
+          serviceName: remoteServiceName
         }));
       }
 
