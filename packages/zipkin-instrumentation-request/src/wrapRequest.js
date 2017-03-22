@@ -10,7 +10,7 @@ function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceNam
       tracer.recordServiceName(serviceName);
       const method = wrappedOptions.method || 'GET';
       tracer.recordRpc(method.toUpperCase());
-      tracer.recordBinary('http.url', wrappedOptions.uri);
+      tracer.recordBinary('http.url', wrappedOptions.uri || wrappedOptions.url);
       tracer.recordAnnotation(new Annotation.ClientSend());
       if (remoteServiceName) {
         tracer.recordAnnotation(new Annotation.ServerAddr({
