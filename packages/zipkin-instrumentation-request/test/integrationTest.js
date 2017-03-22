@@ -16,7 +16,10 @@ describe('request instrumentation - integration test', () => {
     });
   });
 
-  let record, recorder, ctxImpl, tracer;
+  let record;
+  let recorder;
+  let ctxImpl;
+  let tracer;
   beforeEach(() => {
     record = sinon.spy();
     recorder = {record};
