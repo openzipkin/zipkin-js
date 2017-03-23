@@ -1,4 +1,4 @@
-const {Annotation} = require('zipkin');
+const {Annotation, InetAddress} = require('zipkin');
 const redisCommands = require('redis-commands');
 module.exports = function zipkinClient(
   tracer,
@@ -9,7 +9,7 @@ module.exports = function zipkinClient(
 ) {
   const sa = {
     serviceName: remoteServiceName,
-    host: options.host,
+    host: new InetAddress(options.host),
     port: options.port
   };
   function mkZipkinCallback(callback, id) {

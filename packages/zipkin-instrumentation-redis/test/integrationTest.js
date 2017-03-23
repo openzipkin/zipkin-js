@@ -41,7 +41,7 @@ describe('redis interceptor', () => {
             const sa = spanAnnotations[2].annotation;
             expect(sa.annotationType).to.equal('ServerAddr');
             expect(sa.serviceName).to.equal('redis');
-            expect(sa.host).to.equal(redisConnectionOptions.host);
+            expect(sa.host.addr).to.equal(redisConnectionOptions.host);
             expect(sa.port).to.equal(redisConnectionOptions.port);
 
             let lastSpanId;
