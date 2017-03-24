@@ -1,0 +1,21 @@
+{
+  "name": "zipkin-instrumentation-request",
+  "version": "0.6.2",
+  "description": "Instrumentation for request with Zipkin.js",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "express": "^4.13.4",
+    "mocha": "^3.2.0",
+    "request": "^2.81.0",
+    "zipkin": "^0.6.1"
+  }
+}
