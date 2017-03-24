@@ -15,7 +15,7 @@ module.exports = class ExplicitContext {
     const prevCtx = this.currentCtx;
     const result = callable();
     this.currentCtx = prevCtx;
-    return result;
+    return this.currentCtx;
   }
 
   letContext(ctx, callable) {
