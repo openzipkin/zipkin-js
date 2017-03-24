@@ -12,9 +12,7 @@ module.exports = class ExplicitContext {
   }
 
   scoped(callable) {
-    const prevCtx = this.currentCtx;
-    const result = callable();
-    this.currentCtx = prevCtx;
+    callable();
     return this.currentCtx;
   }
 
