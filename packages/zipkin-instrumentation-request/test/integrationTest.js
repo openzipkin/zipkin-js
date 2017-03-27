@@ -217,4 +217,81 @@ describe('request instrumentation - integration test', () => {
       });
     });
   });
+
+  it('should report 404 when path does not exist', done => {
+    tracer.scoped(() => {
+      const apiServer = api.listen(0, () => {
+        const apiPort = apiServer.address().port;
+        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const url = `http://127.0.0.1:${apiPort}/doesNotExist`;
+        zipkinRequest({url, timeout: 100}).on('response', () => {
+          const annotations = record.args.map(args => args[0]);
+          const initialTraceId = annotations[0].traceId.traceId;
+          annotations.forEach(ann => expect(ann.traceId.traceId)
+            .to.equal(initialTraceId).and
+            .to.have.lengthOf(16));
+
+          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+
+          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
+          expect(annotations[1].annotation.name).to.equal('GET');
+
+          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[2].annotation.key).to.equal('http.url');
+          expect(annotations[2].annotation.value).to.equal(url);
+
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('404');
+
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          done();
+        });
+      });
+    });
+  });
+
+
+  it('should report request.error when service does not exist', done => {
+    tracer.scoped(() => {
+      api.listen(0, () => {
+        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const url = 'http://bad.invalid.url';
+        zipkinRequest({url, timeout: 100}).on('error', () => {
+          const annotations = record.args.map(args => args[0]);
+          const initialTraceId = annotations[0].traceId.traceId;
+          annotations.forEach(ann => expect(ann.traceId.traceId)
+            .to.equal(initialTraceId).and
+            .to.have.lengthOf(16));
+
+          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+
+          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
+          expect(annotations[1].annotation.name).to.equal('GET');
+
+          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[2].annotation.key).to.equal('http.url');
+          expect(annotations[2].annotation.value).to.equal(url);
+
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('request.error');
+          expect(annotations[5].annotation.value)
+            .to.contain('Error: getaddrinfo ENOTFOUND bad.invalid.url bad.invalid.url:80');
+
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          done();
+        });
+      });
+    });
+  });
 });

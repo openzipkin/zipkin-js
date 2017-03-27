@@ -24,7 +24,15 @@ function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceNam
       tracer.recordAnnotation(new Annotation.ClientRecv());
     };
 
-    return request(wrappedOptions, callback).on('response', recordResponse);
+    const recordError = (error) => {
+      tracer.setId(traceId);
+      tracer.recordBinary('request.error', error.toString());
+      tracer.recordAnnotation(new Annotation.ClientRecv());
+    };
+
+    return request(wrappedOptions, callback)
+      .on('response', recordResponse)
+      .on('error', recordError);
   }));
 }
 
