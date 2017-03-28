@@ -30,7 +30,7 @@ function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) 
         }).catch(err => {
           tracer.scoped(() => {
             tracer.setId(traceId);
-            tracer.recordBinary('request.error', err.toString());
+            tracer.recordBinary('error', err.toString());
             tracer.recordAnnotation(new Annotation.ClientRecv());
           });
           reject(err);
