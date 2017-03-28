@@ -251,7 +251,7 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
-          expect(annotations[7]).to.be.undefined;
+          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
 
           done();
         });
@@ -293,8 +293,7 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
-          expect(annotations[7]).to.be.undefined;
-
+          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
           done();
         });
       });
