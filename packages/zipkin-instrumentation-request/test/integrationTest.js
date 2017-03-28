@@ -250,6 +250,9 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.value).to.equal('404');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          expect(annotations[7]).to.be.undefined;
+
           done();
         });
       });
@@ -284,11 +287,14 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
           expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('request.error');
+          expect(annotations[5].annotation.key).to.equal('error');
           expect(annotations[5].annotation.value)
             .to.contain('Error: getaddrinfo ENOTFOUND bad.invalid.url bad.invalid.url:80');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          expect(annotations[7]).to.be.undefined;
+
           done();
         });
       });

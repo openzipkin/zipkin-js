@@ -26,7 +26,7 @@ function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceNam
 
     const recordError = (error) => {
       tracer.setId(traceId);
-      tracer.recordBinary('request.error', error.toString());
+      tracer.recordBinary('error', error.toString());
       tracer.recordAnnotation(new Annotation.ClientRecv());
     };
 
