@@ -95,4 +95,60 @@ describe('wrapFetch', () => {
       })
       .catch(done);
   });
+
+  it('should record error', (done) => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    const fetch = wrapFetch(nodeFetch, {
+      tracer,
+      serviceName: 'caller',
+      remoteServiceName: 'callee'
+    });
+
+    ctxImpl.scoped(() => {
+      const id = tracer.createChildId();
+      tracer.setId(id);
+
+      const path = 'http://domain.invalid';
+      fetch(path, {method: 'post'})
+        .then(() => expect.fail())
+        .catch(() => {
+          const annotations = record.args.map(args => args[0]);
+
+          // All annotations should have the same trace id and span id
+          const traceId = annotations[0].traceId.traceId;
+          const spanId = annotations[0].traceId.spanId;
+          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
+          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
+
+          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
+          expect(annotations[0].annotation.serviceName).to.equal('caller');
+
+          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
+          expect(annotations[1].annotation.name).to.equal('POST');
+
+          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[2].annotation.key).to.equal('http.url');
+          expect(annotations[2].annotation.value).to.equal(path);
+
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[4].annotation.serviceName).to.equal('callee');
+
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('error');
+          expect(annotations[5].annotation.value)
+            .to.contain('getaddrinfo ENOTFOUND domain.invalid');
+
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          done();
+        });
+    });
+  });
 });
