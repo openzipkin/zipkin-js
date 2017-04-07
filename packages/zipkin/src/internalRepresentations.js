@@ -91,8 +91,7 @@ function Address({key, endpoint}) {
   this.endpoint = endpoint;
 }
 Address.prototype.toThrift = function toThrift() {
-  const value = new Uint8Array(1);
-  value[0] = 1;
+  const value = Buffer.from([1]);
   const res = new thriftTypes.BinaryAnnotation({
     key: this.key,
     value,
