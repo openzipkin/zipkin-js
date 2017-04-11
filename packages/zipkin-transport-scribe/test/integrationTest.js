@@ -46,6 +46,7 @@ describe('Scribe transport - integration test', () => {
           flags: 0
         });
         tracer.setId(id);
+        tracer.recordAnnotation(new Annotation.ServerAddr({serviceName: 'test'}));
         tracer.recordAnnotation(new Annotation.ClientSend());
         tracer.recordAnnotation(new Annotation.ClientRecv());
         setTimeout(() => {
