@@ -75,6 +75,7 @@ module.exports = function restifyMiddleware({tracer, serviceName = 'unknown', po
         host: req.header('host'),
         pathname: req.path()
       }));
+      tracer.recordBinary('http.req_id', req.getId());
       tracer.recordAnnotation(new Annotation.ServerRecv());
       tracer.recordAnnotation(new Annotation.LocalAddr({port}));
 
