@@ -54,17 +54,17 @@ function _getOptions(options) {
 /* eslint-enable no-param-reassign */
 
 function _optionsToUrl(options) {
-  let protocol = options.protocol ? options.protocol : 'http:';
-  let host = options.host ? options.host.split(':')[0]: null;
-  let hostname = options.hostname ? options.hostname.split(':')[0]: null;
-  let port = options.port ? options.port: null;
-  let path = options.path ? options.path: null;
+  const protocol = options.protocol ? options.protocol : 'http:';
+  const host = options.host ? options.host.split(':')[0] : null;
+  const hostname = options.hostname ? options.hostname.split(':')[0] : null;
+  const port = options.port ? `:${options.port}` : null;
+  const path = options.path ? options.path : null;
 
   if (hostname) {
-    return `${protocol}//${hostname}${(port ? ':' + port : '')}${(path ? path : '')}`
+    return `${protocol}//${hostname}${(port || '')}${(path || '')}`;
   }
 
-  return `${protocol}//${host}${(port ? ':' + port : '')}${(path ? path : '')}`
+  return `${protocol}//${host}${(port || '')}${(path || '')}`;
 }
 
 

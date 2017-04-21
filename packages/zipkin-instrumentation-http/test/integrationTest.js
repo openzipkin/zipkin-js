@@ -203,36 +203,36 @@ describe('http instrumentation - integration test', () => {
           protocol: 'http:',
           host: 'bad.invalid.url',
           timeout: 100}).on('error', () => {
-          const annotations = record.args.map(args => args[0]);
-          const initialTraceId = annotations[0].traceId.traceId;
-          annotations.forEach(ann => expect(ann.traceId.traceId)
-            .to.equal(initialTraceId).and
-            .to.have.lengthOf(16));
+            const annotations = record.args.map(args => args[0]);
+            const initialTraceId = annotations[0].traceId.traceId;
+            annotations.forEach(ann => expect(ann.traceId.traceId)
+              .to.equal(initialTraceId).and
+              .to.have.lengthOf(16));
 
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+            expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
+            expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('GET');
+            expect(annotations[1].annotation.annotationType).to.equal('Rpc');
+            expect(annotations[1].annotation.name).to.equal('GET');
 
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal('http://bad.invalid.url');
+            expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+            expect(annotations[2].annotation.key).to.equal('http.url');
+            expect(annotations[2].annotation.value).to.equal('http://bad.invalid.url');
 
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+            expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+            expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('error');
-          expect(annotations[5].annotation.value)
-            .to.contain('Error: getaddrinfo ENOTFOUND bad.invalid.url bad.invalid.url:80');
+            expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+            expect(annotations[5].annotation.key).to.equal('error');
+            expect(annotations[5].annotation.value)
+              .to.contain('Error: getaddrinfo ENOTFOUND bad.invalid.url bad.invalid.url:80');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+            expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
-          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
-          done();
-        });
+            expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+            done();
+          });
 
         req.write('');
         req.end();
