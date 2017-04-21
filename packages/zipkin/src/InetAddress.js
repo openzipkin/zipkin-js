@@ -1,3 +1,5 @@
+const dns = require('dns');
+const net = require('net');
 const networkAddress = require('network-address');
 
 class InetAddress {
@@ -22,6 +24,26 @@ class InetAddress {
 
 InetAddress.getLocalAddress = function getLocalAddress() {
   return new InetAddress(networkAddress.ipv4());
+};
+
+InetAddress.getAddressByName = function getAddressByName(host, callback) {
+  if (!host) {
+    callback(0);
+  } else if (host instanceof InetAddress) {
+    callback(host);
+  } else if (net.isIPv4(host)) {
+    callback(new InetAddress(host));
+  } else {
+    // only IPv4 addresses are supported by `InetAddress`,
+    // so restrict the lookup call to `family: 4` only
+    dns.lookup(host, {family: 4}, (err, addr) => {
+      if (err !== null) {
+        callback(0);
+        return;
+      }
+      callback(new InetAddress(addr));
+    });
+  }
 };
 
 module.exports = InetAddress;

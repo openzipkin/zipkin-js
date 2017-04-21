@@ -1,8 +1,9 @@
 const thriftTypes = require('./gen-nodejs/zipkinCore_types');
 const {now, hrtime} = require('./time');
 const {Some, None} = require('./option');
+const {getAddressByName} = require('./InetAddress');
 
-function Endpoint({serviceName, host, port}) {
+function Endpoint({serviceName, host, port} = {}) {
   this.serviceName = serviceName;
   this.host = host || 0;
   this.port = port || 0;
@@ -27,6 +28,17 @@ Endpoint.prototype.toJSON = function toJSON() {
     ipv4: formatIPv4(this.host),
     port: this.port
   };
+};
+
+Endpoint.createEndpoint = function createEndpoint({serviceName, host, port}, callback) {
+  getAddressByName(host, addr => {
+    const ep = new Endpoint({
+      serviceName,
+      host: addr ? addr.toInt() : addr,
+      port,
+    });
+    callback(ep);
+  });
 };
 
 function ZipkinAnnotation({timestamp, value, endpoint}) {
@@ -115,7 +127,7 @@ function MutableSpan(traceId) {
   this.startTick = hrtime();
   this.name = None;
   this.service = None;
-  this.endpoint = new Endpoint({});
+  this.endpoint = new Endpoint();
   this.serverAddr = None;
   this.annotations = [];
   this.binaryAnnotations = [];
