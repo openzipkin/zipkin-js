@@ -21,11 +21,7 @@ module.exports = class CLSContext {
   }
 
   scoped(callable) {
-    let result;
-    this._session.run(() => {
-      result = callable();
-    });
-    return result;
+    return callable();
   }
 
   letContext(ctx, callable) {
