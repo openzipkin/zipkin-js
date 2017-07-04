@@ -33,11 +33,10 @@ class HttpLogger {
           console.error('Unexpected response while sending Zipkin data, status:' +
             `${response.status}, body: ${postBody}`);
         }
-        this.queue.length = 0;
       }).catch((error) => {
         console.error('Error sending Zipkin data', error);
-        this.queue.length = 0;
       });
+      this.queue.length = 0;
     }
   }
 }
