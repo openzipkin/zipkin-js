@@ -55,6 +55,38 @@ describe('Batch Recorder', () => {
     });
   });
 
+  // Applications can override the span name via trace.recordRpc
+  it('should record span name as last recordRpc', () => {
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.setId(new TraceId({
+        traceId: None,
+        parentId: new Some('a'),
+        spanId: 'c',
+        sampled: new Some(true)
+      }));
+
+      trace.recordServiceName('SmoothieStore');
+      trace.recordRpc('buySmoothie');
+      trace.recordAnnotation(new Annotation.ServerRecv());
+
+      // some customization code scoped to this trace ID resets the span name
+      trace.recordRpc('rentSmoothie');
+
+      trace.recordAnnotation(new Annotation.ServerSend());
+
+      const loggedSpan = logSpan.getCall(0).args[0];
+
+      expect(loggedSpan.name).to.eql(new Some('rentSmoothie'));
+    });
+  });
+
   it('should set MutableSpan.startTimestamp to first record', () => {
     const clock = lolex.install(12345678);
     const logSpan = sinon.spy();
