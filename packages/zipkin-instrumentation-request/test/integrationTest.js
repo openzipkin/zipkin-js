@@ -34,8 +34,9 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
-        const url = `http://127.0.0.1:${apiPort}/weather?index=10&count=300`;
+        const url = `http://${apiHost}:${apiPort}/weather?index=10&count=300`;
         zipkinRequest.get(url, () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
@@ -60,6 +61,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host).to.be.ok;
+          expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
@@ -77,8 +79,9 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
-        const url = `http://127.0.0.1:${apiPort}/weather?index=10&count=300`;
+        const url = `http://${apiHost}:${apiPort}/weather?index=10&count=300`;
         zipkinRequest(url, () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
@@ -103,6 +106,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host).to.be.ok;
+          expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
@@ -120,8 +124,9 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
-        const url = `http://127.0.0.1:${apiPort}/weather?index=10&count=300`;
+        const url = `http://${apiHost}:${apiPort}/weather?index=10&count=300`;
         zipkinRequest({url}, () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
@@ -146,6 +151,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host).to.be.ok;
+          expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
@@ -163,8 +169,9 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
-        const url = `http://127.0.0.1:${apiPort}/weather?index=10&count=300`;
+        const url = `http://${apiHost}:${apiPort}/weather?index=10&count=300`;
         zipkinRequest({
           url, callback: () => {
             const annotations = record.args.map(args => args[0]);
@@ -190,6 +197,7 @@ describe('request instrumentation - integration test', () => {
             expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
             expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
             expect(annotations[5].annotation.host).to.be.ok;
+            expect(annotations[5].annotation.host.addr).to.equal(apiHost);
             expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
             expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
@@ -208,8 +216,9 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
-        const url = `http://127.0.0.1:${apiPort}/weather?index=10&count=300`;
+        const url = `http://${apiHost}:${apiPort}/weather?index=10&count=300`;
         zipkinRequest({url}).on('response', () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
@@ -234,6 +243,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host).to.be.ok;
+          expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
@@ -251,8 +261,9 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
-        const url = `http://127.0.0.1:${apiPort}/doesNotExist`;
+        const url = `http://${apiHost}:${apiPort}/doesNotExist`;
         zipkinRequest({url, timeout: 100}).on('response', () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
@@ -277,6 +288,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host).to.be.ok;
+          expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
@@ -297,7 +309,8 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       api.listen(0, () => {
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
-        const url = 'http://bad.invalid.url';
+        const apiHost = 'bad.invalid.url';
+        const url = `http://${apiHost}`;
         zipkinRequest({url, timeout: 100}).on('error', () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
@@ -322,6 +335,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host).to.be.ok;
+          expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.be.equal(0);
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
@@ -342,8 +356,9 @@ describe('request instrumentation - integration test', () => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
         const zipkinRequest = wrapRequest(request, {tracer, serviceName});
-        const url = `http://127.0.0.1:${apiPort}/weather?index=10&count=300`;
+        const url = `http://${apiHost}:${apiPort}/weather?index=10&count=300`;
         zipkinRequest.get(url, () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
