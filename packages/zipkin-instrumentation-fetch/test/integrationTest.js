@@ -62,14 +62,16 @@ describe('wrapFetch', () => {
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
+          expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('202');
+          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.serviceName).to.equal('callee');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[6].annotation.key).to.equal('http.status_code');
+          expect(annotations[6].annotation.value).to.equal('202');
+
+          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
 
           const traceIdOnServer = data.traceId;
           expect(traceIdOnServer).to.equal(traceId);
@@ -136,17 +138,19 @@ describe('wrapFetch', () => {
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
+          expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('error');
-          expect(annotations[5].annotation.value)
+          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.serviceName).to.equal('callee');
+
+          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[6].annotation.key).to.equal('error');
+          expect(annotations[6].annotation.value)
             .to.contain('getaddrinfo ENOTFOUND domain.invalid');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
 
-          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
           done();
         });
     });
