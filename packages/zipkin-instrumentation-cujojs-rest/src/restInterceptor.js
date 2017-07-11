@@ -30,7 +30,7 @@ function request(req, {tracer, serviceName = 'unknown', remoteServiceName}) {
     tracer.recordBinary('http.url', reqWithHeaders.path);
     tracer.recordAnnotation(new Annotation.ClientSend());
     tracer.recordAnnotation(new Annotation.LocalAddr({port: URL.parse(reqWithHeaders.path).port}));
-    
+
     if (remoteServiceName) {
       // TODO: can we get the host and port of the http connection?
       tracer.recordAnnotation(new Annotation.ServerAddr({

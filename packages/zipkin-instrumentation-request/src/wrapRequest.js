@@ -9,9 +9,9 @@ function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceNam
     const wrappedOptions = Request.addZipkinHeaders(options, tracer.id);
     const method = wrappedOptions.method || 'GET';
     const url = wrappedOptions.uri || wrappedOptions.url || '';
-    const parsed =  URL.parse(url);
+    const parsed = URL.parse(url);
     const port = wrappedOptions.port || parsed.port;
-    const localAddrAnnot = new Annotation.LocalAddr({port})
+    const localAddrAnnot = new Annotation.LocalAddr({port});
 
     tracer.recordServiceName(serviceName);
     tracer.recordRpc(method.toUpperCase());
@@ -32,7 +32,7 @@ function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceNam
         }));
         serverRecorded = true;
       }
-    }
+    };
 
     const recordResponse = (response) => {
       tracer.setId(traceId);

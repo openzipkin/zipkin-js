@@ -60,7 +60,6 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
-          expect(annotations[5].annotation.host).to.be.ok;
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
@@ -105,7 +104,6 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
-          expect(annotations[5].annotation.host).to.be.ok;
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
@@ -150,7 +148,6 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
-          expect(annotations[5].annotation.host).to.be.ok;
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
@@ -196,7 +193,6 @@ describe('request instrumentation - integration test', () => {
 
             expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
             expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
-            expect(annotations[5].annotation.host).to.be.ok;
             expect(annotations[5].annotation.host.addr).to.equal(apiHost);
             expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
@@ -242,7 +238,6 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
-          expect(annotations[5].annotation.host).to.be.ok;
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
@@ -287,7 +282,6 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
-          expect(annotations[5].annotation.host).to.be.ok;
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.equal(apiPort.toString());
 
@@ -334,7 +328,6 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
-          expect(annotations[5].annotation.host).to.be.ok;
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
           expect(annotations[5].annotation.port).to.be.equal(0);
 
@@ -362,7 +355,7 @@ describe('request instrumentation - integration test', () => {
         zipkinRequest.get(url, () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
-          
+
           expect(annotations.length).to.equal(7);
 
           annotations.forEach(ann => expect(ann.traceId.traceId)
