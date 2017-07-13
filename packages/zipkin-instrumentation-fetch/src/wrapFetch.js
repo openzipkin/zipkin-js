@@ -1,4 +1,3 @@
-const URL = require('url');
 const {Annotation, Request} = require('zipkin');
 
 function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) {
@@ -13,7 +12,6 @@ function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) 
         tracer.recordRpc(method.toUpperCase());
         tracer.recordBinary('http.url', url);
         tracer.recordAnnotation(new Annotation.ClientSend());
-        tracer.recordAnnotation(new Annotation.LocalAddr({port: URL.parse(url).port}));
         if (remoteServiceName) {
           // TODO: can we get the host and port of the http connection?
           tracer.recordAnnotation(new Annotation.ServerAddr({

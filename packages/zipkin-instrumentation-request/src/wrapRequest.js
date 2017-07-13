@@ -10,27 +10,30 @@ function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceNam
     const method = wrappedOptions.method || 'GET';
     const url = wrappedOptions.uri || wrappedOptions.url || '';
     const parsed = URL.parse(url);
-    const port = wrappedOptions.port || parsed.port;
-    const localAddrAnnot = new Annotation.LocalAddr({port});
 
     tracer.recordServiceName(serviceName);
     tracer.recordRpc(method.toUpperCase());
     tracer.recordBinary('http.url', url);
     tracer.recordAnnotation(new Annotation.ClientSend());
-    tracer.recordAnnotation(localAddrAnnot);
 
     const req = request(wrappedOptions, callback);
 
-    let serverRecorded = false;
+    let recorded = false;
     const recordServer = (socket) => {
-      if (!serverRecorded && remoteServiceName) {
+      if (!recorded) {
         tracer.setId(traceId);
-        tracer.recordAnnotation(new Annotation.ServerAddr({
-          serviceName: remoteServiceName,
-          host: new InetAddress(socket ? socket.address().address : parsed.hostname),
-          port
-        }));
-        serverRecorded = true;
+        const remoteAddress = socket ? socket.remoteAddress : parsed.hostname;
+        const remotePort = socket ? socket.remotePort : req.port;
+        const localPort = socket ? socket.localPort : undefined;
+        tracer.recordAnnotation(new Annotation.LocalAddr({port: localPort}));
+        if (remoteServiceName) {
+          tracer.recordAnnotation(new Annotation.ServerAddr({
+            serviceName: remoteServiceName,
+            host: new InetAddress(remoteAddress),
+            port: remotePort
+          }));
+        }
+        recorded = true;
       }
     };
 

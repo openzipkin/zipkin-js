@@ -1,4 +1,4 @@
-const {Tracer, ExplicitContext} = require('zipkin');
+const {Tracer, ExplicitContext, InetAddress} = require('zipkin');
 const express = require('express');
 const request = require('request');
 const sinon = require('sinon');
@@ -7,6 +7,7 @@ const wrapRequest = require('../src/wrapRequest');
 describe('request instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
+  const localAddress = InetAddress.getLocalAddress();
 
   let api;
   before(() => {
@@ -57,11 +58,13 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
           expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.host.addr).to.equal(localAddress.addr);
+          expect(annotations[4].annotation.port).to.not.equal(apiPort);
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
-          expect(annotations[5].annotation.port).to.equal(apiPort.toString());
+          expect(annotations[5].annotation.port).to.equal(apiPort);
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[6].annotation.key).to.equal('http.status_code');
@@ -105,7 +108,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
-          expect(annotations[5].annotation.port).to.equal(apiPort.toString());
+          expect(annotations[5].annotation.port).to.equal(apiPort);
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[6].annotation.key).to.equal('http.status_code');
@@ -145,11 +148,13 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
           expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.host.addr).to.equal(localAddress.addr);
+          expect(annotations[4].annotation.port).to.not.equal(apiPort);
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
-          expect(annotations[5].annotation.port).to.equal(apiPort.toString());
+          expect(annotations[5].annotation.port).to.equal(apiPort);
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[6].annotation.key).to.equal('http.status_code');
@@ -190,11 +195,13 @@ describe('request instrumentation - integration test', () => {
             expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
             expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+            expect(annotations[4].annotation.host.addr).to.equal(localAddress.addr);
+            expect(annotations[4].annotation.port).to.not.equal(apiPort);
 
             expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
             expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
             expect(annotations[5].annotation.host.addr).to.equal(apiHost);
-            expect(annotations[5].annotation.port).to.equal(apiPort.toString());
+            expect(annotations[5].annotation.port).to.equal(apiPort);
 
             expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
             expect(annotations[6].annotation.key).to.equal('http.status_code');
@@ -235,11 +242,13 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
           expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.host.addr).to.equal(localAddress.addr);
+          expect(annotations[4].annotation.port).to.not.equal(apiPort);
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
-          expect(annotations[5].annotation.port).to.equal(apiPort.toString());
+          expect(annotations[5].annotation.port).to.equal(apiPort);
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[6].annotation.key).to.equal('http.status_code');
@@ -279,11 +288,13 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
           expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.host.addr).to.equal(localAddress.addr);
+          expect(annotations[4].annotation.port).to.not.equal(apiPort);
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
-          expect(annotations[5].annotation.port).to.equal(apiPort.toString());
+          expect(annotations[5].annotation.port).to.equal(apiPort);
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[6].annotation.key).to.equal('http.status_code');
@@ -325,11 +336,12 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
           expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.host.addr).to.equal(localAddress.addr);
 
           expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
           expect(annotations[5].annotation.serviceName).to.equal(remoteServiceName);
           expect(annotations[5].annotation.host.addr).to.equal(apiHost);
-          expect(annotations[5].annotation.port).to.be.equal(0);
+          expect(annotations[5].annotation.port).to.be.equal(80);
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[6].annotation.key).to.equal('error');
@@ -375,6 +387,8 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
           expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.host.addr).to.equal(localAddress.addr);
+          expect(annotations[4].annotation.port).to.not.equal(apiPort);
 
           expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[5].annotation.key).to.equal('http.status_code');
