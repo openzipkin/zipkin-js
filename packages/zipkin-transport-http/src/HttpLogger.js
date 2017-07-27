@@ -1,5 +1,10 @@
 /* eslint-disable no-console */
-const fetch = require('node-fetch');
+const globalFetch =
+  (typeof window !== 'undefined' && window.fetch) ||
+  (typeof global !== 'undefined' && global.fetch);
+
+// eslint-disable-next-line global-require
+const fetch = globalFetch || require('node-fetch');
 
 class HttpLogger {
   constructor({endpoint, httpInterval = 1000}) {
