@@ -30,7 +30,8 @@ module.exports = function zipkinClient(
 
 
   const redisClient = redis.createClient(options);
-  const methodsToWrap = redisCommands.list;
+  const methodsToWrap = redisCommands.list.concat('batch');
+  const methodsThatReturnMulti = [ 'batch', 'multi' ];
   const restrictedCommands = [
     'ping',
     'flushall',
@@ -42,24 +43,34 @@ module.exports = function zipkinClient(
     'slaveof',
     'config',
     'sentinel'];
-  methodsToWrap.forEach((method) => {
-    if (restrictedCommands.indexOf(method) > -1) {
-      return;
-    }
-    const actualFn = redisClient[method];
-    redisClient[method] = function(...args) {
-      const callback = args.pop();
-      let id;
-      tracer.scoped(() => {
-        id = tracer.createChildId();
-        tracer.setId(id);
-        commonAnnotations(method);
-      });
-      const wrapper = mkZipkinCallback(callback, id);
-      const newArgs = [...args, wrapper];
-      actualFn.apply(this, newArgs);
-    };
-  });
+  const wrap = (client) =>
+    methodsToWrap.forEach((method) => {
+      if (restrictedCommands.indexOf(method) > -1) {
+        return;
+      }
+      const actualFn = client[method];
+      if (methodsThatReturnMulti.indexOf(method) > -1) {
+        client[method] = function (...args) {
+          const multiInstance = actualFn.apply(this, args);
+          wrap(multiInstance);
+          return multiInstance;
+        }
+        return;
+      }
+      client[method] = function(...args) {
+        const callback = args.pop();
+        let id;
+        tracer.scoped(() => {
+          id = tracer.createChildId();
+          tracer.setId(id);
+          commonAnnotations(method);
+        });
+        const wrapper = mkZipkinCallback(callback, id);
+        const newArgs = [...args, wrapper];
+        actualFn.apply(this, newArgs);
+      };
+    });
 
+  wrap(redisClient);
   return redisClient;
 };
