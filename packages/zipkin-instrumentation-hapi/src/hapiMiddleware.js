@@ -81,7 +81,7 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
       tracer.recordRpc(request.method.toUpperCase());
       tracer.recordBinary('http.url', url.format(request.url));
       tracer.recordAnnotation(new Annotation.ServerRecv());
-      tracer.recordAnnotation(new Annotation.LocalAddr({port}));
+      tracer.recordLocalAddr({port});
 
       if (id.flags !== 0 && id.flags != null) {
         tracer.recordBinary(Header.Flags, id.flags.toString());
