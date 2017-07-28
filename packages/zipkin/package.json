@@ -14,7 +14,6 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "base64-js": "^1.1.2",
-    "network-address": "^1.1.0",
     "thrift": "^0.10.0"
   },
   "devDependencies": {

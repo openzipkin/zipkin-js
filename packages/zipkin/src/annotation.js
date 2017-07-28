@@ -48,8 +48,8 @@ ServerAddr.prototype.toString = function() {
   return `ServerAddr(serviceName="${this.serviceName}", host="${this.host}", port=${this.port})`;
 };
 
-function LocalAddr({host, port}) {
-  this.host = host || InetAddress.getLocalAddress();
+function LocalAddr({host, port}, getLocalAddress) {
+  this.host = host || new InetAddress(getLocalAddress());
   this.port = port || 0;
 }
 LocalAddr.prototype.toString = function() {

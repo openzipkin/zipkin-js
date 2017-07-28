@@ -3,13 +3,11 @@ const globalFetch =
   (typeof window !== 'undefined' && window.fetch) ||
   (typeof global !== 'undefined' && global.fetch);
 
-// eslint-disable-next-line global-require
-const fetch = globalFetch || require('node-fetch');
-
 class HttpLogger {
-  constructor({endpoint, httpInterval = 1000}) {
+  constructor({endpoint, httpInterval = 1000, fetch = globalFetch}) {
     this.endpoint = endpoint;
     this.queue = [];
+    this.fetch = fetch;
 
     const timer = setInterval(() => {
       this.processQueue();
@@ -26,7 +24,7 @@ class HttpLogger {
   processQueue() {
     if (this.queue.length > 0) {
       const postBody = JSON.stringify(this.queue);
-      fetch(this.endpoint, {
+      this.fetch(this.endpoint, {
         method: 'POST',
         body: postBody,
         headers: {

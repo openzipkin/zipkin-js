@@ -1,4 +1,5 @@
 const {Tracer, BatchRecorder, Annotation, ExplicitContext} = require('zipkin');
+const fetch = require('node-fetch');
 const HttpLogger = require('../src/HttpLogger');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -19,7 +20,8 @@ describe('HTTP transport - integration test', () => {
     this.server = app.listen(0, () => {
       this.port = this.server.address().port;
       const httpLogger = new HttpLogger({
-        endpoint: `http://localhost:${this.port}/api/v1/spans`
+        endpoint: `http://localhost:${this.port}/api/v1/spans`,
+        fetch
       });
 
       const ctxImpl = new ExplicitContext();

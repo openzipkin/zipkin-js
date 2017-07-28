@@ -16,6 +16,7 @@ class Tracer {
     ctxImpl = requiredArg('ctxImpl'),
     recorder = requiredArg('recorder'),
     sampler = new Sampler(alwaysSample),
+    localAddr = () => '127.0.0.1',
     // traceID128Bit enables the generation of 128 bit traceIDs in case the tracer
     // needs to create a root span. By default regular 64 bit traceIDs are used.
     // Regardless of this setting, the library will propagate and support both
@@ -29,6 +30,7 @@ class Tracer {
     this._defaultTraceId = this.createRootId();
     this._startTimestamp = now();
     this._startTick = hrtime();
+    this._localAddr = localAddr;
   }
 
   scoped(callback) {
@@ -125,7 +127,7 @@ class Tracer {
 
   recordLocalAddr(ia) {
     this.recordAnnotation(
-      new Annotation.LocalAddr(ia)
+      new Annotation.LocalAddr(ia, this._localAddr)
     );
   }
 
