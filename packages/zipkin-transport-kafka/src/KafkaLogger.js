@@ -14,9 +14,13 @@ module.exports = class KafkaLogger {
     const producerOpts = Object.assign({}, producerDefaults, options.producerOpts || {});
     this.producerPromise = new Promise((resolve, reject) => {
       this.topic = options.topic || 'zipkin';
-      this.client = new kafka.Client(
-        clientOpts.connectionString, clientOpts.clientId, clientOpts.zkOpts
-      );
+      if (clientOpts.connectionString) {
+        this.client = new kafka.Client(
+          clientOpts.connectionString, clientOpts.clientId, clientOpts.zkOpts
+        );
+      } else {
+        this.client = new kafka.KafkaClient(clientOpts);
+      }
       const producer = new kafka.HighLevelProducer(this.client, producerOpts);
       producer.on('ready', () => resolve(producer));
       producer.on('error', reject);
