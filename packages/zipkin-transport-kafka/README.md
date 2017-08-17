@@ -23,3 +23,18 @@ const tracer = new Tracer({
   ctxImpl // this would typically be a CLSContext or ExplicitContext
 });
 ```
+
+If you do not use zookeeper to store offsets, use `clientOpts.kafkaHost` instead of `clientOpts.connectionString`.
+
+```js
+const {BatchRecorder} = require('zipkin');
+const {KafkaLogger} = require('zipkin-transport-kafka');
+
+const kafkaRecorder = new BatchRecorder({
+  logger: new KafkaLogger({
+    clientOpts: {
+      kafkaHost: 'localhost:2181'
+    }
+  })
+});
+```

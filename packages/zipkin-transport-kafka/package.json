@@ -12,7 +12,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "kafka-node": "^1.0.0"
+    "kafka-node": "^2.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
