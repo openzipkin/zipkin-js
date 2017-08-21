@@ -1,0 +1,19 @@
+{
+  "name": "zipkin-instrumentation-grpc",
+  "version": "0.0.1",
+  "description": "Interceptor for instrumenting GRPC calls.",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "prepublish": "npm run build"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "~6.26.0",
+    "grpc": "~1.4.1",
+    "zipkin": "~0.7.3"
+  }
+}
