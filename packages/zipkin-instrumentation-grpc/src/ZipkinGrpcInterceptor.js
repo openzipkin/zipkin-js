@@ -79,7 +79,7 @@ class ZipkinGrpcInterceptor {
       this.tracer.recordServiceName(serviceName);
 
       this.tracer.recordAnnotation(new Annotation.ServerRecv());
-      this.tracer.recordAnnotation(new Annotation.LocalAddr());
+      this.tracer.recordAnnotation(new Annotation.LocalAddr({}));
     });
   }
 
