@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "test": "mocha --require ../../test/helper.js"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -13,7 +14,11 @@
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "~6.26.0",
+    "chai": "~4.1.1",
     "grpc": "~1.4.1",
-    "zipkin": "~0.7.3"
+    "mocha": "~3.5.0",
+    "zipkin": "~0.7.3",
+    "zipkin-context-cls": "~0.6.1",
+    "zipkin-transport-http": "~0.7.3"
   }
 }
