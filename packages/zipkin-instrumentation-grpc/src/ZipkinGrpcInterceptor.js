@@ -44,7 +44,7 @@ class ZipkinGrpcInterceptor {
     });
   }
 
-  // Call this at the first line upon the GRPC server received the call from the GRPC client side.
+  // Call this at the first line upon the GRPC server received the call from the GRPC client.
   uponServerRecvGrpcCall({serviceName = 'unknown', grpcMetadataFromIncomingCtx}) {
     if (!grpcMetadataFromIncomingCtx || !(grpcMetadataFromIncomingCtx instanceof grpc.Metadata)) {
       throw new Error("The parameter 'grpcMetadataFromIncomingCtx' must be instance of 'grpc.Metadata'");
@@ -83,7 +83,7 @@ class ZipkinGrpcInterceptor {
     });
   }
 
-  // Call this right before the GRPC server finish all respond.
+  // Call this right before the GRPC server has finished all respond.
   uponServerFinishRespond() {
     this.tracer.scoped(() => {
       this.tracer.setId(this.traceId);
@@ -91,7 +91,7 @@ class ZipkinGrpcInterceptor {
     });
   }
 
-  // Call this right after everything of this GRPC call be finished at GRPC client side.
+  // Call this right after everything of this GRPC call has been finished at GRPC client.
   afterGrpcCallFinish() {
     this.tracer.scoped(() => {
       this.tracer.setId(this.traceId);
