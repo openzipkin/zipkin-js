@@ -29,7 +29,7 @@ class ZipkinGrpcInterceptor {
       this.traceId = this.tracer.id;
 
       metadata.add('X-B3-TraceId', this.tracer.id.traceId);
-      metadata.add('X-B3-ParentSpanId', this.tracer.id.spanId);
+      metadata.add('X-B3-ParentSpanId', this.tracer.id.parentId);
       metadata.add('X-B3-SpanId', this.tracer.id.spanId);
       metadata.add('X-B3-Sampled', this.tracer.id.sampled.getOrElse() ? '1' : '0');
 
