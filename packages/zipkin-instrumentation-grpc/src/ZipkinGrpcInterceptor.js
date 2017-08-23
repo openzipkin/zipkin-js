@@ -14,7 +14,7 @@ class ZipkinGrpcInterceptor {
 
   // Call this right before the GRPC client is ready to call the GRPC server service.
   beforeClientDoGrpcCall({serviceName = 'unknown', remoteGrpcServiceName = 'unknown',
-                            xB3Sampled = '0', grpcMetadata}) {
+                            grpcMetadata}) {
     return this.tracer.scoped(() => {
       let metadata;
 
@@ -24,17 +24,15 @@ class ZipkinGrpcInterceptor {
         metadata = new grpc.Metadata();
       }
 
-      const parentSpanIds = this.tracer.id;
-      const newSpanIds = this.tracer.createChildId();
+      this.tracer.setId(this.tracer.createChildId());
 
-      metadata.add('X-B3-TraceId', parentSpanIds.traceId);
-      metadata.add('X-B3-ParentSpanId', parentSpanIds.spanId);
-      metadata.add('X-B3-SpanId', newSpanIds.spanId);
-      metadata.add('X-B3-Sampled', xB3Sampled);
+      this.traceId = this.tracer.id;
 
-      this.traceId = newSpanIds;
+      metadata.add('X-B3-TraceId', this.tracer.id.traceId);
+      metadata.add('X-B3-ParentSpanId', this.tracer.id.spanId);
+      metadata.add('X-B3-SpanId', this.tracer.id.spanId);
+      metadata.add('X-B3-Sampled', this.tracer.id.sampled.getOrElse() ? '1' : '0');
 
-      this.tracer.setId(newSpanIds);
       this.tracer.recordServiceName(serviceName);
       this.tracer.recordRpc(remoteGrpcServiceName);
 
