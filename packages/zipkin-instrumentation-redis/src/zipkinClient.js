@@ -43,7 +43,7 @@ module.exports = function zipkinClient(
     'slaveof',
     'config',
     'sentinel'];
-  const wrap = function(client, parentId) {
+  const wrap = function(client, traceId) {
     const clientNeedsToBeModified = client;
     methodsToWrap.forEach((method) => {
       if (restrictedCommands.indexOf(method) > -1) {
@@ -66,7 +66,7 @@ module.exports = function zipkinClient(
       }
       clientNeedsToBeModified[method] = function(...args) {
         const callback = args.pop();
-        let id = parentId;
+        let id = traceId;
         tracer.scoped(() => {
           if (id === undefined) {
             id = tracer.createChildId();

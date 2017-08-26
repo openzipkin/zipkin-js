@@ -50,31 +50,28 @@ describe('redis interceptor', () => {
     const redis = getRedis(tracer);
     redis.on('error', done);
     tracer.setId(tracer.createRootId());
-    const ctx = ctxImpl.getContext();
     redis.set('ping', 'pong', 10, () => {
-      ctxImpl.letContext(ctx, () => {
-        redis.get('ping', () => {
-          const annotations = recorder.record.args.map(args => args[0]);
-          const firstAnn = annotations[0];
-          expect(annotations).to.have.length(10);
+      redis.get('ping', () => {
+        const annotations = recorder.record.args.map(args => args[0]);
+        const firstAnn = annotations[0];
+        expect(annotations).to.have.length(10);
 
-          // we expect two spans, run annotations tests for each
+        // we expect two spans, run annotations tests for each
 
-          runTest(annotations.slice(0, annotations.length / 2));
-          runTest(annotations.slice(annotations.length / 2, annotations.length));
+        runTest(annotations.slice(0, annotations.length / 2));
+        runTest(annotations.slice(annotations.length / 2, annotations.length));
 
-          expect(
-            annotations[0].traceId.spanId
-          ).not.to.equal(annotations[annotations.length / 2].traceId.spanId);
+        expect(
+          annotations[0].traceId.spanId
+        ).not.to.equal(annotations[annotations.length / 2].traceId.spanId);
 
-          annotations.forEach(ann => {
-            expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
-          });
-
-          done();
+        annotations.forEach(ann => {
+          expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
+          expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
+          expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
         });
+
+        done();
       });
     });
   });
@@ -88,39 +85,63 @@ describe('redis interceptor', () => {
     const redis = getRedis(tracer);
     redis.on('error', done);
     tracer.setId(tracer.createRootId());
-    const ctx = ctxImpl.getContext();
     redis.set('ping', 'pong', 10, () => {
-      ctxImpl.letContext(ctx, () => {
-        redis.batch([['get', 'ping']]).exec(() => {
-          const annotations = recorder.record.args.map(args => args[0]);
-          const firstAnn = annotations[0];
-          expect(annotations).to.have.length(11);
-          expect(annotations[5].annotation.key).to.equal('commands');
-          expect(annotations[5].annotation.value).to.deep.equal([['get', 'ping']]);
-          expect(annotations[6].annotation.name).to.equal('exec');
+      redis.batch([['get', 'ping']]).exec(() => {
+        const annotations = recorder.record.args.map(args => args[0]);
+        const firstAnn = annotations[0];
+        expect(annotations).to.have.length(11);
+        expect(annotations[5].annotation.key).to.equal('commands');
+        expect(annotations[5].annotation.value).to.deep.equal([['get', 'ping']]);
+        expect(annotations[6].annotation.name).to.equal('exec');
 
-          // we expect two spans, run annotations tests for each
-          expectAnnotationsBelongToTheSameSpan(
-            annotations.slice(0, annotations.length / 2));
-          expectAnnotationsDescribeRedisInteraction(
-            annotations.slice(0, annotations.length / 2));
+        // we expect two spans, run annotations tests for each
+        expectAnnotationsBelongToTheSameSpan(
+          annotations.slice(0, annotations.length / 2));
+        expectAnnotationsDescribeRedisInteraction(
+          annotations.slice(0, annotations.length / 2));
 
-          expectAnnotationsBelongToTheSameSpan(
-            annotations.slice(annotations.length / 2, annotations.length));
-          expectAnnotationsDescribeRedisInteraction(
-            annotations.slice(annotations.length / 2 + 1, annotations.length));
+        expectAnnotationsBelongToTheSameSpan(
+          annotations.slice(annotations.length / 2, annotations.length));
+        expectAnnotationsDescribeRedisInteraction(
+          annotations.slice(annotations.length / 2 + 1, annotations.length));
 
-          expect(
-            annotations[0].traceId.spanId
-          ).not.to.equal(annotations[Math.floor(annotations.length / 2)].traceId.spanId);
+        expect(
+          annotations[0].traceId.spanId
+        ).not.to.equal(annotations[Math.floor(annotations.length / 2)].traceId.spanId);
 
-          annotations.forEach(ann => {
-            expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
+        annotations.forEach(ann => {
+          expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
+          expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
+          expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
+        });
+
+        done();
+      });
+    });
+  });
+
+  it('should add zipkin annotations for multiple embedded methods', (done) => {
+    const ctxImpl = new ExplicitContext();
+    const recorder = {record: sinon.spy()};
+    // const recorder = new ConsoleRecorder();
+    const tracer = new Tracer({ctxImpl, recorder});
+
+    const redis = getRedis(tracer);
+    redis.on('error', done);
+    tracer.setId(tracer.createRootId());
+    redis.set('ping', 'pong', 10, () => {
+      redis.batch([['get', 'ping']]).exec(() => {
+        redis.multi([['get', 'ping']]).exec(() => {
+          redis.get('ping', () => {
+            const annotations = recorder.record.args.map(args => args[0]);
+            const firstAnn = annotations[0];
+            annotations.forEach(ann => {
+              expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
+              expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
+              expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
+            });
+            done();
           });
-
-          done();
         });
       });
     });
