@@ -46,9 +46,8 @@ class ZipkinGrpcInterceptor {
   // Call this at the first line upon the GRPC server received the call from the GRPC client.
   uponServerRecvGrpcCall({serviceName = 'unknown', grpcMetadataFromIncomingCtx}) {
     if (!grpcMetadataFromIncomingCtx || !(grpcMetadataFromIncomingCtx instanceof grpc.Metadata)) {
-      throw new Error(
-        "The parameter 'grpcMetadataFromIncomingCtx' must be instance of 'grpc.Metadata'"
-      );
+      // Should fail silently here, without possibly breaking the actual service call stack.
+      return;
     }
 
     const [ctxTraceId, ctxParentId, ctxSpanId] = [
@@ -59,9 +58,8 @@ class ZipkinGrpcInterceptor {
 
     if (!ctxTraceId || !ctxParentId || !ctxSpanId) {
       throw new Error(
-        "Incoming X-B3 metadata corrupted, missing one of 'X-B3-TraceId', 'X-B3-ParentSpanId' " +
-        "or 'X-B3-SpanId'."
-      );
+      // Should fail silently here, without possibly breaking the actual service call stack.
+      return;
     }
 
     let ctxSampled = grpcMetadataFromIncomingCtx.get('x-b3-sampled')[0];
