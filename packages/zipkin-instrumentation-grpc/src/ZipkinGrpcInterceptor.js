@@ -57,7 +57,6 @@ class ZipkinGrpcInterceptor {
     ];
 
     if (!ctxTraceId || !ctxParentId || !ctxSpanId) {
-      throw new Error(
       // Should fail silently here, without possibly breaking the actual service call stack.
       return;
     }
