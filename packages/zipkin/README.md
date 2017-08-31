@@ -13,6 +13,7 @@ const CLSContext = require('zipkin-context-cls');
 const ctxImpl = new CLSContext(); // if you want to use CLS
 const xtxImpl = new zipkin.ExplicitContext(); // Alternative; if you want to pass around the context manually
 
+// Tracer will be a one to many relationship with instrumentation that use it (like express)
 const tracer = new zipkin.Tracer({
   ctxImpl,
   recorder: new zipkin.ConsoleRecorder(), // For easy debugging. You probably want to use an actual implementation, like Kafka or Scribe.
