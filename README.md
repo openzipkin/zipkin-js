@@ -5,6 +5,9 @@
 This is a library for instrumenting Node.js applications. It uses a lot of
 new JavaScript features and syntax, so Node.js version 6 or newer is required.
 
+If you'd like to try this out right away, try our [example app](https://github.com/openzipkin/zipkin-js-example) which shows
+how tracing services looks.
+
 
 ## Installation:
 
