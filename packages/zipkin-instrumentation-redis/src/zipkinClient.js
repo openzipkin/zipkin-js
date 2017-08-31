@@ -30,7 +30,8 @@ module.exports = function zipkinClient(
 
 
   const redisClient = redis.createClient(options);
-  const methodsToWrap = redisCommands.list;
+  const methodsToWrap = redisCommands.list.concat('batch');
+  const methodsThatReturnMulti = ['batch', 'multi'];
   const restrictedCommands = [
     'ping',
     'flushall',
@@ -42,24 +43,44 @@ module.exports = function zipkinClient(
     'slaveof',
     'config',
     'sentinel'];
-  methodsToWrap.forEach((method) => {
-    if (restrictedCommands.indexOf(method) > -1) {
-      return;
-    }
-    const actualFn = redisClient[method];
-    redisClient[method] = function(...args) {
-      const callback = args.pop();
-      let id;
-      tracer.scoped(() => {
-        id = tracer.createChildId();
-        tracer.setId(id);
-        commonAnnotations(method);
-      });
-      const wrapper = mkZipkinCallback(callback, id);
-      const newArgs = [...args, wrapper];
-      actualFn.apply(this, newArgs);
-    };
-  });
+  const wrap = function(client, traceId) {
+    const clientNeedsToBeModified = client;
+    methodsToWrap.forEach((method) => {
+      if (restrictedCommands.indexOf(method) > -1) {
+        return;
+      }
+      const actualFn = clientNeedsToBeModified[method];
+      if (methodsThatReturnMulti.indexOf(method) > -1) {
+        clientNeedsToBeModified[method] = function(...args) {
+          const multiInstance = actualFn.apply(this, args);
+          let id;
+          tracer.scoped(() => {
+            id = tracer.createChildId();
+            tracer.setId(id);
+            tracer.recordBinary('commands', args[0]);
+          });
+          wrap(multiInstance, id);
+          return multiInstance;
+        };
+        return;
+      }
+      clientNeedsToBeModified[method] = function(...args) {
+        const callback = args.pop();
+        let id = traceId;
+        tracer.scoped(() => {
+          if (id === undefined) {
+            id = tracer.createChildId();
+          }
+          tracer.setId(id);
+          commonAnnotations(method);
+        });
+        const wrapper = mkZipkinCallback(callback, id);
+        const newArgs = [...args, wrapper];
+        actualFn.apply(this, newArgs);
+      };
+    });
+  };
 
+  wrap(redisClient);
   return redisClient;
 };
