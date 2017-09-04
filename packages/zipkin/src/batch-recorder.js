@@ -1,5 +1,13 @@
 const {now} = require('./time');
-const thriftTypes = require('./gen-nodejs/zipkinCore_types');
+const AnnotationType = {
+  BOOL: 0,
+  BYTES: 1,
+  I16: 2,
+  I32: 3,
+  I64: 4,
+  DOUBLE: 5,
+  STRING: 6
+};
 const {
   MutableSpan,
   Endpoint,
@@ -68,7 +76,7 @@ class BatchRecorder {
     span.addBinaryAnnotation(new BinaryAnnotation({
       key,
       value,
-      annotationType: thriftTypes.AnnotationType.STRING
+      annotationType: AnnotationType.STRING
     }));
   }
 
@@ -78,16 +86,16 @@ class BatchRecorder {
     this._updateSpanMap(id, span => {
       switch (rec.annotation.annotationType) {
         case 'ClientSend':
-          this._annotate(span, rec, thriftTypes.CLIENT_SEND);
+          this._annotate(span, rec, 'cs');
           break;
         case 'ClientRecv':
-          this._annotate(span, rec, thriftTypes.CLIENT_RECV);
+          this._annotate(span, rec, 'cr');
           break;
         case 'ServerSend':
-          this._annotate(span, rec, thriftTypes.SERVER_SEND);
+          this._annotate(span, rec, 'ss');
           break;
         case 'ServerRecv':
-          this._annotate(span, rec, thriftTypes.SERVER_RECV);
+          this._annotate(span, rec, 'sr');
           break;
         case 'Message':
           this._annotate(span, rec, rec.annotation.message);

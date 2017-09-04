@@ -13,12 +13,12 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "base64-js": "^1.1.2",
-    "network-address": "^1.1.0",
-    "thrift": "^0.10.0"
+    "base64-js": "^1.1.2"
   },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
-    "mocha": "^3.2.0"
+    "network-address": "^1.1.0",
+    "babel-cli": "^6.26.0",
+    "mocha": "^3.2.0",
+    "thrift": "^0.10.0"
   }
 }
