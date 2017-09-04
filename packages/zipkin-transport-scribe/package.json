@@ -12,10 +12,11 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "scribe": "0.0.9"
+    "scribe": "0.0.9",
+    "thrift": "^0.10.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
+    "babel-cli": "^6.26.0",
     "mocha": "^3.2.0",
     "thrift": "^0.10.0",
     "zipkin": "^0.7.3"

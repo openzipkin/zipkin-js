@@ -1,4 +1,3 @@
-const thriftTypes = require('./gen-nodejs/zipkinCore_types');
 const {now, hrtime} = require('./time');
 const {Some, None} = require('./option');
 
@@ -15,6 +14,9 @@ Endpoint.prototype.isUnknown = function isUnknown() {
   return this.serviceName === undefined || this.host === 0 && this.port === 0;
 };
 Endpoint.prototype.toThrift = function toThrift() {
+  // eslint-disable-next-line global-require
+  const thriftTypes = require('./gen-nodejs/zipkinCore_types');
+
   return new thriftTypes.Endpoint({
     service_name: this.serviceName,
     ipv4: this.host,
@@ -36,6 +38,9 @@ function ZipkinAnnotation({timestamp, value, endpoint}) {
 }
 
 ZipkinAnnotation.prototype.toThrift = function toThrift() {
+  // eslint-disable-next-line global-require
+  const thriftTypes = require('./gen-nodejs/zipkinCore_types');
+
   const res = new thriftTypes.Annotation({
     timestamp: this.timestamp, // must be in micros
     value: this.value
@@ -65,6 +70,9 @@ function BinaryAnnotation({key, value, endpoint}) {
   this.endpoint = endpoint;
 }
 BinaryAnnotation.prototype.toThrift = function toThrift() {
+  // eslint-disable-next-line global-require
+  const thriftTypes = require('./gen-nodejs/zipkinCore_types');
+
   const res = new thriftTypes.BinaryAnnotation({
     key: this.key,
     value: this.value,
@@ -91,6 +99,9 @@ function Address({key, endpoint}) {
   this.endpoint = endpoint;
 }
 Address.prototype.toThrift = function toThrift() {
+  // eslint-disable-next-line global-require
+  const thriftTypes = require('./gen-nodejs/zipkinCore_types');
+
   const value = Buffer.from([1]);
   const res = new thriftTypes.BinaryAnnotation({
     key: this.key,
@@ -128,14 +139,14 @@ MutableSpan.prototype.setServiceName = function setServiceName(name) {
 };
 MutableSpan.prototype.setServerAddr = function setServerAddr(ep) {
   this.serverAddr = new Some(new Address({
-    key: thriftTypes.SERVER_ADDR,
+    key: 'sa',
     endpoint: ep
   }));
 };
 MutableSpan.prototype.addAnnotation = function addAnnotation(ann) {
   if (!this.endTimestamp && (
-        ann.value === thriftTypes.CLIENT_RECV ||
-        ann.value === thriftTypes.SERVER_SEND
+        ann.value === 'cr' ||
+        ann.value === 'Ss'
         )) {
     this.endTimestamp = now(this.startTimestamp, this.startTick);
   }
@@ -164,6 +175,9 @@ MutableSpan.prototype.overrideEndpointJSON = function overrideEndpointJSON(ann) 
   }
 };
 MutableSpan.prototype.toThrift = function toThrift() {
+  // eslint-disable-next-line global-require
+  const thriftTypes = require('./gen-nodejs/zipkinCore_types');
+
   const span = new thriftTypes.Span();
 
   span.id = this.traceId.spanId;
@@ -215,7 +229,7 @@ MutableSpan.prototype.toJSON = function toJSON() {
     // span. If we were propagated an id, we can assume that we shouldn't report
     // timestamp or duration, rather let the client do that. Worst case we were
     // propagated an unreported ID and Zipkin backfills timestamp and duration.
-    if (ann.value === thriftTypes.SERVER_RECV) {
+    if (ann.value === 'sr') {
       // TODO: only set this to false when we know we in an existing trace
       startedSpan = false;
     }

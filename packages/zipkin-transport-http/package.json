@@ -11,14 +11,12 @@
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
-  "dependencies": {
-    "node-fetch": "^1.5.3"
-  },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
+    "babel-cli": "^6.26.0",
     "body-parser": "^1.15.2",
     "express": "^4.13.4",
     "mocha": "^3.2.0",
+    "node-fetch": "^1.5.3",
     "zipkin": "^0.7.3"
   }
 }
