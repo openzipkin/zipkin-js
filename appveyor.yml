@@ -1,12 +1,12 @@
 install:
   - choco install redis
   - choco install nodejs --version 6.9.4
+  - choco install yarn
   - node --version
-  - npm --version
-  - npm install
-  - npm run lerna-bootstrap
+  - yarn --version
+  - yarn
 environment:
   KAFKA_PLEASE_LOG: verbose
 build_script:
-  - npm run lint
-  - npm test
+  - yarn lint
+  - yarn test
