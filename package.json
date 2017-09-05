@@ -10,7 +10,8 @@
     "test": "mocha --require babel-register",
     "lerna-clean": "lerna clean",
     "lerna-build": "lerna run build",
-    "lerna-publish": "lerna publish --force-publish *"
+    "lerna-publish": "lerna publish --force-publish *",
+    "postinstall": "yarn lerna-build --silent"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "repository": "https://github.com/openzipkin/zipkin-js",
