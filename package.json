@@ -3,14 +3,13 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
-    "lerna": "2.0.0-beta.38"
+    "lerna": "^2.1.2"
   },
   "scripts": {
     "lint": "eslint packages",
     "test": "mocha --require babel-register",
     "lerna-clean": "lerna clean",
     "lerna-build": "lerna run build",
-    "lerna-bootstrap": "lerna bootstrap --hoist",
     "lerna-publish": "lerna publish --force-publish *"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -28,5 +27,8 @@
     "lolex": "^1.5.1",
     "mocha": "^3.2.0",
     "sinon": "^1.17.6"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

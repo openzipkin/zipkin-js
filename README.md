@@ -56,23 +56,21 @@ process.hrtime = require('browser-process-hrtime');
 
 The code base is a monorepo. We use [Lerna](https://lernajs.io/) for managing inter-module
 dependencies, which makes it easier to develop coordinated changes between the modules.
-Instead of running lerna directly, the commands are wrapped with npm; `npm run lerna-bootstrap`
-and `npm run lerna-publish`.
+Instead of running lerna directly, the commands are wrapped with npm; `npm run lerna-publish`.
 
 To setup the development environment, run:
 
 ```
-npm install
-npm run lerna-bootstrap
+yarn
 ```
 
-Running tests: `npm test`
+Running tests: `yarn test`
 
 Note that the memcached integration test requires you to have a local memcached instance running.
 The Kafka integration test will start an embedded Kafka server for the test, which requires you to have
 Java installed on your machine.
 
-Running code style linting: `npm run lint`
+Running code style linting: `yarn lint`
 
 AppVeyor is currently broken and ignored. PR welcome from those with Windows boxes.
 
