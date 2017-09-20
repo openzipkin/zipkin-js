@@ -66,8 +66,8 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
         if (req.header(Header.Flags)) {
           const currentId = tracer.id;
           const idWithFlags = new TraceId({
-            traceId: currentId.traceId,
-            parentId: currentId.parentId,
+            traceId: new Some(currentId.traceId),
+            parentId: new Some(currentId.parentId),
             spanId: currentId.spanId,
             sampled: currentId.sampled,
             flags: readHeader(Header.Flags)
