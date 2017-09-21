@@ -3,10 +3,11 @@
   "version": "0.7.3",
   "description": "The core tracer for zipkin.js",
   "main": "lib/index.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "babel src -d lib",
     "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
-    "test": "mocha --require ../../test/helper.js",
+    "test": "tsc index.d.ts && mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "typescript": "^2.4.2"
   }
 }
