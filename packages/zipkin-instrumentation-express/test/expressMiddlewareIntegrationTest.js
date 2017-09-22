@@ -1,5 +1,5 @@
 const sinon = require('sinon');
-const { Tracer, ExplicitContext } = require('zipkin');
+const {Tracer, ExplicitContext} = require('zipkin');
 const fetch = require('node-fetch');
 const express = require('express');
 const middleware = require('../src/expressMiddleware');
@@ -7,9 +7,9 @@ const middleware = require('../src/expressMiddleware');
 describe('express middleware - integration test', () => {
   it('should create traceId', done => {
     const record = sinon.spy();
-    const recorder = { record };
+    const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ recorder, ctxImpl });
+    const tracer = new Tracer({recorder, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
@@ -23,7 +23,7 @@ describe('express middleware - integration test', () => {
         setTimeout(() => {
           ctxImpl.letContext(ctx, () => {
             tracer.recordBinary('message', 'hello from within app');
-            res.status(202).json({ status: 'OK' });
+            res.status(202).json({status: 'OK'});
           });
         }, 10);
       });
@@ -81,9 +81,9 @@ describe('express middleware - integration test', () => {
   });
   it('should receive trace info from the client', done => {
     const record = sinon.spy();
-    const recorder = { record };
+    const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ recorder, ctxImpl });
+    const tracer = new Tracer({recorder, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
@@ -97,7 +97,7 @@ describe('express middleware - integration test', () => {
         setTimeout(() => {
           ctxImpl.letContext(ctx, () => {
             tracer.recordBinary('message', 'hello from within app');
-            res.status(202).json({ status: 'OK' });
+            res.status(202).json({status: 'OK'});
           });
         }, 10);
       });
@@ -159,9 +159,9 @@ describe('express middleware - integration test', () => {
 
   it('should properly report the URL with a query string', done => {
     const record = sinon.spy();
-    const recorder = { record };
+    const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ recorder, ctxImpl });
+    const tracer = new Tracer({recorder, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
@@ -175,7 +175,7 @@ describe('express middleware - integration test', () => {
         setTimeout(() => {
           ctxImpl.letContext(ctx, () => {
             tracer.recordBinary('message', 'hello from within app');
-            res.status(202).json({ status: 'OK' });
+            res.status(202).json({status: 'OK'});
           });
         }, 10);
       });
@@ -205,9 +205,9 @@ describe('express middleware - integration test', () => {
 
   it('should accept a 128bit X-B3-TraceId', done => {
     const record = sinon.spy();
-    const recorder = { record };
+    const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ recorder, ctxImpl });
+    const tracer = new Tracer({recorder, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
@@ -221,7 +221,7 @@ describe('express middleware - integration test', () => {
         setTimeout(() => {
           ctxImpl.letContext(ctx, () => {
             tracer.recordBinary('message', 'hello from within app');
-            res.status(202).json({ status: 'OK' });
+            res.status(202).json({status: 'OK'});
           });
         }, 10);
       });
@@ -252,12 +252,11 @@ describe('express middleware - integration test', () => {
       });
     });
   });
-
-  it('only contains flags header', done => {
+  it('should receive trace info from the client', done => {
     const record = sinon.spy();
-    const recorder = { record };
+    const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ recorder, ctxImpl });
+    const tracer = new Tracer({recorder, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
@@ -271,7 +270,7 @@ describe('express middleware - integration test', () => {
         setTimeout(() => {
           ctxImpl.letContext(ctx, () => {
             tracer.recordBinary('message', 'hello from within app');
-            res.status(202).json({ status: 'OK' });
+            res.status(202).json({status: 'OK'});
           });
         }, 10);
       });
@@ -323,5 +322,5 @@ describe('express middleware - integration test', () => {
           });
       });
     });
-  })
+  });
 });
