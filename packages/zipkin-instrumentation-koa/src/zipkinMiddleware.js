@@ -1,10 +1,10 @@
 const {Annotation} = require('zipkin');
 
-module.exports = function zipkinMiddleware(tracer) {
+module.exports = function zipkinMiddleware({tracer, serviceName}) {
   return async (ctx, next) => {
     const id = tracer.createRootId();
     tracer.setId(id);
-    tracer.recordServiceName('ms-1');
+    tracer.recordServiceName(serviceName);
     tracer.recordRpc(ctx.request.method.toUpperCase());
     tracer.recordBinary('http.url', ctx.request.path);
     tracer.recordAnnotation(new Annotation.ServerRecv());
