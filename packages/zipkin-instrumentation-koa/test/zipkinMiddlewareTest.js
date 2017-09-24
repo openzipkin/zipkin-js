@@ -9,15 +9,15 @@ describe('zipkinMiddlewareTest', () => {
   let app;
   let server;
   let tracer;
-  let annotations;
-  let binaryAnnotations;
+  let records;
+  let binaryRecords;
 
   before(() => {
     const record = (rec) => {
       if (rec.annotation.annotationType !== 'BinaryAnnotation') {
-        annotations[rec.annotation.annotationType] = rec.annotation;
+        records[rec.annotation.annotationType] = rec;
       } else {
-        binaryAnnotations[rec.annotation.key] = rec.annotation;
+        binaryRecords[rec.annotation.key] = rec;
       }
     };
     tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: {record}});
@@ -25,38 +25,92 @@ describe('zipkinMiddlewareTest', () => {
 
   beforeEach(() => {
     app = new Koa();
-    annotations = {};
-    binaryAnnotations = {};
+    records = {};
+    binaryRecords = {};
   });
 
   afterEach(done => {
     server.close(done);
   });
 
-  it('should record annotations for root span', (done) => {
-    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service', port: 1234}));
+  it('should record annotations for root span', done => {
+    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
     app.use(ctx => {
       ctx.status = 201;
     });
     server = app.listen(0, () => {
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post'}).then(() => {
-        expect(annotations['ServiceName']).not.to.be.undefined;
-        expect(annotations['ServiceName'].serviceName).to.be.equal('foo-service');
+        expect(records['ServiceName'].annotation).not.to.be.undefined;
+        expect(records['ServiceName'].annotation.serviceName).to.be.equal('foo-service');
 
-        expect(annotations['Rpc']).to.not.be.defined;
-        expect(annotations['Rpc'].name).to.not.be.equal('get');
+        expect(records['Rpc'].annotation).to.not.be.defined;
+        expect(records['Rpc'].annotation.name).to.not.be.equal('get');
 
-        expect(annotations['LocalAddr']).not.to.be.undefined;
-        expect(annotations['ServerRecv']).not.to.be.undefined;
-        expect(annotations['ServerSend']).not.to.be.undefined;
+        expect(records['LocalAddr'].annotation).not.to.be.undefined;
+        expect(records['ServerRecv'].annotation).not.to.be.undefined;
+        expect(records['ServerSend'].annotation).not.to.be.undefined;
 
-        expect(binaryAnnotations['http.url']).not.to.be.undefined;
-        expect(binaryAnnotations['http.url'].value).to.be.equal('/foo');
+        expect(binaryRecords['http.url'].annotation).not.to.be.undefined;
+        expect(binaryRecords['http.url'].annotation.value).to.be.equal('/foo');
 
-        expect(binaryAnnotations['http.status_code']).not.to.be.undefined;
-        expect(binaryAnnotations['http.status_code'].value).to.be.equal('201');
-      }).then(done)
-        .catch(done);
+        expect(binaryRecords['http.status_code'].annotation).not.to.be.undefined;
+        expect(binaryRecords['http.status_code'].annotation.value).to.be.equal('201');
+
+        const traceId = records['ServiceName'].traceId;
+        expect(traceId.traceId).to.have.lengthOf(16);
+        expect(traceId.spanId).to.be.equal(traceId.traceId);
+        expect(traceId.parentId).to.be.equal(traceId.spanId);
+
+        Object.keys(records).forEach(rec => {
+          expect(records[rec].traceId.traceId).to.be.equal(traceId.traceId);
+          expect(records[rec].traceId.spanId).to.be.equal(traceId.spanId);
+          expect(records[rec].traceId.parentId).to.be.equal(traceId.parentId);
+        });
+        done();
+      }).catch(done);
+    });
+  });
+
+  it('should record annotation for child span', done => {
+    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
+    app.use(ctx => {
+      ctx.status = 201;
+    });
+    server = app.listen(0, () => {
+      const headers = {
+        'X-B3-TraceId': 'trace1d',
+        'X-B3-ParentSpanId': 'parent5pan1d',
+        'X-B3-SpanId': '5span1d'
+      };
+      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
+        expect(records['ServiceName'].annotation).not.to.be.undefined;
+        expect(records['ServiceName'].annotation.serviceName).to.be.equal('foo-service');
+
+        expect(records['Rpc'].annotation).to.not.be.defined;
+        expect(records['Rpc'].annotation.name).to.not.be.equal('get');
+
+        expect(records['LocalAddr'].annotation).not.to.be.undefined;
+        expect(records['ServerRecv'].annotation).not.to.be.undefined;
+        expect(records['ServerSend'].annotation).not.to.be.undefined;
+
+        expect(binaryRecords['http.url'].annotation).not.to.be.undefined;
+        expect(binaryRecords['http.url'].annotation.value).to.be.equal('/foo');
+
+        expect(binaryRecords['http.status_code'].annotation).not.to.be.undefined;
+        expect(binaryRecords['http.status_code'].annotation.value).to.be.equal('201');
+
+        const traceId = records['ServiceName'].traceId;
+        expect(traceId.traceId).to.be.equal('trace1d');
+        expect(traceId.spanId.value).to.be.equal('5span1d');
+        expect(traceId.parentId).to.be.equal('parent5pan1d');
+
+        Object.keys(records).forEach(rec => {
+          expect(records[rec].traceId.traceId).to.be.equal(traceId.traceId);
+          expect(records[rec].traceId.spanId).to.be.equal(traceId.spanId);
+          expect(records[rec].traceId.parentId).to.be.equal(traceId.parentId);
+        });
+        done();
+      }).catch(done);
     });
   });
 });

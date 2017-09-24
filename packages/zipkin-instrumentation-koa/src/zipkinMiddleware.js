@@ -1,8 +1,16 @@
-const {Annotation} = require('zipkin');
+const {Annotation, TraceId, option: {Some, None}} = require('zipkin');
 
 module.exports = function zipkinMiddleware({tracer, serviceName}) {
   return async (ctx, next) => {
-    const id = tracer.createRootId();
+    let id;
+    if (ctx.request.headers['x-b3-traceid']) {
+      const traceId = new Some(ctx.request.headers['x-b3-traceid']);
+      const parentId = new Some(ctx.request.headers['x-b3-parentspanid']);
+      const spanId = new Some(ctx.request.headers['x-b3-spanid']);
+      id = new TraceId({traceId, parentId, spanId});
+    } else {
+      id = tracer.createRootId();
+    }
     tracer.setId(id);
     tracer.recordServiceName(serviceName);
     tracer.recordRpc(ctx.request.method.toUpperCase());
