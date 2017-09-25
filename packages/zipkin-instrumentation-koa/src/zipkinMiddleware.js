@@ -1,12 +1,12 @@
-const {Annotation, TraceId, option: {Some, None}} = require('zipkin');
+const {Annotation, TraceId, HttpHeaders, option} = require('zipkin');
 
 module.exports = function zipkinMiddleware({tracer, serviceName}) {
   return async (ctx, next) => {
     let id;
-    if (ctx.request.headers['x-b3-traceid']) {
-      const traceId = new Some(ctx.request.headers['x-b3-traceid']);
-      const parentId = new Some(ctx.request.headers['x-b3-parentspanid']);
-      const spanId = new Some(ctx.request.headers['x-b3-spanid']);
+    if (hasTrace(ctx.request)) {
+      const traceId = option.fromNullable(ctx.request.headers[HttpHeaders.TraceId.toLowerCase()]);
+      const parentId = option.fromNullable(ctx.request.headers[HttpHeaders.ParentSpanId.toLowerCase()]);
+      const spanId = option.fromNullable(ctx.request.headers[HttpHeaders.SpanId.toLowerCase()]);
       id = new TraceId({traceId, parentId, spanId});
     } else {
       id = tracer.createRootId();
@@ -25,3 +25,8 @@ module.exports = function zipkinMiddleware({tracer, serviceName}) {
     tracer.recordAnnotation(new Annotation.ServerSend());
   };
 };
+
+function hasTrace(request) {
+  return typeof(request.headers[HttpHeaders.TraceId.toLowerCase()]) !== 'undefined'
+    && typeof(request.headers[HttpHeaders.SpanId.toLowerCase()]) !== 'undefined';
+}

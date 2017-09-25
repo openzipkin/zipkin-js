@@ -79,8 +79,8 @@ describe('zipkinMiddlewareTest', () => {
     server = app.listen(0, () => {
       const headers = {
         'X-B3-TraceId': 'trace1d',
-        'X-B3-ParentSpanId': 'parent5pan1d',
-        'X-B3-SpanId': '5span1d'
+        'X-B3-SpanId': '5pan1d',
+        'X-B3-ParentSpanId': 'parent5pan1d'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         expect(records['ServiceName'].annotation).not.to.be.undefined;
@@ -101,7 +101,7 @@ describe('zipkinMiddlewareTest', () => {
 
         const traceId = records['ServiceName'].traceId;
         expect(traceId.traceId).to.be.equal('trace1d');
-        expect(traceId.spanId.value).to.be.equal('5span1d');
+        expect(traceId.spanId.value).to.be.equal('5pan1d');
         expect(traceId.parentId).to.be.equal('parent5pan1d');
 
         Object.keys(records).forEach(rec => {
@@ -109,6 +109,28 @@ describe('zipkinMiddlewareTest', () => {
           expect(records[rec].traceId.spanId).to.be.equal(traceId.spanId);
           expect(records[rec].traceId.parentId).to.be.equal(traceId.parentId);
         });
+        done();
+      }).catch(done);
+    });
+  });
+
+  it('should handle absence of optional headers', (done) => {
+    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
+    app.use(ctx => {
+      ctx.status = 201;
+    });
+    server = app.listen(0, () => {
+      const headers = {
+        'X-B3-TraceId': 'trace1d',
+        'X-B3-SpanId': '5pan1d'
+      };
+      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
+        expect(records['ServiceName'].annotation).not.to.be.undefined;
+
+        const traceId = records['ServiceName'].traceId;
+        expect(traceId.traceId).to.be.equal('trace1d');
+        expect(traceId.spanId.value).to.be.equal('5pan1d');
+        expect(traceId.parentId).to.be.equal(traceId.spanId);
         done();
       }).catch(done);
     });
