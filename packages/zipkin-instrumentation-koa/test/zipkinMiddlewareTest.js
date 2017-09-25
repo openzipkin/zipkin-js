@@ -72,7 +72,7 @@ describe('zipkinMiddlewareTest', () => {
   });
 
   it('should record annotation for child span', done => {
-    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
+    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service', port: 3002}));
     app.use(ctx => {
       ctx.status = 201;
     });
@@ -90,6 +90,8 @@ describe('zipkinMiddlewareTest', () => {
         expect(records['Rpc'].annotation.name).to.not.be.equal('get');
 
         expect(records['LocalAddr'].annotation).not.to.be.undefined;
+        expect(records['LocalAddr'].annotation.port).to.be.equal(3002);
+
         expect(records['ServerRecv'].annotation).not.to.be.undefined;
         expect(records['ServerSend'].annotation).not.to.be.undefined;
 

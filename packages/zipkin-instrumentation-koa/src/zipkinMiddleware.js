@@ -1,6 +1,6 @@
 const {Annotation, TraceId, HttpHeaders, option} = require('zipkin');
 
-module.exports = function zipkinMiddleware({tracer, serviceName}) {
+module.exports = function zipkinMiddleware({tracer, serviceName, port}) {
   return async (ctx, next) => {
     let id;
     if (hasTrace(ctx.request)) {
@@ -16,7 +16,7 @@ module.exports = function zipkinMiddleware({tracer, serviceName}) {
     tracer.recordRpc(ctx.request.method.toUpperCase());
     tracer.recordBinary('http.url', ctx.request.path);
     tracer.recordAnnotation(new Annotation.ServerRecv());
-    tracer.recordAnnotation(new Annotation.LocalAddr({port: '3001'}));
+    tracer.recordAnnotation(new Annotation.LocalAddr({port}));
 
     await next();
 
