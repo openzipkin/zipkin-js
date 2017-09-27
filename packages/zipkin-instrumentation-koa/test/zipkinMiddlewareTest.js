@@ -39,12 +39,16 @@ describe('zipkinMiddlewareTest', () => {
       ctx.status = 201;
     });
     server = app.listen(0, () => {
-      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post'}).then(() => {
+      const headers = {
+        'X-B3-TraceId': 'aaa-123',
+        'X-B3-SpanId': 'aaa-123'
+      };
+      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         expect(records['ServiceName'].annotation).not.to.be.undefined;
         expect(records['ServiceName'].annotation.serviceName).to.be.equal('foo-service');
 
         expect(records['Rpc'].annotation).to.not.be.defined;
-        expect(records['Rpc'].annotation.name).to.not.be.equal('get');
+        expect(records['Rpc'].annotation.name).to.be.equal('POST');
 
         expect(records['LocalAddr'].annotation).not.to.be.undefined;
         expect(records['ServerRecv'].annotation).not.to.be.undefined;
@@ -57,8 +61,8 @@ describe('zipkinMiddlewareTest', () => {
         expect(binaryRecords['http.status_code'].annotation.value).to.be.equal('201');
 
         const traceId = records['ServiceName'].traceId;
-        expect(traceId.traceId).to.have.lengthOf(16);
-        expect(traceId.spanId).to.be.equal(traceId.traceId);
+        expect(traceId.traceId).to.be.equal('aaa-123');
+        expect(traceId.spanId.value).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
 
         Object.keys(records).forEach(rec => {
@@ -78,16 +82,16 @@ describe('zipkinMiddlewareTest', () => {
     });
     server = app.listen(0, () => {
       const headers = {
-        'X-B3-TraceId': 'trace1d',
-        'X-B3-SpanId': '5pan1d',
-        'X-B3-ParentSpanId': 'parent5pan1d'
+        'X-B3-TraceId': 'aaa-123',
+        'X-B3-SpanId': 'bbb-123',
+        'X-B3-ParentSpanId': 'ccc-123'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         expect(records['ServiceName'].annotation).not.to.be.undefined;
         expect(records['ServiceName'].annotation.serviceName).to.be.equal('foo-service');
 
         expect(records['Rpc'].annotation).to.not.be.defined;
-        expect(records['Rpc'].annotation.name).to.not.be.equal('get');
+        expect(records['Rpc'].annotation.name).to.be.equal('POST');
 
         expect(records['LocalAddr'].annotation).not.to.be.undefined;
         expect(records['LocalAddr'].annotation.port).to.be.equal(3002);
@@ -102,9 +106,9 @@ describe('zipkinMiddlewareTest', () => {
         expect(binaryRecords['http.status_code'].annotation.value).to.be.equal('201');
 
         const traceId = records['ServiceName'].traceId;
-        expect(traceId.traceId).to.be.equal('trace1d');
-        expect(traceId.spanId.value).to.be.equal('5pan1d');
-        expect(traceId.parentId).to.be.equal('parent5pan1d');
+        expect(traceId.traceId).to.be.equal('aaa-123');
+        expect(traceId.spanId.value).to.be.equal('bbb-123');
+        expect(traceId.parentId).to.be.equal('ccc-123');
 
         Object.keys(records).forEach(rec => {
           expect(records[rec].traceId.traceId).to.be.equal(traceId.traceId);
@@ -116,22 +120,21 @@ describe('zipkinMiddlewareTest', () => {
     });
   });
 
-  it('should handle absence of optional headers', (done) => {
+  it('should create root span and record annotations', (done) => {
     app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
     app.use(ctx => {
       ctx.status = 201;
     });
     server = app.listen(0, () => {
       const headers = {
-        'X-B3-TraceId': 'trace1d',
-        'X-B3-SpanId': '5pan1d'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         expect(records['ServiceName'].annotation).not.to.be.undefined;
 
         const traceId = records['ServiceName'].traceId;
-        expect(traceId.traceId).to.be.equal('trace1d');
-        expect(traceId.spanId.value).to.be.equal('5pan1d');
+
+        expect(traceId.traceId).to.have.lengthOf(16);
+        expect(traceId.spanId).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
         done();
       }).catch(done);
