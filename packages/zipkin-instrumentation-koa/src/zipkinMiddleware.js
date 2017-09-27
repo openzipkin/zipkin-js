@@ -7,7 +7,9 @@ module.exports = function zipkinMiddleware({tracer, serviceName, port}) {
       const traceId = option.fromNullable(ctx.request.headers[HttpHeaders.TraceId.toLowerCase()]);
       const parentId = option.fromNullable(ctx.request.headers[HttpHeaders.ParentSpanId.toLowerCase()]);
       const spanId = option.fromNullable(ctx.request.headers[HttpHeaders.SpanId.toLowerCase()]);
-      id = new TraceId({traceId, parentId, spanId});
+      const sampled = option.fromNullable(ctx.request.headers[HttpHeaders.Sampled.toLowerCase()]);
+      const flags = ctx.request.headers[HttpHeaders.Flags.toLowerCase()];
+      id = new TraceId({traceId, parentId, spanId, sampled, flags});
     } else {
       id = tracer.createRootId();
     }

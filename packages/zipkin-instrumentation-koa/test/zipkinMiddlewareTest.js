@@ -1,7 +1,7 @@
 const zipkinMiddleware = require('../src/zipkinMiddleware');
 const Koa = require('koa');
 
-const {Tracer, ExplicitContext} = require('zipkin');
+const {Tracer, ExplicitContext, option} = require('zipkin');
 
 const fetch = require('node-fetch');
 
@@ -41,7 +41,8 @@ describe('zipkinMiddlewareTest', () => {
     server = app.listen(0, () => {
       const headers = {
         'X-B3-TraceId': 'aaa-123',
-        'X-B3-SpanId': 'aaa-123'
+        'X-B3-SpanId': 'aaa-123',
+        'X-B3-Sampled': '1'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         expect(records['ServiceName'].annotation).not.to.be.undefined;
@@ -62,13 +63,16 @@ describe('zipkinMiddlewareTest', () => {
 
         const traceId = records['ServiceName'].traceId;
         expect(traceId.traceId).to.be.equal('aaa-123');
-        expect(traceId.spanId.value).to.be.equal(traceId.traceId);
+        expect(traceId.spanId.getOrElse()).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
+        expect(traceId.sampled.getOrElse()).to.be.equal('1');
+        expect(traceId.flags).to.be.equal(0);
 
         Object.keys(records).forEach(rec => {
           expect(records[rec].traceId.traceId).to.be.equal(traceId.traceId);
           expect(records[rec].traceId.spanId).to.be.equal(traceId.spanId);
           expect(records[rec].traceId.parentId).to.be.equal(traceId.parentId);
+          expect(records[rec].traceId.sampled.getOrElse()).to.be.equal(traceId.sampled.getOrElse());
         });
         done();
       }).catch(done);
@@ -84,7 +88,8 @@ describe('zipkinMiddlewareTest', () => {
       const headers = {
         'X-B3-TraceId': 'aaa-123',
         'X-B3-SpanId': 'bbb-123',
-        'X-B3-ParentSpanId': 'ccc-123'
+        'X-B3-ParentSpanId': 'ccc-123',
+        'X-B3-Sampled': '1'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         expect(records['ServiceName'].annotation).not.to.be.undefined;
@@ -109,11 +114,14 @@ describe('zipkinMiddlewareTest', () => {
         expect(traceId.traceId).to.be.equal('aaa-123');
         expect(traceId.spanId.value).to.be.equal('bbb-123');
         expect(traceId.parentId).to.be.equal('ccc-123');
+        expect(traceId.sampled.getOrElse()).to.be.equal('1');
+        expect(traceId.flags).to.be.equal(0);
 
         Object.keys(records).forEach(rec => {
           expect(records[rec].traceId.traceId).to.be.equal(traceId.traceId);
           expect(records[rec].traceId.spanId).to.be.equal(traceId.spanId);
           expect(records[rec].traceId.parentId).to.be.equal(traceId.parentId);
+          expect(records[rec].traceId.sampled.getOrElse()).to.be.equal(traceId.sampled.getOrElse());
         });
         done();
       }).catch(done);
@@ -126,16 +134,53 @@ describe('zipkinMiddlewareTest', () => {
       ctx.status = 201;
     });
     server = app.listen(0, () => {
-      const headers = {
-      };
-      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
-        expect(records['ServiceName'].annotation).not.to.be.undefined;
-
+      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post'}).then(() => {
         const traceId = records['ServiceName'].traceId;
 
         expect(traceId.traceId).to.have.lengthOf(16);
         expect(traceId.spanId).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
+        expect(traceId.sampled.getOrElse()).to.be.equal(true);
+        expect(traceId.flags).to.be.equal(0);
+        done();
+      }).catch(done);
+    });
+  });
+
+  it('should set sampled=0', (done) => {
+    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
+    app.use(ctx => {
+      ctx.status = 201;
+    });
+    server = app.listen(0, () => {
+      const headers = {
+        'X-B3-TraceId': 'aaa-123',
+        'X-B3-SpanId': 'bbb-123',
+        'X-B3-Sampled': '0'
+      };
+      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
+        const traceId = records['ServiceName'].traceId;
+        expect(traceId.sampled.getOrElse()).to.be.equal('0');
+        done();
+      }).catch(done);
+    });
+  });
+
+  it('should set flags=1 and sampled=1', (done) => {
+    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
+    app.use(ctx => {
+      ctx.status = 201;
+    });
+    server = app.listen(0, () => {
+      const headers = {
+        'X-B3-TraceId': 'aaa-123',
+        'X-B3-SpanId': 'bbb-123',
+        'X-B3-Flags': '1'
+      };
+      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
+        const traceId = records['ServiceName'].traceId;
+        expect(traceId.sampled.getOrElse()).to.be.equal(true);
+        expect(traceId.flags).to.be.equal('1');
         done();
       }).catch(done);
     });
