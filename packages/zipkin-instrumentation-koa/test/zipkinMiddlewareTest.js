@@ -138,9 +138,9 @@ describe('zipkinMiddlewareTest', () => {
         const traceId = records['ServiceName'].traceId;
 
         expect(traceId.traceId).to.have.lengthOf(16);
-        expect(traceId.spanId).to.be.equal(traceId.traceId);
-        expect(traceId.parentId).to.be.equal(traceId.spanId);
-        expect(traceId.sampled.getOrElse()).to.be.equal(true);
+        expect(traceId.spanId.getOrElse()).to.be.equal(traceId.traceId);
+        expect(traceId.parentId).to.be.equal(traceId.spanId.getOrElse());
+        expect(traceId.sampled.getOrElse()).to.be.undefined;
         expect(traceId.flags).to.be.equal(0);
         done();
       }).catch(done);
@@ -180,7 +180,26 @@ describe('zipkinMiddlewareTest', () => {
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         const traceId = records['ServiceName'].traceId;
         expect(traceId.sampled.getOrElse()).to.be.equal(true);
-        expect(traceId.flags).to.be.equal('1');
+        expect(traceId.flags).to.be.equal(1);
+        done();
+      }).catch(done);
+    });
+  });
+
+  it('should set flags=1 and sampled=1 for created span', (done) => {
+    app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
+    app.use(ctx => {
+      ctx.status = 201;
+    });
+    server = app.listen(0, () => {
+      const headers = {
+        'X-B3-Flags': '1'
+      };
+      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
+        const traceId = records['ServiceName'].traceId;
+
+        expect(traceId.sampled.getOrElse()).to.be.true;
+        expect(traceId.flags).to.be.equal(1);
         done();
       }).catch(done);
     });
