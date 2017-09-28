@@ -91,7 +91,7 @@ describe('redis interceptor', () => {
         const firstAnn = annotations[0];
         expect(annotations).to.have.length(11);
         expect(annotations[5].annotation.key).to.equal('commands');
-        expect(annotations[5].annotation.value).to.deep.equal([['get', 'ping']]);
+        expect(annotations[5].annotation.value).to.deep.equal('[["get","ping"]]');
         expect(annotations[6].annotation.name).to.equal('exec');
 
         // we expect two spans, run annotations tests for each
