@@ -1,5 +1,3 @@
-/* eslint no-param-reassign: ["error", { "props": false }] */
-
 const zipkinMiddleware = require('../src/zipkinMiddleware');
 const Koa = require('koa');
 

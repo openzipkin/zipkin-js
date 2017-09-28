@@ -1,6 +1,6 @@
 # zipkin-instrumentation-koa
 
-Zipkin middleware for Koa that traces incoming HTTP requests.
+Zipkin middleware for Koa 2.x that traces incoming HTTP requests.
 
 ## Installation
 `npm install zipkin-instrumentation-koa`
