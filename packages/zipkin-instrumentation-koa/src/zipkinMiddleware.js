@@ -1,6 +1,6 @@
 const {Annotation, TraceId, HttpHeaders, option} = require('zipkin');
 
-module.exports = function zipkinMiddleware({tracer, serviceName, port}) {
+module.exports = function zipkinMiddleware({tracer, serviceName = 'unknown', port = 0}) {
   return async (ctx, next) => {
     const id = getTraceId(ctx.request, tracer);
 
