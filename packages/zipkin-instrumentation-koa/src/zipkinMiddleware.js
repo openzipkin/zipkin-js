@@ -37,8 +37,7 @@ function getTraceId(request, tracer) {
 }
 
 function hasTrace(request) {
-  return typeof(request.headers[HttpHeaders.TraceId.toLowerCase()]) !== 'undefined'
-    && typeof(request.headers[HttpHeaders.SpanId.toLowerCase()]) !== 'undefined';
+  return typeof(request.headers[HttpHeaders.SpanId.toLowerCase()]) !== 'undefined';
 }
 
 function traceIdFromHeaders(request, sampled, flags) {
