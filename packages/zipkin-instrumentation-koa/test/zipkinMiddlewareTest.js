@@ -1,3 +1,5 @@
+/* eslint no-param-reassign: ["error", { "props": false }] */
+
 const zipkinMiddleware = require('../src/zipkinMiddleware');
 const Koa = require('koa');
 
@@ -46,27 +48,27 @@ describe('zipkinMiddlewareTest', () => {
         'X-B3-Sampled': '1'
       };
       fetch(url, {method: 'post', headers}).then(() => {
-        expect(records['ServiceName']).not.to.be.undefined;
-        expect(records['ServiceName'].annotation.serviceName).to.be.equal('foo-service');
+        expect(records.ServiceName).to.be.not.equal(undefined);
+        expect(records.ServiceName.annotation.serviceName).to.be.equal('foo-service');
 
-        expect(records['Rpc']).to.not.be.defined;
-        expect(records['Rpc'].annotation.name).to.be.equal('POST');
+        expect(records.Rpc).to.not.be.equal(undefined);
+        expect(records.Rpc.annotation.name).to.be.equal('POST');
 
-        expect(records['LocalAddr']).not.to.be.undefined;
-        expect(records['ServerRecv']).not.to.be.undefined;
-        expect(records['ServerSend']).not.to.be.undefined;
+        expect(records.LocalAddr).to.be.not.equal(undefined);
+        expect(records.ServerRecv).to.be.not.equal(undefined);
+        expect(records.ServerSend).to.be.not.equal(undefined);
 
-        expect(binaryRecords['http.url']).not.to.be.undefined;
+        expect(binaryRecords['http.url']).to.be.not.equal(undefined);
         expect(binaryRecords['http.url'].annotation.value).to.be.equal(url);
 
-        expect(binaryRecords['http.status_code']).not.to.be.undefined;
+        expect(binaryRecords['http.status_code']).to.be.not.equal(undefined);
         expect(binaryRecords['http.status_code'].annotation.value).to.be.equal('201');
 
-        const traceId = records['ServiceName'].traceId;
+        const traceId = records.ServiceName.traceId;
         expect(traceId.traceId).to.be.equal('aaa-123');
         expect(traceId.spanId).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
-        expect(traceId.sampled.getOrElse()).to.be.true;
+        expect(traceId.sampled.getOrElse()).to.be.equal(true);
         expect(traceId.flags).to.be.equal(0);
 
         Object.keys(records).forEach(rec => {
@@ -93,22 +95,22 @@ describe('zipkinMiddlewareTest', () => {
         'X-B3-Sampled': '1'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
-        expect(records['ServiceName']).not.to.be.undefined;
-        expect(records['Rpc']).to.not.be.defined;
+        expect(records.ServiceName).to.be.not.equal(undefined);
+        expect(records.Rpc).to.not.be.equal(undefined);
 
-        expect(records['LocalAddr']).not.to.be.undefined;
+        expect(records.LocalAddr).to.be.not.equal(undefined);
 
-        expect(records['ServerRecv']).not.to.be.undefined;
-        expect(records['ServerSend']).not.to.be.undefined;
+        expect(records.ServerRecv).to.be.not.equal(undefined);
+        expect(records.ServerSend).to.be.not.equal(undefined);
 
-        expect(binaryRecords['http.url']).not.to.be.undefined;
-        expect(binaryRecords['http.status_code']).not.to.be.undefined;
+        expect(binaryRecords['http.url']).to.be.not.equal(undefined);
+        expect(binaryRecords['http.status_code']).to.be.not.equal(undefined);
 
-        const traceId = records['ServiceName'].traceId;
+        const traceId = records.ServiceName.traceId;
         expect(traceId.traceId).to.be.equal('aaa-123');
         expect(traceId.spanId).to.be.equal('bbb-123');
         expect(traceId.parentId).to.be.equal('ccc-123');
-        expect(traceId.sampled.getOrElse()).to.be.true;
+        expect(traceId.sampled.getOrElse()).to.be.equal(true);
         expect(traceId.flags).to.be.equal(0);
 
         Object.keys(records).forEach(rec => {
@@ -129,12 +131,12 @@ describe('zipkinMiddlewareTest', () => {
     });
     server = app.listen(0, () => {
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post'}).then(() => {
-        const traceId = records['ServiceName'].traceId;
+        const traceId = records.ServiceName.traceId;
 
         expect(traceId.traceId).to.have.lengthOf(16);
         expect(traceId.spanId).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
-        expect(traceId.sampled.getOrElse()).to.be.true;
+        expect(traceId.sampled.getOrElse()).to.be.equal(true);
         expect(traceId.flags).to.be.equal(0);
         done();
       }).catch(done);
@@ -153,8 +155,8 @@ describe('zipkinMiddlewareTest', () => {
         'X-B3-Sampled': '0'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
-        const traceId = records['ServiceName'].traceId;
-        expect(traceId.sampled.getOrElse()).to.be.false;
+        const traceId = records.ServiceName.traceId;
+        expect(traceId.sampled.getOrElse()).to.be.equal(false);
         done();
       }).catch(done);
     });
@@ -172,7 +174,7 @@ describe('zipkinMiddlewareTest', () => {
         'X-B3-Flags': '1'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
-        const traceId = records['ServiceName'].traceId;
+        const traceId = records.ServiceName.traceId;
 
         expect(traceId.sampled.getOrElse()).to.be.equal(true);
         expect(traceId.flags).to.be.equal(1);
@@ -191,9 +193,9 @@ describe('zipkinMiddlewareTest', () => {
         'X-B3-Flags': '1'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
-        const traceId = records['ServiceName'].traceId;
+        const traceId = records.ServiceName.traceId;
 
-        expect(traceId.sampled.getOrElse()).to.be.true;
+        expect(traceId.sampled.getOrElse()).to.be.equal(true);
         expect(traceId.flags).to.be.equal(1);
         done();
       }).catch(done);
