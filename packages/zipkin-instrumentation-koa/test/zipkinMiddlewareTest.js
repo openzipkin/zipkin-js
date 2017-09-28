@@ -179,6 +179,7 @@ describe('zipkinMiddlewareTest', () => {
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         const traceId = records['ServiceName'].traceId;
+
         expect(traceId.sampled.getOrElse()).to.be.equal(true);
         expect(traceId.flags).to.be.equal(1);
         done();
