@@ -4,9 +4,15 @@ module.exports = function zipkinMiddleware({tracer, serviceName, port}) {
   return async (ctx, next) => {
     let id;
 
-    const sampled = option.fromNullable(ctx.request.headers[HttpHeaders.Sampled.toLowerCase()]);
+    const sampled = option.fromNullable(ctx.request.headers[HttpHeaders.Sampled.toLowerCase()])
+      .flatMap(value => {
+        if (value === '1') return option.fromNullable(true);
+        if (value === '0') return option.fromNullable(false);
+        return option.None;
+      });
+
     const flags = option.fromNullable(ctx.request.headers[HttpHeaders.Flags.toLowerCase()])
-      .map(parseInt).getOrElse(0);
+      .map(parseInt).getOrElse();
 
     if (hasTrace(ctx.request)) {
       const traceId = option.fromNullable(ctx.request.headers[HttpHeaders.TraceId.toLowerCase()]);

@@ -65,7 +65,7 @@ describe('zipkinMiddlewareTest', () => {
         expect(traceId.traceId).to.be.equal('aaa-123');
         expect(traceId.spanId.getOrElse()).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
-        expect(traceId.sampled.getOrElse()).to.be.equal('1');
+        expect(traceId.sampled.getOrElse()).to.be.true;
         expect(traceId.flags).to.be.equal(0);
 
         Object.keys(records).forEach(rec => {
@@ -114,7 +114,7 @@ describe('zipkinMiddlewareTest', () => {
         expect(traceId.traceId).to.be.equal('aaa-123');
         expect(traceId.spanId.value).to.be.equal('bbb-123');
         expect(traceId.parentId).to.be.equal('ccc-123');
-        expect(traceId.sampled.getOrElse()).to.be.equal('1');
+        expect(traceId.sampled.getOrElse()).to.be.true;
         expect(traceId.flags).to.be.equal(0);
 
         Object.keys(records).forEach(rec => {
@@ -138,9 +138,9 @@ describe('zipkinMiddlewareTest', () => {
         const traceId = records['ServiceName'].traceId;
 
         expect(traceId.traceId).to.have.lengthOf(16);
-        expect(traceId.spanId.getOrElse()).to.be.equal(traceId.traceId);
-        expect(traceId.parentId).to.be.equal(traceId.spanId.getOrElse());
-        expect(traceId.sampled.getOrElse()).to.be.undefined;
+        expect(traceId.spanId).to.be.equal(traceId.traceId);
+        expect(traceId.parentId).to.be.equal(traceId.spanId);
+        expect(traceId.sampled.getOrElse()).to.be.true;
         expect(traceId.flags).to.be.equal(0);
         done();
       }).catch(done);
@@ -160,7 +160,7 @@ describe('zipkinMiddlewareTest', () => {
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
         const traceId = records['ServiceName'].traceId;
-        expect(traceId.sampled.getOrElse()).to.be.equal('0');
+        expect(traceId.sampled.getOrElse()).to.be.false;
         done();
       }).catch(done);
     });
@@ -186,7 +186,7 @@ describe('zipkinMiddlewareTest', () => {
     });
   });
 
-  it('should set flags=1 and sampled=1 for created span', (done) => {
+  it('should set flags=1 and sampled=1 for created root span', (done) => {
     app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
     app.use(ctx => {
       ctx.status = 201;
