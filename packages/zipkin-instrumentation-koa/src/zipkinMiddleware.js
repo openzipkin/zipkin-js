@@ -7,7 +7,7 @@ module.exports = function zipkinMiddleware({tracer, serviceName, port}) {
     tracer.setId(id);
     tracer.recordServiceName(serviceName);
     tracer.recordRpc(ctx.request.method.toUpperCase());
-    tracer.recordBinary('http.url', ctx.request.path);
+    tracer.recordBinary('http.url', ctx.request.href);
     tracer.recordAnnotation(new Annotation.ServerRecv());
     tracer.recordAnnotation(new Annotation.LocalAddr({port}));
 

@@ -1,7 +1,7 @@
 const zipkinMiddleware = require('../src/zipkinMiddleware');
 const Koa = require('koa');
 
-const {Tracer, ExplicitContext, option} = require('zipkin');
+const {Tracer, ExplicitContext} = require('zipkin');
 
 const fetch = require('node-fetch');
 
@@ -39,26 +39,27 @@ describe('zipkinMiddlewareTest', () => {
       ctx.status = 201;
     });
     server = app.listen(0, () => {
+      const url = `http://localhost:${server.address().port}/foo?query=test`;
       const headers = {
         'X-B3-TraceId': 'aaa-123',
         'X-B3-SpanId': 'aaa-123',
         'X-B3-Sampled': '1'
       };
-      fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
-        expect(records['ServiceName'].annotation).not.to.be.undefined;
+      fetch(url, {method: 'post', headers}).then(() => {
+        expect(records['ServiceName']).not.to.be.undefined;
         expect(records['ServiceName'].annotation.serviceName).to.be.equal('foo-service');
 
-        expect(records['Rpc'].annotation).to.not.be.defined;
+        expect(records['Rpc']).to.not.be.defined;
         expect(records['Rpc'].annotation.name).to.be.equal('POST');
 
-        expect(records['LocalAddr'].annotation).not.to.be.undefined;
-        expect(records['ServerRecv'].annotation).not.to.be.undefined;
-        expect(records['ServerSend'].annotation).not.to.be.undefined;
+        expect(records['LocalAddr']).not.to.be.undefined;
+        expect(records['ServerRecv']).not.to.be.undefined;
+        expect(records['ServerSend']).not.to.be.undefined;
 
-        expect(binaryRecords['http.url'].annotation).not.to.be.undefined;
-        expect(binaryRecords['http.url'].annotation.value).to.be.equal('/foo');
+        expect(binaryRecords['http.url']).not.to.be.undefined;
+        expect(binaryRecords['http.url'].annotation.value).to.be.equal(url);
 
-        expect(binaryRecords['http.status_code'].annotation).not.to.be.undefined;
+        expect(binaryRecords['http.status_code']).not.to.be.undefined;
         expect(binaryRecords['http.status_code'].annotation.value).to.be.equal('201');
 
         const traceId = records['ServiceName'].traceId;
@@ -92,23 +93,16 @@ describe('zipkinMiddlewareTest', () => {
         'X-B3-Sampled': '1'
       };
       fetch(`http://localhost:${server.address().port}/foo`, {method: 'post', headers}).then(() => {
-        expect(records['ServiceName'].annotation).not.to.be.undefined;
-        expect(records['ServiceName'].annotation.serviceName).to.be.equal('foo-service');
+        expect(records['ServiceName']).not.to.be.undefined;
+        expect(records['Rpc']).to.not.be.defined;
 
-        expect(records['Rpc'].annotation).to.not.be.defined;
-        expect(records['Rpc'].annotation.name).to.be.equal('POST');
+        expect(records['LocalAddr']).not.to.be.undefined;
 
-        expect(records['LocalAddr'].annotation).not.to.be.undefined;
-        expect(records['LocalAddr'].annotation.port).to.be.equal(3002);
+        expect(records['ServerRecv']).not.to.be.undefined;
+        expect(records['ServerSend']).not.to.be.undefined;
 
-        expect(records['ServerRecv'].annotation).not.to.be.undefined;
-        expect(records['ServerSend'].annotation).not.to.be.undefined;
-
-        expect(binaryRecords['http.url'].annotation).not.to.be.undefined;
-        expect(binaryRecords['http.url'].annotation.value).to.be.equal('/foo');
-
-        expect(binaryRecords['http.status_code'].annotation).not.to.be.undefined;
-        expect(binaryRecords['http.status_code'].annotation.value).to.be.equal('201');
+        expect(binaryRecords['http.url']).not.to.be.undefined;
+        expect(binaryRecords['http.status_code']).not.to.be.undefined;
 
         const traceId = records['ServiceName'].traceId;
         expect(traceId.traceId).to.be.equal('aaa-123');
@@ -128,7 +122,7 @@ describe('zipkinMiddlewareTest', () => {
     });
   });
 
-  it('should create root span and record annotations', (done) => {
+  it('should create root span', (done) => {
     app.use(zipkinMiddleware({tracer, serviceName: 'foo-service'}));
     app.use(ctx => {
       ctx.status = 201;
