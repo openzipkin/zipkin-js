@@ -2,6 +2,7 @@
   "name": "zipkin-instrumentation-koa",
   "version": "0.7.3",
   "description": "Koa middleware for instrumentation with Zipkin.js",
+  "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha --require ../../test/helper.js",
