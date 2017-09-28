@@ -57,7 +57,7 @@ module.exports = function zipkinClient(
           tracer.scoped(() => {
             id = tracer.createChildId();
             tracer.setId(id);
-            tracer.recordBinary('commands', args[0]);
+            tracer.recordBinary('commands', JSON.stringify(args[0]));
           });
           wrap(multiInstance, id);
           return multiInstance;
