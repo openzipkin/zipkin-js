@@ -82,7 +82,7 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
       tracer.recordRpc(req.method.toUpperCase());
       tracer.recordBinary('http.url', formatRequestUrl(req));
       tracer.recordAnnotation(new Annotation.ServerRecv());
-      tracer.recordAnnotation(new Annotation.LocalAddr({port}));
+      tracer.recordLocalAddr({port});
 
       if (id.flags !== 0 && id.flags != null) {
         tracer.recordBinary(Header.Flags, id.flags.toString());

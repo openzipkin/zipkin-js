@@ -1,22 +1,20 @@
 {
-  "name": "zipkin-transport-http",
+  "name": "zipkin-local-address",
   "version": "0.7.3",
-  "description": "Transports Zipkin trace data via HTTP",
+  "description": "Adds default host functionality",
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
+  "dependencies": {
+    "network-address": "^1.1.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.23.0",
-    "body-parser": "^1.15.2",
-    "express": "^4.13.4",
-    "mocha": "^3.2.0",
-    "node-fetch": "^1.5.3",
     "zipkin": "^0.7.3"
   }
 }
