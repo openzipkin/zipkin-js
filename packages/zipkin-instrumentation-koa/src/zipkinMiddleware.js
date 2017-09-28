@@ -21,11 +21,10 @@ module.exports = function zipkinMiddleware({tracer, serviceName = 'unknown', por
 
 function getTraceId(request, tracer) {
   const sampled = option.fromNullable(request.headers[HttpHeaders.Sampled.toLowerCase()])
-    .flatMap(value => {
-      if (value === '1') return option.fromNullable(true);
-      if (value === '0') return option.fromNullable(false);
-      return option.None;
-    });
+    .map(value => {
+      if (value === '1') return true;
+      if (value === '0') return false;
+    }).flatMap(option.fromNullable);
 
   const flags = option.fromNullable(request.headers[HttpHeaders.Flags.toLowerCase()])
     .map(parseInt).getOrElse();
@@ -45,7 +44,7 @@ function hasTrace(request) {
 function traceIdFromHeaders(request, sampled, flags) {
   const traceId = option.fromNullable(request.headers[HttpHeaders.TraceId.toLowerCase()]);
   const parentId = option.fromNullable(request.headers[HttpHeaders.ParentSpanId.toLowerCase()]);
-  const spanId = option.fromNullable(request.headers[HttpHeaders.SpanId.toLowerCase()]);
+  const spanId = request.headers[HttpHeaders.SpanId.toLowerCase()];
   return new TraceId({traceId, parentId, spanId, sampled, flags});
 }
 
@@ -55,7 +54,7 @@ function rootTraceId(tracer, sampled, flags) {
     return new TraceId({
       traceId: option.fromNullable(rootId.traceId),
       parentId: option.fromNullable(rootId.parentId),
-      spanId: option.fromNullable(rootId.spanId),
+      spanId: rootId.spanId,
       sampled,
       flags
     });

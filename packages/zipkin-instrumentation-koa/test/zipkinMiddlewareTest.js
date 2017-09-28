@@ -64,7 +64,7 @@ describe('zipkinMiddlewareTest', () => {
 
         const traceId = records['ServiceName'].traceId;
         expect(traceId.traceId).to.be.equal('aaa-123');
-        expect(traceId.spanId.getOrElse()).to.be.equal(traceId.traceId);
+        expect(traceId.spanId).to.be.equal(traceId.traceId);
         expect(traceId.parentId).to.be.equal(traceId.spanId);
         expect(traceId.sampled.getOrElse()).to.be.true;
         expect(traceId.flags).to.be.equal(0);
@@ -106,7 +106,7 @@ describe('zipkinMiddlewareTest', () => {
 
         const traceId = records['ServiceName'].traceId;
         expect(traceId.traceId).to.be.equal('aaa-123');
-        expect(traceId.spanId.value).to.be.equal('bbb-123');
+        expect(traceId.spanId).to.be.equal('bbb-123');
         expect(traceId.parentId).to.be.equal('ccc-123');
         expect(traceId.sampled.getOrElse()).to.be.true;
         expect(traceId.flags).to.be.equal(0);
