@@ -3,6 +3,8 @@
 This is the core npm package for Zipkin. It contains the public API which is used by the various
 plugins (instrumentations and transports).
 
+We include TypeScript [definition file](index.d.ts) which you can also use a documentation.
+
 ## Usage
 
 ```javascript
