@@ -22,7 +22,7 @@ declare namespace zipkin {
     recordClientAddr(inetAddress: InetAddress): void;
     recordServerAddr(inetAddress: InetAddress): void;
     recordLocalAddr(inetAddress: InetAddress): void;
-    recordBinary(key: string, value: any): void;
+    recordBinary(key: string, value: boolean | string | number): void;
     writeIdToConsole(message: any): void;
   }
 
@@ -111,7 +111,7 @@ declare namespace zipkin {
     }
 
     class BinaryAnnotation implements IAnnotation {
-      constructor(key: string, value: any);
+      constructor(key: string, value: boolean | string | number);
     }
   }
 
