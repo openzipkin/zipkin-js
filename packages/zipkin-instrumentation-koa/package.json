@@ -12,7 +12,9 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "babel-cli": "^6.23.0",
+    "koa": "^2.3.0",
     "mocha": "^3.2.0",
+    "node-fetch": "^1.7.3",
     "zipkin": "^0.7.3"
   }
 }
