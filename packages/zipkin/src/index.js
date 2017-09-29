@@ -16,6 +16,7 @@ const serializeSpan = require('./serializeSpan');
 const ExplicitContext = require('./explicit-context');
 
 const Request = require('./request');
+const Instrumentation = require('./instrumentation');
 
 module.exports = {
   Tracer,
@@ -30,5 +31,6 @@ module.exports = {
   serializeSpan,
   ExplicitContext,
   sampler,
-  Request
+  Request,
+  Instrumentation
 };

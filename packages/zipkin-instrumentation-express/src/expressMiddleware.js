@@ -2,26 +2,9 @@ const {
   Annotation,
   HttpHeaders: Header,
   option: {Some, None},
-  TraceId
+  Instrumentation
 } = require('zipkin');
 const url = require('url');
-
-function containsRequiredHeaders(req) {
-  return req.header(Header.TraceId) !== undefined &&
-    req.header(Header.SpanId) !== undefined;
-}
-
-function stringToBoolean(str) {
-  return str === '1';
-}
-
-function stringToIntOption(str) {
-  try {
-    return new Some(parseInt(str));
-  } catch (err) {
-    return None;
-  }
-}
 
 function formatRequestUrl(req) {
   const parsed = url.parse(req.originalUrl);
@@ -45,37 +28,7 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
         }
       }
 
-      if (containsRequiredHeaders(req)) {
-        const spanId = readHeader(Header.SpanId);
-        spanId.ifPresent(sid => {
-          const traceId = readHeader(Header.TraceId);
-          const parentSpanId = readHeader(Header.ParentSpanId);
-          const sampled = readHeader(Header.Sampled);
-          const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
-          const id = new TraceId({
-            traceId,
-            parentId: parentSpanId,
-            spanId: sid,
-            sampled: sampled.map(stringToBoolean),
-            flags
-          });
-          tracer.setId(id);
-        });
-      } else {
-        tracer.setId(tracer.createRootId());
-        if (req.header(Header.Flags)) {
-          const currentId = tracer.id;
-          const idWithFlags = new TraceId({
-            traceId: currentId.traceId,
-            parentId: currentId.parentId,
-            spanId: currentId.spanId,
-            sampled: currentId.sampled,
-            flags: readHeader(Header.Flags)
-          });
-          tracer.setId(idWithFlags);
-        }
-      }
-
+      Instrumentation.Http.createIdFromHeaders(tracer, readHeader).ifPresent(id => tracer.setId(id));
       const id = tracer.id;
 
       tracer.recordServiceName(serviceName);

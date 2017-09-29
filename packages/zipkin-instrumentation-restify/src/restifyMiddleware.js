@@ -2,70 +2,24 @@ const {
   Annotation,
   HttpHeaders: Header,
   option: {Some, None},
-  TraceId
+  Instrumentation
 } = require('zipkin');
 const url = require('url');
 
-function containsRequiredHeaders(req) {
-  return req.header(Header.TraceId) !== undefined &&
-    req.header(Header.SpanId) !== undefined;
-}
-
-function stringToBoolean(str) {
-  return str === '1';
-}
-
-function stringToIntOption(str) {
-  try {
-    return new Some(parseInt(str));
-  } catch (err) {
+function headerOption(req, header) {
+  const val = req.header(header);
+  if (val != null) {
+    return new Some(val);
+  } else {
     return None;
   }
 }
 
 module.exports = function restifyMiddleware({tracer, serviceName = 'unknown', port = 0}) {
   return function zipkinRestifyMiddleware(req, res, next) {
+    const readHeader = headerOption.bind(null, req);
     tracer.scoped(() => {
-      function readHeader(header) {
-        const val = req.header(header);
-        if (val != null) {
-          return new Some(val);
-        } else {
-          return None;
-        }
-      }
-
-      if (containsRequiredHeaders(req)) {
-        const spanId = readHeader(Header.SpanId);
-        spanId.ifPresent(sid => {
-          const traceId = readHeader(Header.TraceId);
-          const parentSpanId = readHeader(Header.ParentSpanId);
-          const sampled = readHeader(Header.Sampled);
-          const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
-          const id = new TraceId({
-            traceId,
-            parentId: parentSpanId,
-            spanId: sid,
-            sampled: sampled.map(stringToBoolean),
-            flags
-          });
-          tracer.setId(id);
-        });
-      } else {
-        tracer.setId(tracer.createRootId());
-        if (req.header(Header.Flags)) {
-          const currentId = tracer.id;
-          const idWithFlags = new TraceId({
-            traceId: currentId.traceId,
-            parentId: currentId.parentId,
-            spanId: currentId.spanId,
-            sampled: currentId.sampled,
-            flags: readHeader(Header.Flags)
-          });
-          tracer.setId(idWithFlags);
-        }
-      }
-
+      Instrumentation.Http.createIdFromHeaders(tracer, readHeader).ifPresent(id => tracer.setId(id));
       const id = tracer.id;
 
       tracer.recordServiceName(serviceName);

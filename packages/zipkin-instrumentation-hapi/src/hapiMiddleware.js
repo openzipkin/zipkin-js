@@ -1,23 +1,11 @@
 const {
   Annotation,
   HttpHeaders: Header,
-  TraceId,
-  option: {Some, None}
+  option: {Some, None},
+  Instrumentation
 } = require('zipkin');
 const url = require('url');
 const pkg = require('../package.json');
-
-function stringToBoolean(str) {
-  return str === '1';
-}
-
-function stringToIntOption(str) {
-  try {
-    return new Some(parseInt(str));
-  } catch (err) {
-    return None;
-  }
-}
 
 function headerOption(headers, header) {
   const val = headers[header.toLowerCase()];
@@ -40,37 +28,7 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
     const plugins = request.plugins;
 
     tracer.scoped(() => {
-      if (readHeader(Header.TraceId) !== None && readHeader(Header.SpanId) !== None) {
-        const spanId = readHeader(Header.SpanId);
-        spanId.ifPresent((sid) => {
-          const traceId = readHeader(Header.TraceId);
-          const parentSpanId = readHeader(Header.ParentSpanId);
-          const sampled = readHeader(Header.Sampled);
-          const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
-          const id = new TraceId({
-            traceId,
-            parentId: parentSpanId,
-            spanId: sid,
-            sampled: sampled.map(stringToBoolean),
-            flags
-          });
-          tracer.setId(id);
-        });
-      } else {
-        tracer.setId(tracer.createRootId());
-        if (readHeader(Header.Flags) !== None) {
-          const currentId = tracer.id;
-          const idWithFlags = new TraceId({
-            traceId: currentId.traceId,
-            parentId: currentId.parentId,
-            spanId: currentId.spanId,
-            sampled: currentId.sampled,
-            flags: readHeader(Header.Flags)
-          });
-          tracer.setId(idWithFlags);
-        }
-      }
-
+      Instrumentation.Http.createIdFromHeaders(tracer, readHeader).ifPresent(id => tracer.setId(id));
       const id = tracer.id;
 
       plugins.zipkin = {
