@@ -28,6 +28,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [memcached](packages/zipkin-instrumentation-memcached) (zipkin-instrumentation-memcached)
 - [redis](packages/zipkin-instrumentation-redis) (zipkin-instrumentation-redis)
 - [restify](packages/zipkin-instrumentation-restify) (zipkin-instrumentation-restify)
+- [koa](packages/zipkin-instrumentation-koa) (zipkin-instrumentation-koa)
 
 Every module has a README.md file that describes how to use it.
 
