@@ -17,6 +17,7 @@ function formatRequestUrl(req) {
 }
 
 module.exports = function expressMiddleware({tracer, serviceName = 'unknown', port = 0}) {
+  const instrumentation = new Instrumentation.HttpServer({ tracer });
   return function zipkinExpressMiddleware(req, res, next) {
     tracer.scoped(() => {
       function readHeader(header) {
@@ -28,24 +29,11 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
         }
       }
 
-      Instrumentation.Http.createIdFromHeaders(tracer, readHeader).ifPresent(id => tracer.setId(id));
-      const id = tracer.id;
-
-      tracer.recordServiceName(serviceName);
-      tracer.recordRpc(req.method.toUpperCase());
-      tracer.recordBinary('http.url', formatRequestUrl(req));
-      tracer.recordAnnotation(new Annotation.ServerRecv());
-      tracer.recordAnnotation(new Annotation.LocalAddr({port}));
-
-      if (id.flags !== 0 && id.flags != null) {
-        tracer.recordBinary(Header.Flags, id.flags.toString());
-      }
+      const id = instrumentation.recordRequest(serviceName, port, req.method, formatRequestUrl(req), readHeader);
 
       res.on('finish', () => {
         tracer.scoped(() => {
-          tracer.setId(id);
-          tracer.recordBinary('http.status_code', res.statusCode.toString());
-          tracer.recordAnnotation(new Annotation.ServerSend());
+          instrumentation.recordResponse(id, res.statusCode);
         });
       });
 

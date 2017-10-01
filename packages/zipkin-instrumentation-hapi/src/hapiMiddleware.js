@@ -17,6 +17,7 @@ function headerOption(headers, header) {
 }
 
 exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) => {
+  const instrumentation = new Instrumentation.HttpServer({ tracer });
   if (tracer == null) {
     next(new Error('No tracer specified'));
     return;
@@ -28,22 +29,11 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
     const plugins = request.plugins;
 
     tracer.scoped(() => {
-      Instrumentation.Http.createIdFromHeaders(tracer, readHeader).ifPresent(id => tracer.setId(id));
-      const id = tracer.id;
+      const id = instrumentation.recordRequest(serviceName, port, request.method, url.format(request.url), readHeader);
 
       plugins.zipkin = {
-        traceId: tracer.id
+        traceId: id
       };
-
-      tracer.recordServiceName(serviceName);
-      tracer.recordRpc(request.method.toUpperCase());
-      tracer.recordBinary('http.url', url.format(request.url));
-      tracer.recordAnnotation(new Annotation.ServerRecv());
-      tracer.recordAnnotation(new Annotation.LocalAddr({port}));
-
-      if (id.flags !== 0 && id.flags != null) {
-        tracer.recordBinary(Header.Flags, id.flags.toString());
-      }
 
       return reply.continue();
     });
@@ -54,9 +44,7 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
     const statusCode = response.isBoom ? response.output.statusCode : response.statusCode;
 
     tracer.scoped(() => {
-      tracer.setId(request.plugins.zipkin.traceId);
-      tracer.recordBinary('http.status_code', statusCode.toString());
-      tracer.recordAnnotation(new Annotation.ServerSend());
+      instrumentation.recordResponse(request.plugins.zipkin.traceId, statusCode);
     });
 
     return reply.continue();
