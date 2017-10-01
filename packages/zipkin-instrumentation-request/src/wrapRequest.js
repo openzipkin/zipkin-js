@@ -1,33 +1,23 @@
-const {Request, Annotation} = require('zipkin');
+const {
+  Request,
+  Annotation,
+  Instrumentation
+} = require('zipkin');
 
 function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceName}) {
+  const instrumentation = new Instrumentation.HttpClient({ tracer });
   return request.defaults((options, callback) => tracer.scoped(() => {
-    tracer.setId(tracer.createChildId());
+    const method = options.method || 'GET';
+    const url = options.uri || options.url;
+    const wrappedOptions = instrumentation.recordRequest(serviceName, options, remoteServiceName, url, method);
     const traceId = tracer.id;
 
-    const wrappedOptions = Request.addZipkinHeaders(options, tracer.id);
-    const method = wrappedOptions.method || 'GET';
-
-    tracer.recordServiceName(serviceName);
-    tracer.recordRpc(method.toUpperCase());
-    tracer.recordBinary('http.url', wrappedOptions.uri || wrappedOptions.url);
-    tracer.recordAnnotation(new Annotation.ClientSend());
-    if (remoteServiceName) {
-      tracer.recordAnnotation(new Annotation.ServerAddr({
-        serviceName: remoteServiceName
-      }));
-    }
-
     const recordResponse = (response) => {
-      tracer.setId(traceId);
-      tracer.recordBinary('http.status_code', response.statusCode.toString());
-      tracer.recordAnnotation(new Annotation.ClientRecv());
+      instrumentation.recordResponse(traceId, response.statusCode);
     };
 
     const recordError = (error) => {
-      tracer.setId(traceId);
-      tracer.recordBinary('error', error.toString());
-      tracer.recordAnnotation(new Annotation.ClientRecv());
+      instrumentation.recordError(traceId, error);
     };
 
     return request(wrappedOptions, callback)

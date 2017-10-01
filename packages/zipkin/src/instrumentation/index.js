@@ -1,3 +1,4 @@
 module.exports = {
-  HttpServer: require('./httpServer')
+  HttpServer: require('./httpServer'),
+  HttpClient: require('./httpClient')
 }
