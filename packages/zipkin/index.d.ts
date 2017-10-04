@@ -174,7 +174,7 @@ declare namespace zipkin {
         requestUrl: string,
         readHeader: <T> (header: string) => option.IOption<T>
       ): string;
-      recordResponse(traceId: string, statusCode: string);
+      recordResponse(traceId: string, statusCode: string): void;
     }
 
     class HttpClient {
@@ -187,8 +187,8 @@ declare namespace zipkin {
         url: string,
         method: string
       ): T;
-      recordResponse(traceId: string, statusCode: string);
-      recordError(traceId: string, error: Error);
+      recordResponse(traceId: string, statusCode: string): void;
+      recordError(traceId: string, error: Error): void;
     }
   }
 }
