@@ -1,6 +1,4 @@
 const {
-  Annotation,
-  HttpHeaders: Header,
   option: {Some, None},
   Instrumentation
 } = require('zipkin');
@@ -17,7 +15,7 @@ function headerOption(headers, header) {
 }
 
 exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) => {
-  const instrumentation = new Instrumentation.HttpServer({ tracer });
+  const instrumentation = new Instrumentation.HttpServer({tracer});
   if (tracer == null) {
     next(new Error('No tracer specified'));
     return;
@@ -29,7 +27,10 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
     const plugins = request.plugins;
 
     tracer.scoped(() => {
-      const id = instrumentation.recordRequest(serviceName, port, request.method, url.format(request.url), readHeader);
+      const id =
+        instrumentation.recordRequest(
+          serviceName, port, request.method, url.format(request.url), readHeader
+        );
 
       plugins.zipkin = {
         traceId: id

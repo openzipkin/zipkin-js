@@ -1,11 +1,7 @@
 const sinon = require('sinon');
 const Tracer = require('../src/tracer');
-const TraceId = require('../src/tracer/TraceId');
-const Annotation = require('../src/annotation');
-const InetAddress = require('../src/InetAddress');
 const {Some, None} = require('../src/option');
 const ExplicitContext = require('../src/explicit-context');
-const BatchRecorder = require('../src/batch-recorder');
 const HttpServer = require('../src/instrumentation/httpServer');
 
 describe('Http Server Instrumentation', () => {
@@ -71,7 +67,7 @@ describe('Http Server Instrumentation', () => {
     };
     const port = 80;
     const url = `http://127.0.0.1:${port}`;
-    const readHeader = function (name) { return headers[name] ? new Some(headers[name]) : None };
+    const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
     ctxImpl.scoped(() => {
       const id = instrumentation.recordRequest('service-a', port, 'POST', url, readHeader);
       tracer.recordBinary('message', 'hello from within app');
@@ -146,8 +142,8 @@ describe('Http Server Instrumentation', () => {
       'X-B3-TraceId': traceId,
       'X-B3-SpanId': '48485a3953bb6124',
       'X-B3-Flags': '1'
-    }
-    const readHeader = function (name) { return headers[name] ? new Some(headers[name]) : None };
+    };
+    const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
     ctxImpl.scoped(() => {
       const id = instrumentation.recordRequest('service-a', port, 'POST', url, readHeader);
       tracer.recordBinary('message', 'hello from within app');
@@ -158,6 +154,4 @@ describe('Http Server Instrumentation', () => {
 
     annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
   });
-
 });
-

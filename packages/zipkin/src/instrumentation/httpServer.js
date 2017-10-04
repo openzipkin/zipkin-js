@@ -1,5 +1,5 @@
 const Header = require('../httpHeaders');
-const { Some, None } = require('../option');
+const {Some, None} = require('../option');
 const TraceId = require('../tracer/TraceId');
 const Annotation = require('../annotation');
 

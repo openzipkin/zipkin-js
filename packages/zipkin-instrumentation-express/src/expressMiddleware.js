@@ -1,6 +1,4 @@
 const {
-  Annotation,
-  HttpHeaders: Header,
   option: {Some, None},
   Instrumentation
 } = require('zipkin');
@@ -17,7 +15,7 @@ function formatRequestUrl(req) {
 }
 
 module.exports = function expressMiddleware({tracer, serviceName = 'unknown', port = 0}) {
-  const instrumentation = new Instrumentation.HttpServer({ tracer });
+  const instrumentation = new Instrumentation.HttpServer({tracer});
   return function zipkinExpressMiddleware(req, res, next) {
     tracer.scoped(() => {
       function readHeader(header) {
@@ -29,7 +27,10 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
         }
       }
 
-      const id = instrumentation.recordRequest(serviceName, port, req.method, formatRequestUrl(req), readHeader);
+      const id =
+        instrumentation.recordRequest(
+          serviceName, port, req.method, formatRequestUrl(req), readHeader
+        );
 
       res.on('finish', () => {
         tracer.scoped(() => {

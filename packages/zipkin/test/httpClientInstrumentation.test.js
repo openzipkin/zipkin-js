@@ -1,11 +1,6 @@
 const sinon = require('sinon');
 const Tracer = require('../src/tracer');
-const TraceId = require('../src/tracer/TraceId');
-const Annotation = require('../src/annotation');
-const InetAddress = require('../src/InetAddress');
-const {Some, None} = require('../src/option');
 const ExplicitContext = require('../src/explicit-context');
-const BatchRecorder = require('../src/batch-recorder');
 const HttpClient = require('../src/instrumentation/httpClient');
 
 describe('Http Client Instrumentation', () => {
@@ -16,7 +11,7 @@ describe('Http Client Instrumentation', () => {
     const tracer = new Tracer({ctxImpl, recorder});
     const instrumentation = new HttpClient({tracer});
 
-    const url = `http://127.0.0.1:80/weather?index=10&count=300`;
+    const url = 'http://127.0.0.1:80/weather?index=10&count=300';
     tracer.scoped(() => {
       instrumentation.recordRequest('weather-app', {}, 'weather-forecast-service', url, 'GET');
       instrumentation.recordResponse(tracer.id, '202');
@@ -56,7 +51,7 @@ describe('Http Client Instrumentation', () => {
     const tracer = new Tracer({ctxImpl, recorder});
     const instrumentation = new HttpClient({tracer});
 
-    const url = `http://127.0.0.1:80/weather?index=10&count=300`;
+    const url = 'http://127.0.0.1:80/weather?index=10&count=300';
     tracer.scoped(() => {
       instrumentation.recordRequest('weather-app', {}, 'weather-forecast-service', url, 'GET');
       instrumentation.recordError(tracer.id, new Error('nasty error'));
@@ -71,6 +66,4 @@ describe('Http Client Instrumentation', () => {
     expect(annotations[5].annotation.key).to.equal('error');
     expect(annotations[5].annotation.value).to.equal('Error: nasty error');
   });
-
 });
-

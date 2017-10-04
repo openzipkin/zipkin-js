@@ -1,8 +1,6 @@
 /* eslint-disable no-param-reassign */
 const interceptor = require('rest/interceptor');
 const {
-  Annotation,
-  Request,
   Instrumentation
   } = require('zipkin');
 
@@ -18,9 +16,12 @@ function getRequestMethod(req) {
 }
 
 function request(req, {tracer, serviceName = 'unknown', remoteServiceName}) {
-  this.instrumentation = new Instrumentation.HttpClient({ tracer });
+  this.instrumentation = new Instrumentation.HttpClient({tracer});
   return tracer.scoped(() => {
-    const reqWithHeaders = this.instrumentation.recordRequest(serviceName, req, remoteServiceName, req.path, getRequestMethod(req));
+    const reqWithHeaders =
+      this.instrumentation.recordRequest(
+        serviceName, req, remoteServiceName, req.path, getRequestMethod(req)
+      );
     this.traceId = tracer.id;
     return reqWithHeaders;
   });

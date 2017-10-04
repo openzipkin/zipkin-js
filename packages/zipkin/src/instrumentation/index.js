@@ -1,4 +1,7 @@
+const HttpServer = require('./httpServer');
+const HttpClient = require('./httpClient');
+
 module.exports = {
-  HttpServer: require('./httpServer'),
-  HttpClient: require('./httpClient')
-}
+  HttpServer,
+  HttpClient
+};
