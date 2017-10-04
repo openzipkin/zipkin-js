@@ -1,0 +1,21 @@
+{
+  "name": "zipkin-context-cls-hooked",
+  "version": "0.1.0",
+  "description": "A Context API implementation that uses cls-hooked under the hood",
+  "main": "lib/CLSHookedContext.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "dependencies": {
+    "cls-hooked": "^4.2.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "mocha": "^3.2.0"
+  }
+}

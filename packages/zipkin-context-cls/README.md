@@ -4,6 +4,9 @@ This module implements a context API on top of [CLS/continuation-local-storage](
 The primary objective of CLS is to implement a *transparent* context API, that is, you don't need to pass around a `ctx`
 variable everywhere in your application code.
 
+This library does not preserve context when **async/await** is used. If you need that functionality please
+use [zipkin-context-cls-hooked](https://github.com/openzipkin/zipkin-js/tree/master/packages/zipkin-context-cls-hooked) instead.
+
 ## Usage:
 
 ```javascript
