@@ -10,10 +10,10 @@ describe('Http Server Instrumentation', () => {
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
-    const instrumentation = new HttpServer({tracer});
+    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port: 80});
 
     ctxImpl.scoped(() => {
-      const id = instrumentation.recordRequest('service-a', undefined, 'POST', '/foo', () => None);
+      const id = instrumentation.recordRequest('POST', '/foo', () => None);
       tracer.recordBinary('message', 'hello from within app');
       instrumentation.recordResponse(id, 202);
     });
@@ -58,7 +58,6 @@ describe('Http Server Instrumentation', () => {
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
-    const instrumentation = new HttpServer({tracer});
 
     const headers = {
       'X-B3-TraceId': 'aaa',
@@ -67,9 +66,10 @@ describe('Http Server Instrumentation', () => {
     };
     const port = 80;
     const url = `http://127.0.0.1:${port}`;
+    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
     const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
     ctxImpl.scoped(() => {
-      const id = instrumentation.recordRequest('service-a', port, 'POST', url, readHeader);
+      const id = instrumentation.recordRequest('POST', url, readHeader);
       tracer.recordBinary('message', 'hello from within app');
       instrumentation.recordResponse(id, 202);
     });
@@ -113,11 +113,11 @@ describe('Http Server Instrumentation', () => {
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
 
-    const instrumentation = new HttpServer({tracer});
     const port = 80;
+    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
     const url = `http://127.0.0.1:${port}/foo?abc=123`;
     ctxImpl.scoped(() => {
-      const id = instrumentation.recordRequest('service-a', port, 'GET', url, () => None);
+      const id = instrumentation.recordRequest('GET', url, () => None);
       tracer.recordBinary('message', 'hello from within app');
       instrumentation.recordResponse(id, 202);
     });
@@ -133,9 +133,9 @@ describe('Http Server Instrumentation', () => {
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
-    const instrumentation = new HttpServer({tracer});
 
     const port = 80;
+    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
     const url = `http://127.0.0.1:${port}`;
     const traceId = '863ac35c9f6413ad48485a3953bb6124';
     const headers = {
@@ -145,7 +145,7 @@ describe('Http Server Instrumentation', () => {
     };
     const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
     ctxImpl.scoped(() => {
-      const id = instrumentation.recordRequest('service-a', port, 'POST', url, readHeader);
+      const id = instrumentation.recordRequest('POST', url, readHeader);
       tracer.recordBinary('message', 'hello from within app');
       instrumentation.recordResponse(id, 202);
     });
