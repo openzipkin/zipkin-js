@@ -1,12 +1,12 @@
-const TraceId = require('../src/tracer/TraceId');
-const serializeSpan = require('../src/serializeSpan');
+const TraceId = require('../../zipkin/src/tracer/TraceId');
+const serializeSpan = require('../src');
 const {
   MutableSpan,
   Endpoint,
   ZipkinAnnotation,
   BinaryAnnotation
-} = require('../src/internalRepresentations');
-const {Some, None} = require('../src/option');
+} = require('../../zipkin/src/internalRepresentations');
+const {Some, None} = require('../../zipkin/src/option');
 
 describe('Serialising a span', () => {
   // The Thrift IDL has camel_cased variable names, so we need camel-casing

@@ -1,7 +1,7 @@
 const lolex = require('lolex');
 const {TBinaryProtocol, TFramedTransport} = require('thrift');
 const thriftTypes = require('../src/gen-nodejs/zipkinCore_types');
-const serializeSpan = require('../src/serializeSpan');
+const serializeSpan = require('zipkin-encoder-thrift');
 const TraceId = require('../src/tracer/TraceId');
 const {
   MutableSpan,

@@ -1,5 +1,5 @@
 const kafka = require('kafka-node');
-const {serializeSpan} = require('zipkin');
+const serializeSpan = require('zipkin-encoder-thrift');
 
 module.exports = class KafkaLogger {
   constructor(options) {

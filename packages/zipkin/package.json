@@ -6,7 +6,6 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "babel src -d lib",
-    "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
     "test": "tsc index.d.ts && mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
@@ -15,8 +14,7 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "base64-js": "^1.1.2",
-    "network-address": "^1.1.0",
-    "thrift": "^0.10.0"
+    "network-address": "^1.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
