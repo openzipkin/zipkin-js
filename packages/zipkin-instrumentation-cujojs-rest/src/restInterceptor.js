@@ -16,12 +16,10 @@ function getRequestMethod(req) {
 }
 
 function request(req, {tracer, serviceName = 'unknown', remoteServiceName}) {
-  this.instrumentation = new Instrumentation.HttpClient({tracer});
+  this.instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
   return tracer.scoped(() => {
     const reqWithHeaders =
-      this.instrumentation.recordRequest(
-        serviceName, req, remoteServiceName, req.path, getRequestMethod(req)
-      );
+      this.instrumentation.recordRequest(req, req.path, getRequestMethod(req));
     this.traceId = tracer.id;
     return reqWithHeaders;
   });

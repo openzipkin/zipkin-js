@@ -15,7 +15,7 @@ function headerOption(headers, header) {
 }
 
 exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) => {
-  const instrumentation = new Instrumentation.HttpServer({tracer});
+  const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
   if (tracer == null) {
     next(new Error('No tracer specified'));
     return;
@@ -28,9 +28,7 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
 
     tracer.scoped(() => {
       const id =
-        instrumentation.recordRequest(
-          serviceName, port, request.method, url.format(request.url), readHeader
-        );
+        instrumentation.recordRequest(request.method, url.format(request.url), readHeader);
 
       plugins.zipkin = {
         traceId: id

@@ -23,13 +23,11 @@ function formatRequestUrl(request) {
 
 module.exports = function restifyMiddleware({tracer, serviceName = 'unknown', port = 0}) {
   return function zipkinRestifyMiddleware(req, res, next) {
-    const instrumentation = new Instrumentation.HttpServer({tracer});
+    const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
     const readHeader = headerOption.bind(null, req);
     tracer.scoped(() => {
       const id =
-        instrumentation.recordRequest(
-          serviceName, port, req.method, formatRequestUrl(req), readHeader
-        );
+        instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
 
       const onCloseOrFinish = () => {
         res.removeListener('close', onCloseOrFinish);

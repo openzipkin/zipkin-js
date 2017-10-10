@@ -15,7 +15,7 @@ function formatRequestUrl(req) {
 }
 
 module.exports = function expressMiddleware({tracer, serviceName = 'unknown', port = 0}) {
-  const instrumentation = new Instrumentation.HttpServer({tracer});
+  const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
   return function zipkinExpressMiddleware(req, res, next) {
     tracer.scoped(() => {
       function readHeader(header) {
@@ -28,9 +28,7 @@ module.exports = function expressMiddleware({tracer, serviceName = 'unknown', po
       }
 
       const id =
-        instrumentation.recordRequest(
-          serviceName, port, req.method, formatRequestUrl(req), readHeader
-        );
+        instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
 
       res.on('finish', () => {
         tracer.scoped(() => {

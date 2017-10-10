@@ -3,13 +3,13 @@ const {
 } = require('zipkin');
 
 function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) {
-  const instrumentation = new Instrumentation.HttpClient({tracer});
+  const instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
   return function zipkinfetch(url, opts = {}) {
     return new Promise((resolve, reject) => {
       tracer.scoped(() => {
         const method = opts.method || 'GET';
         const zipkinOpts =
-          instrumentation.recordRequest(serviceName, opts, remoteServiceName, url, method);
+          instrumentation.recordRequest(opts, url, method);
         const traceId = tracer.id;
 
         fetch(url, zipkinOpts).then(res => {

@@ -25,9 +25,13 @@ function requiredArg(name) {
 
 class HttpServerInstrumentation {
   constructor({
-    tracer = requiredArg('tracer')
+    tracer = requiredArg('tracer'),
+    serviceName = requiredArg('serviceName'),
+    port = requiredArg('port')
   }) {
     this.tracer = tracer;
+    this.serviceName = serviceName;
+    this.port = port;
   }
 
   _createIdFromHeaders(readHeader) {
@@ -63,15 +67,15 @@ class HttpServerInstrumentation {
     }
   }
 
-  recordRequest(serviceName, port, method, requestUrl, readHeader) {
+  recordRequest(method, requestUrl, readHeader) {
     this._createIdFromHeaders(readHeader).ifPresent(id => this.tracer.setId(id));
     const id = this.tracer.id;
 
-    this.tracer.recordServiceName(serviceName);
+    this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.url', requestUrl);
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
-    this.tracer.recordAnnotation(new Annotation.LocalAddr({port}));
+    this.tracer.recordAnnotation(new Annotation.LocalAddr({port: this.port}));
 
     if (id.flags !== 0 && id.flags != null) {
       this.tracer.recordBinary(Header.Flags, id.flags.toString());
@@ -79,9 +83,12 @@ class HttpServerInstrumentation {
     return id;
   }
 
-  recordResponse(id, statusCode) {
+  recordResponse(id, statusCode, error) {
     this.tracer.setId(id);
     this.tracer.recordBinary('http.status_code', statusCode.toString());
+    if (error) {
+      this.tracer.recordBinary('error', error.toString());
+    }
     this.tracer.recordAnnotation(new Annotation.ServerSend());
   }
 }

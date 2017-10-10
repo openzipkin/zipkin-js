@@ -7,23 +7,27 @@ function requiredArg(name) {
 
 class HttpClientInstrumentation {
   constructor({
-    tracer = requiredArg('tracer')
+    tracer = requiredArg('tracer'),
+    serviceName = requiredArg('serviceName'),
+    remoteServiceName
   }) {
     this.tracer = tracer;
+    this.serviceName = serviceName;
+    this.remoteServiceName = remoteServiceName;
   }
 
-  recordRequest(serviceName, request, remoteServiceName, url, method) {
+  recordRequest(request, url, method) {
     this.tracer.setId(this.tracer.createChildId());
     const traceId = this.tracer.id;
 
-    this.tracer.recordServiceName(serviceName);
+    this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.url', url);
     this.tracer.recordAnnotation(new Annotation.ClientSend());
-    if (remoteServiceName) {
+    if (this.remoteServiceName) {
       // TODO: can we get the host and port of the http connection?
       this.tracer.recordAnnotation(new Annotation.ServerAddr({
-        serviceName: remoteServiceName
+        serviceName: this.remoteServiceName
       }));
     }
 

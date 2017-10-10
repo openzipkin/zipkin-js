@@ -3,12 +3,12 @@ const {
 } = require('zipkin');
 
 function wrapRequest(request, {tracer, serviceName = 'unknown', remoteServiceName}) {
-  const instrumentation = new Instrumentation.HttpClient({tracer});
+  const instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
   return request.defaults((options, callback) => tracer.scoped(() => {
     const method = options.method || 'GET';
     const url = options.uri || options.url;
     const wrappedOptions =
-      instrumentation.recordRequest(serviceName, options, remoteServiceName, url, method);
+      instrumentation.recordRequest(options, url, method);
     const traceId = tracer.id;
 
     const recordResponse = (response) => {
