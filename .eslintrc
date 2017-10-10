@@ -16,6 +16,7 @@
     "radix": ["error", "as-needed"]
   },
   "env": {
-    "node": true
+    "node": true,
+    "jasmine": true
   }
 }

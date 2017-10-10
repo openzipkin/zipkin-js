@@ -150,8 +150,6 @@ declare namespace zipkin {
     record: (rec: any) => void;
   }
 
-  const serializeSpan: () => void;
-
   class ExplicitContext {
   }
 

@@ -12,7 +12,6 @@ const InetAddress = require('./InetAddress');
 const BatchRecorder = require('./batch-recorder');
 const ConsoleRecorder = require('./console-recorder');
 
-const serializeSpan = require('./serializeSpan');
 const ExplicitContext = require('./explicit-context');
 
 const Request = require('./request');
@@ -28,7 +27,6 @@ module.exports = {
   HttpHeaders,
   BatchRecorder,
   ConsoleRecorder,
-  serializeSpan,
   ExplicitContext,
   sampler,
   Request,
