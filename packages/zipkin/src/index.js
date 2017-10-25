@@ -17,6 +17,10 @@ const ExplicitContext = require('./explicit-context');
 const Request = require('./request');
 const Instrumentation = require('./instrumentation');
 
+const record = require('./record');
+
+const toJsonV1 = require('./json-v1');
+
 module.exports = {
   Tracer,
   createNoopTracer,
@@ -30,5 +34,7 @@ module.exports = {
   ExplicitContext,
   sampler,
   Request,
-  Instrumentation
+  Instrumentation,
+  record,
+  toJsonV1
 };

@@ -1,4 +1,6 @@
-const {Tracer, BatchRecorder, Annotation, ExplicitContext} = require('zipkin');
+const {
+  Tracer, BatchRecorder, Annotation, ExplicitContext
+} = require('zipkin');
 const HttpLogger = require('../src/HttpLogger');
 const express = require('express');
 const bodyParser = require('body-parser');

@@ -6,6 +6,8 @@ const globalFetch =
 // eslint-disable-next-line global-require
 const fetch = globalFetch || require.call(null, 'node-fetch');
 
+const {toJsonV1} = require('zipkin');
+
 class HttpLogger {
   constructor({endpoint, httpInterval = 1000}) {
     this.endpoint = endpoint;
@@ -20,12 +22,12 @@ class HttpLogger {
   }
 
   logSpan(span) {
-    this.queue.push(span.toJSON());
+    this.queue.push(toJsonV1(span));
   }
 
   processQueue() {
     if (this.queue.length > 0) {
-      const postBody = JSON.stringify(this.queue);
+      const postBody = `[${this.queue.join(',')}]`;
       fetch(this.endpoint, {
         method: 'POST',
         body: postBody,

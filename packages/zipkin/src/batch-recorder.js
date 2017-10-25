@@ -1,11 +1,5 @@
 const {now} = require('./time');
-const thriftTypes = require('./gen-nodejs/zipkinCore_types');
-const {
-  MutableSpan,
-  Endpoint,
-  ZipkinAnnotation,
-  BinaryAnnotation
-} = require('./internalRepresentations');
+const {Span, Endpoint} = require('./record');
 
 class BatchRecorder {
   constructor({
@@ -42,7 +36,7 @@ class BatchRecorder {
     if (this.partialSpans.has(id)) {
       span = this.partialSpans.get(id);
     } else {
-      span = new MutableSpan(id);
+      span = new Span(id);
     }
     updater(span);
     if (span.endTimestamp) {
@@ -56,63 +50,63 @@ class BatchRecorder {
     return span.startTimestamp + this.timeout < now();
   }
 
-
-  _annotate(span, {timestamp}, value) {
-    span.addAnnotation(new ZipkinAnnotation({
-      timestamp,
-      value
-    }));
+  _setLocalEndpoint(span, ann) {
+    if (ann.host) {
+      span.setLocalIpV4(ann.host.ipv4());
+    }
+    const port = ann.port;
+    if (port && port !== 0) {
+      span.setLocalPort(port);
+    }
   }
 
-  _binaryAnnotate(span, key, value) {
-    span.addBinaryAnnotation(new BinaryAnnotation({
-      key,
-      value,
-      annotationType: thriftTypes.AnnotationType.STRING
-    }));
+  _setRemoteEndpoint(span, ann) {
+    const endpoint = new Endpoint({
+      serviceName: ann.serviceName,
+      port: ann.port
+    });
+    if (ann.host) {
+      endpoint.ipv4 = ann.host.ipv4();
+    }
+    span.setRemoteEndpoint(endpoint);
   }
 
   record(rec) {
     const id = rec.traceId;
 
-    this._updateSpanMap(id, span => {
+    this._updateSpanMap(id, (span) => {
       switch (rec.annotation.annotationType) {
         case 'ClientSend':
-          this._annotate(span, rec, thriftTypes.CLIENT_SEND);
+          span.addAnnotation(rec.timestamp, 'cs');
           break;
         case 'ClientRecv':
-          this._annotate(span, rec, thriftTypes.CLIENT_RECV);
+          span.addAnnotation(rec.timestamp, 'cr');
           break;
         case 'ServerSend':
-          this._annotate(span, rec, thriftTypes.SERVER_SEND);
+          span.addAnnotation(rec.timestamp, 'ss');
           break;
         case 'ServerRecv':
-          this._annotate(span, rec, thriftTypes.SERVER_RECV);
+          // TODO: only set this to false when we know we in an existing trace
+          span.setShared(id.parentId !== id.spanId);
+          span.addAnnotation(rec.timestamp, 'sr');
           break;
         case 'Message':
-          this._annotate(span, rec, rec.annotation.message);
+          span.addAnnotation(rec.timestamp, rec.annotation.message);
           break;
         case 'Rpc':
           span.setName(rec.annotation.name);
           break;
         case 'ServiceName':
-          span.setServiceName(rec.annotation.serviceName);
+          span.setLocalServiceName(rec.annotation.serviceName);
           break;
         case 'BinaryAnnotation':
-          this._binaryAnnotate(span, rec.annotation.key, rec.annotation.value);
+          span.putTag(rec.annotation.key, rec.annotation.value);
           break;
         case 'LocalAddr':
-          span.setEndpoint(new Endpoint({
-            host: rec.annotation.host.toInt(),
-            port: rec.annotation.port
-          }));
+          this._setLocalEndpoint(span, rec.annotation);
           break;
         case 'ServerAddr':
-          span.setServerAddr(new Endpoint({
-            serviceName: rec.annotation.serviceName,
-            host: rec.annotation.host ? rec.annotation.host.toInt() : undefined,
-            port: rec.annotation.port
-          }));
+          this._setRemoteEndpoint(span, rec.annotation);
           break;
         default:
           break;
