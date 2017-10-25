@@ -44,12 +44,11 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.traceId.traceId).to.equal('a');
       expect(loggedSpan.traceId.parentId).to.equal('a');
       expect(loggedSpan.traceId.spanId).to.equal('c');
-      expect(loggedSpan.name).to.eql(new Some('buySmoothie'));
-      expect(loggedSpan.endpoint.host).to.equal(2130706433);
-      expect(loggedSpan.endpoint.port).to.equal(7070);
-      expect(loggedSpan.service).to.eql(new Some('SmoothieStore'));
-      expect(loggedSpan.binaryAnnotations[0].key).to.equal('taste');
-      expect(loggedSpan.binaryAnnotations[0].value).to.equal('banana');
+      expect(loggedSpan.name).to.eql('buySmoothie');
+      expect(loggedSpan.localEndpoint.serviceName).to.equal('SmoothieStore');
+      expect(loggedSpan.localEndpoint.ipv4).to.equal('127.0.0.1');
+      expect(loggedSpan.localEndpoint.port).to.equal(7070);
+      expect(loggedSpan.tags.taste).to.equal('banana');
       expect(loggedSpan.annotations[0].value).to.equal('sr');
       expect(loggedSpan.annotations[1].value).to.equal('ss');
     });
@@ -83,7 +82,35 @@ describe('Batch Recorder', () => {
 
       const loggedSpan = logSpan.getCall(0).args[0];
 
-      expect(loggedSpan.name).to.eql(new Some('rentSmoothie'));
+      expect(loggedSpan.name).to.eql('rentSmoothie');
+    });
+  });
+
+  // TODO: handle this when headers are extracted instead of guessing
+  it('should set non-root server span as shared', () => {
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.setId(new TraceId({
+        traceId: None,
+        parentId: new Some('a'),
+        spanId: 'c',
+        sampled: new Some(true)
+      }));
+
+      trace.recordServiceName('SmoothieStore');
+      trace.recordRpc('buySmoothie');
+      trace.recordAnnotation(new Annotation.ServerRecv());
+      trace.recordAnnotation(new Annotation.ServerSend());
+
+      const loggedSpan = logSpan.getCall(0).args[0];
+
+      expect(loggedSpan.shared).to.equal(true);
     });
   });
 
@@ -172,19 +199,9 @@ describe('Batch Recorder', () => {
       trace.recordAnnotation(new Annotation.ClientRecv());
 
       const loggedSpan = logSpan.getCall(0).args[0];
-
-      const spanJson = loggedSpan.toJSON();
-      expect(spanJson.binaryAnnotations).to.deep.equal([
-        {
-          key: 'sa',
-          value: true,
-          endpoint: {
-            serviceName: 'server',
-            ipv4: '127.0.0.2',
-            port: 7071
-          }
-        }
-      ]);
+      expect(loggedSpan.remoteEndpoint.serviceName).to.equal('server');
+      expect(loggedSpan.remoteEndpoint.ipv4).to.equal('127.0.0.2');
+      expect(loggedSpan.remoteEndpoint.port).to.equal(7071);
     });
   });
 });

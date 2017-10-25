@@ -2,6 +2,17 @@ class InetAddress {
   constructor(addr) {
     this.addr = addr;
   }
+
+  // returns undefined if this isn't an IPv4 string
+  ipv4() {
+    // coercing to int forces validation here
+    const ipv4Int = this.toInt();
+    if (ipv4Int && ipv4Int !== 0) {
+      return this.addr;
+    }
+    return undefined;
+  }
+
   toInt() {
     // e.g. 10.57.50.83
     // should become
@@ -13,6 +24,7 @@ class InetAddress {
     // jshint bitwise: false
     return parts[0] << 24 | parts[1] << 16 | parts[2] << 8 | parts[3];
   }
+
   toString() {
     return `InetAddress(${this.addr})`;
   }

@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const {Scribe} = require('scribe');
-const serializeSpan = require('zipkin-encoder-thrift');
+const {fromByteArray: base64encode} = require('base64-js');
+const toThrift = require('zipkin-encoder-thrift');
 
 function ScribeLogger({scribeHost, scribePort = 9410, scribeInterval = 1000}) {
   const scribeClient = new Scribe(scribeHost, scribePort, {autoReconnect: true});
@@ -11,12 +12,12 @@ function ScribeLogger({scribeHost, scribePort = 9410, scribeInterval = 1000}) {
   setInterval(() => {
     if (this.queue.length > 0) {
       try {
-        scribeClient.open(err => {
+        scribeClient.open((err) => {
           if (err) {
             console.error('Error writing Zipkin data to Scribe', err);
           } else {
-            this.queue.forEach(span => {
-              scribeClient.send('zipkin', serializeSpan(span));
+            this.queue.forEach((span) => {
+              scribeClient.send('zipkin', base64encode(toThrift(span)));
             });
             scribeClient.flush();
             this.queue.length = 0;

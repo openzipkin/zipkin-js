@@ -1,5 +1,19 @@
-# Generate with the command "thrift -gen js:node zipkinCore.thrift"
-namespace java com.twitter.zipkin.gen
+# Copyright 2012 Twitter Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+namespace java com.twitter.zipkin.thriftjava
+#@namespace scala com.twitter.zipkin.thriftscala
+namespace rb Zipkin
 
 #************** Annotation.value **************
 /**
@@ -61,6 +75,34 @@ const string SERVER_SEND = "ss"
  */
 const string SERVER_RECV = "sr"
 /**
+ * Message send ("ms") is a request to send a message to a destination, usually
+ * a broker. This may be the only annotation in a messaging span. If WIRE_SEND
+ * exists in the same span, it follows this moment and clarifies delays sending
+ * the message, such as batching.
+ *
+ * Unlike RPC annotations like CLIENT_SEND, messaging spans never share a span
+ * ID. For example, "ms" should always be the parent of "mr".
+ *
+ * Annotation.host is not the destination, it is the host which logged the send
+ * event: the producer. When annotating MESSAGE_SEND, instrumentation should
+ * also tag the MESSAGE_ADDR.
+ */
+const string MESSAGE_SEND = "ms"
+/**
+ * A consumer received ("mr") a message from a broker. This may be the only
+ * annotation in a messaging span. If WIRE_RECV exists in the same span, it
+ * precedes this moment and clarifies any local queuing delay.
+ *
+ * Unlike RPC annotations like SERVER_RECV, messaging spans never share a span
+ * ID. For example, "mr" should always be a child of "ms" unless it is a root
+ * span.
+ *
+ * Annotation.host is not the broker, it is the host which logged the receive
+ * event: the consumer.  When annotating MESSAGE_RECV, instrumentation should
+ * also tag the MESSAGE_ADDR.
+ */
+const string MESSAGE_RECV = "mr"
+/**
  * Optionally logs an attempt to send a message on the wire. Multiple wire send
  * events could indicate network retries. A lag between client or server send
  * and wire send might indicate queuing or processing delay.
@@ -120,7 +162,7 @@ const string HTTP_METHOD = "http.method"
  * "/resource/{resource_id}". In systems where only equals queries are available, searching for
  * http/path=/resource won't match if the actual request was /resource/abcd-ff.
  *
- * Historical note: This was commonly expressed as "http.uri" in zipkin, eventhough it was most
+ * Historical note: This was commonly expressed as "http.uri" in zipkin, even though it was most
  * often just a path.
  */
 const string HTTP_PATH = "http.path"
@@ -216,6 +258,10 @@ const string CLIENT_ADDR = "ca"
  * different server ip or port.
  */
 const string SERVER_ADDR = "sa"
+/**
+ * Indicates the remote address of a messaging span, usually the broker.
+ */
+const string MESSAGE_ADDR = "ma"
 
 /**
  * Indicates the network context of a service recording an annotation with two
@@ -406,7 +452,7 @@ struct Span {
    * precise value possible. For example, gettimeofday or syncing nanoTime
    * against a tick of currentTimeMillis.
    *
-   * For compatibilty with instrumentation that precede this field, collectors
+   * For compatibility with instrumentation that precede this field, collectors
    * or span stores can derive this via Annotation.timestamp.
    * For example, SERVER_RECV.timestamp or CLIENT_SEND.timestamp.
    *
