@@ -1,23 +1,9 @@
 const {
-  Annotation,
-  HttpHeaders: Header,
-  TraceId,
-  option: {Some, None}
+  option: {Some, None},
+  Instrumentation
 } = require('zipkin');
 const url = require('url');
 const pkg = require('../package.json');
-
-function stringToBoolean(str) {
-  return str === '1';
-}
-
-function stringToIntOption(str) {
-  try {
-    return new Some(parseInt(str));
-  } catch (err) {
-    return None;
-  }
-}
 
 function headerOption(headers, header) {
   const val = headers[header.toLowerCase()];
@@ -29,6 +15,7 @@ function headerOption(headers, header) {
 }
 
 exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) => {
+  const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
   if (tracer == null) {
     next(new Error('No tracer specified'));
     return;
@@ -40,52 +27,12 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
     const plugins = request.plugins;
 
     tracer.scoped(() => {
-      if (readHeader(Header.TraceId) !== None && readHeader(Header.SpanId) !== None) {
-        const spanId = readHeader(Header.SpanId);
-        spanId.ifPresent((sid) => {
-          const traceId = readHeader(Header.TraceId);
-          const parentSpanId = readHeader(Header.ParentSpanId);
-          const sampled = readHeader(Header.Sampled);
-          const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
-          const id = new TraceId({
-            traceId,
-            parentId: parentSpanId,
-            spanId: sid,
-            sampled: sampled.map(stringToBoolean),
-            flags
-          });
-          tracer.setId(id);
-        });
-      } else {
-        tracer.setId(tracer.createRootId());
-        if (readHeader(Header.Flags) !== None) {
-          const currentId = tracer.id;
-          const idWithFlags = new TraceId({
-            traceId: currentId.traceId,
-            parentId: currentId.parentId,
-            spanId: currentId.spanId,
-            sampled: currentId.sampled,
-            flags: readHeader(Header.Flags)
-          });
-          tracer.setId(idWithFlags);
-        }
-      }
-
-      const id = tracer.id;
+      const id =
+        instrumentation.recordRequest(request.method, url.format(request.url), readHeader);
 
       plugins.zipkin = {
-        traceId: tracer.id
+        traceId: id
       };
-
-      tracer.recordServiceName(serviceName);
-      tracer.recordRpc(request.method.toUpperCase());
-      tracer.recordBinary('http.url', url.format(request.url));
-      tracer.recordAnnotation(new Annotation.ServerRecv());
-      tracer.recordAnnotation(new Annotation.LocalAddr({port}));
-
-      if (id.flags !== 0 && id.flags != null) {
-        tracer.recordBinary(Header.Flags, id.flags.toString());
-      }
 
       return reply.continue();
     });
@@ -96,9 +43,7 @@ exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) =
     const statusCode = response.isBoom ? response.output.statusCode : response.statusCode;
 
     tracer.scoped(() => {
-      tracer.setId(request.plugins.zipkin.traceId);
-      tracer.recordBinary('http.status_code', statusCode.toString());
-      tracer.recordAnnotation(new Annotation.ServerSend());
+      instrumentation.recordResponse(request.plugins.zipkin.traceId, statusCode);
     });
 
     return reply.continue();

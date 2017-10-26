@@ -162,6 +162,31 @@ declare namespace zipkin {
 
   interface Logger {
   }
+
+  namespace Instrumentation {
+    class HttpServer {
+      constructor(args: { tracer: Tracer, serviceName: string, port: string | number });
+
+      recordRequest(
+        method: string,
+        requestUrl: string,
+        readHeader: <T> (header: string) => option.IOption<T>
+      ): string;
+      recordResponse(traceId: string, statusCode: string, error?: Error): void;
+    }
+
+    class HttpClient {
+      constructor(args: { tracer: Tracer, serviceName: string, remoteServiceName?: string });
+
+      recordRequest<T>(
+        request: T,
+        url: string,
+        method: string
+      ): T;
+      recordResponse(traceId: string, statusCode: string): void;
+      recordError(traceId: string, error: Error): void;
+    }
+  }
 }
 
 export = zipkin;

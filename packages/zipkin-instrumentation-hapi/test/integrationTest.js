@@ -132,48 +132,6 @@ describe('hapi middleware - integration test', () => {
     });
   });
 
-  it('should accept a 128bit X-B3-TraceId', done => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
-
-    ctxImpl.scoped(() => {
-      const server = new Hapi.Server();
-      server.connection();
-      server.route({
-        method: 'POST',
-        path: '/foo',
-        config: {
-          handler: (request, reply) => {
-            reply({status: 'OK'}).code(202);
-          }
-        }
-      });
-      server.register({
-        register: middleware,
-        options: {tracer, serviceName: 'service-a'}
-      });
-
-      const traceId = '863ac35c9f6413ad48485a3953bb6124';
-      const method = 'POST';
-      const url = '/foo';
-      const headers = {
-        'X-B3-TraceId': traceId,
-        'X-B3-SpanId': '48485a3953bb6124',
-        'X-B3-Flags': '1'
-      };
-      server.inject({method, url, headers}, () => {
-        const annotations = record.args.map(args => args[0]);
-
-        annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
-
-        done();
-      });
-    });
-  });
-
-
   it('should record a reasonably accurate span duration', done => {
     const record = sinon.spy();
     const recorder = {record};
