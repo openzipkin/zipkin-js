@@ -9,7 +9,7 @@ const {Some, None} = require('../src/option');
 const ExplicitContext = require('../src/explicit-context');
 
 describe('Batch Recorder', () => {
-  it('should accumulate annotations into MutableSpans', () => {
+  it('should accumulate annotations into PartialSpans', () => {
     const logSpan = sinon.spy();
 
     const ctxImpl = new ExplicitContext();
@@ -41,16 +41,15 @@ describe('Batch Recorder', () => {
 
       const loggedSpan = logSpan.getCall(0).args[0];
 
-      expect(loggedSpan.traceId.traceId).to.equal('a');
-      expect(loggedSpan.traceId.parentId).to.equal('a');
-      expect(loggedSpan.traceId.spanId).to.equal('c');
+      expect(loggedSpan.traceId).to.equal('a');
+      expect(loggedSpan.parentId).to.equal('a');
+      expect(loggedSpan.id).to.equal('c');
       expect(loggedSpan.name).to.eql('buySmoothie');
+      expect(loggedSpan.kind).to.equal('SERVER');
       expect(loggedSpan.localEndpoint.serviceName).to.equal('SmoothieStore');
       expect(loggedSpan.localEndpoint.ipv4).to.equal('127.0.0.1');
       expect(loggedSpan.localEndpoint.port).to.equal(7070);
       expect(loggedSpan.tags.taste).to.equal('banana');
-      expect(loggedSpan.annotations[0].value).to.equal('sr');
-      expect(loggedSpan.annotations[1].value).to.equal('ss');
     });
   });
 
@@ -114,7 +113,7 @@ describe('Batch Recorder', () => {
     });
   });
 
-  it('should set MutableSpan.startTimestamp to first record', () => {
+  it('should set Span.timestamp to first record', () => {
     const clock = lolex.install(12345678);
     const logSpan = sinon.spy();
 
@@ -125,8 +124,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: None,
-        parentId: new Some('a'),
+        traceId: new Some('a'),
         spanId: 'c',
         sampled: new Some(true)
       }));
@@ -138,7 +136,36 @@ describe('Batch Recorder', () => {
 
       const loggedSpan = logSpan.getCall(0).args[0];
 
-      expect(loggedSpan.startTimestamp).to.equal(12345678000);
+      expect(loggedSpan.timestamp).to.equal(12345678000);
+
+      clock.uninstall();
+    });
+  });
+
+  it('should record minimum duration of 1 microsecond', () => {
+    const clock = lolex.install(12345678);
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.setId(new TraceId({
+        traceId: new Some('a'),
+        spanId: 'c',
+        sampled: new Some(true)
+      }));
+      trace.recordRpc('GET');
+      trace.recordAnnotation(new Annotation.ClientSend());
+      clock.tick(0.000123);
+      trace.recordAnnotation(new Annotation.ClientRecv());
+
+      const loggedSpan = logSpan.getCall(0).args[0];
+
+      expect(loggedSpan.timestamp).to.equal(12345678000);
+      expect(loggedSpan.duration).to.equal(1); // rounds up!
 
       clock.uninstall();
     });
