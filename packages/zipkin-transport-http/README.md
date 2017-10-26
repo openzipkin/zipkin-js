@@ -6,12 +6,17 @@ This is a module that sends Zipkin trace data to a configurable HTTP endpoint.
 `npm install zipkin-transport-http --save`
 
 ```javascript
-const {Tracer, BatchRecorder} = require('zipkin');
+const {
+  Tracer,
+  BatchRecorder,
+  jsonEncoder: {JSON_V2}
+} = require('zipkin');
 const {HttpLogger} = require('zipkin-transport-http');
 
 const recorder = new BatchRecorder({
   logger: new HttpLogger({
-    endpoint: 'http://localhost:9411/api/v1/spans'
+    endpoint: 'http://localhost:9411/api/v2/spans',
+    jsonEncoder: JSON_V2
   })
 });
 

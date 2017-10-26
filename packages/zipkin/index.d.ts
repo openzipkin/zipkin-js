@@ -85,6 +85,16 @@ declare namespace zipkin {
     }
   }
 
+  interface JsonEncoder {
+    // TODO: make a typesafe def for model.Endpoint,Span using Span here
+    encode: (span: any) => string;
+  }
+
+  namespace jsonEncoder {
+    const JSON_V1: JsonEncoder;
+    const JSON_V2: JsonEncoder;
+  }
+
   interface IAnnotation {
   }
 

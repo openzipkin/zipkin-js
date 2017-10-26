@@ -1,9 +1,7 @@
-const lolex = require('lolex');
 const TraceId = require('../src/tracer/TraceId');
-const {Span, Endpoint} = require('../src/record');
-const toJsonV1 = require('../src/json-v1');
+const {Span, Endpoint} = require('../src/model');
+const {JSON_V1} = require('../src/jsonEncoder');
 const {Some, None} = require('../src/option');
-const {now} = require('../src/time');
 
 describe('JSON v1 Formatting', () => {
   // v1 format requires an empty span name. v2 can leave it out
@@ -14,7 +12,7 @@ describe('JSON v1 Formatting', () => {
       sampled: None
     }));
 
-    expect(toJsonV1(span)).to.equal(
+    expect(JSON_V1.encode(span)).to.equal(
       '{"traceId":"000000000000162e","id":"000000000000162e","name":""}'
     );
   });
@@ -27,7 +25,7 @@ describe('JSON v1 Formatting', () => {
       sampled: None
     }));
 
-    expect(toJsonV1(span)).to.contain(
+    expect(JSON_V1.encode(span)).to.contain(
       '{"traceId":"000000000000162e","parentId":"000000000000abcd"'
     );
   });
@@ -38,7 +36,7 @@ describe('JSON v1 Formatting', () => {
       spanId: '000000000000162e'
     }));
 
-    expect(toJsonV1(span)).to.contain(
+    expect(JSON_V1.encode(span)).to.contain(
       '{"traceId":"00000000000004d2000000000000162e"'
     );
   });
@@ -50,25 +48,27 @@ describe('JSON v1 Formatting', () => {
       flags: 1
     }));
 
-    expect(toJsonV1(span)).to.contain(',"debug":true}');
+    expect(JSON_V1.encode(span)).to.contain(',"debug":true}');
   });
 
   it('should transform correctly from Span to JSON representation', () => {
-    const serverSpan = new Span(new TraceId({
+    const span = new Span(new TraceId({
       traceId: new Some('a'),
       parentId: new Some('b'),
       spanId: 'c',
       sampled: None
     }));
-    serverSpan.setName('GET');
-    serverSpan.setLocalServiceName('PortalService');
-    serverSpan.setLocalIpV4('10.57.50.83');
-    serverSpan.setLocalPort(8080);
-    serverSpan.setShared(true);
-    serverSpan.putTag('warning', 'The cake is a lie');
-    serverSpan.addAnnotation(1, 'sr');
-    serverSpan.addAnnotation(2, 'ss');
-    serverSpan.started = 1468441525803803;
+    span.setName('GET');
+    span.setLocalEndpoint(new Endpoint({
+      serviceName: 'PortalService',
+      ipv4: '10.57.50.83',
+      port: 8080
+    }));
+    span.setKind('SERVER');
+    span.setTimestamp(1);
+    span.setDuration(1);
+    span.putTag('warning', 'The cake is a lie');
+    span.setShared(true);
 
     const expected = {
       traceId: 'a',
@@ -108,7 +108,7 @@ describe('JSON v1 Formatting', () => {
       ]
     };
 
-    const spanJson = JSON.parse(toJsonV1(serverSpan));
+    const spanJson = JSON.parse(JSON_V1.encode(span));
     expect(spanJson.traceId).to.equal(expected.traceId);
     expect(spanJson.name).to.equal(expected.name);
     expect(spanJson.id).to.equal(expected.id);
@@ -118,80 +118,55 @@ describe('JSON v1 Formatting', () => {
   });
 
   it('should not set timestamp or duration on shared span', () => {
-    const serverSpan = new Span(new TraceId({
+    const span = new Span(new TraceId({
       traceId: new Some('a'),
       parentId: new Some('b'),
       spanId: 'c',
       sampled: None
     }));
-    serverSpan.setName('GET');
-    serverSpan.setShared(true);
-    serverSpan.addAnnotation(1, 'sr');
-    serverSpan.addAnnotation(2, 'ss');
+    span.setName('GET');
+    span.setKind('SERVER');
+    span.setTimestamp(1);
+    span.setDuration(1);
+    span.setShared(true);
 
-    const spanJson = toJsonV1(serverSpan);
+    const spanJson = JSON_V1.encode(span);
 
     expect(spanJson).to.not.contain('"name":"GET","timestamp"');
     expect(spanJson).to.not.contain('"duration"');
   });
 
   it('should set timestamp and duration on client span', () => {
-    const clock = lolex.install(12345678);
-
-    const clientSpan = new Span(new TraceId({
+    const span = new Span(new TraceId({
       traceId: new Some('a'),
       parentId: new Some('b'),
       spanId: 'c',
       sampled: None
     }));
-    clientSpan.setName('GET');
-    clientSpan.addAnnotation(now(), 'cs');
-    clock.tick(1.732123);
-    clientSpan.addAnnotation(now(), 'cr');
+    span.setName('GET');
+    span.setKind('CLIENT');
+    span.setTimestamp(1);
+    span.setDuration(1);
 
-    expect(toJsonV1(clientSpan)).to.contain(
-      '"timestamp":12345678000,"duration":1732,' // truncates nanos
-    );
-
-    clock.uninstall();
-  });
-
-  it('should have minimum duration of 1 microsecond', () => {
-    const clock = lolex.install(12345678);
-
-    const clientSpan = new Span(new TraceId({
-      traceId: new Some('a'),
-      parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
-    }));
-    clientSpan.setName('GET');
-    clientSpan.addAnnotation(now(), 'cs');
-    clock.tick(0.000123);
-    clientSpan.addAnnotation(now(), 'cr');
-
-    expect(toJsonV1(clientSpan)).to.contain(
-      '"timestamp":12345678000,"duration":1,' // rounds up!
-    );
-
-    clock.uninstall();
+    expect(JSON_V1.encode(span)).to.contain('"timestamp":1,"duration":1,');
   });
 
   it('should set server address on client span', () => {
-    const clientSpan = new Span(new TraceId({
+    const span = new Span(new TraceId({
       traceId: new Some('a'),
       parentId: new Some('b'),
       spanId: 'c',
       sampled: None
     }));
-    clientSpan.setName('GET');
-    clientSpan.setRemoteEndpoint(new Endpoint({
+    span.setName('GET');
+    span.setKind('CLIENT');
+    span.setRemoteEndpoint(new Endpoint({
       serviceName: 'there',
       ipv4: '10.57.50.84',
       port: 80
     }));
 
-    const spanJson = toJsonV1(clientSpan);
+    const spanJson = JSON_V1.encode(span);
     expect(spanJson).to.contain(
       '{"key":"sa","value":true,"endpoint":{"serviceName":"there","ipv4":"10.57.50.84","port":80}}'
     );
@@ -208,7 +183,7 @@ describe('JSON v1 Formatting', () => {
     span.setName('GET');
     span.putTag('http.path', '/api');
 
-    const spanJson = toJsonV1(span);
+    const spanJson = JSON_V1.encode(span);
     expect(spanJson).to.contain(
       '"binaryAnnotations":[{"key":"http.path","value":"/api"}]}'
     );

@@ -56,37 +56,61 @@ function toThriftAddress(key, endpoint) {
 
 function toThriftSpan(span) {
   const res = new thriftTypes.Span();
-  const traceId = span.traceId.traceId;
-
   // thrift fields are i64, but accept hex input. That's why we set via strings.
-  if (traceId.length <= 16) {
-    res.trace_id = traceId;
+  if (span.traceId.length <= 16) {
+    res.trace_id = span.traceId;
   } else {
-    res.trace_id_high = traceId.substr(0, 16);
-    res.trace_id = traceId.substr(traceId.length - 16);
+    res.trace_id_high = span.traceId.substr(0, 16);
+    res.trace_id = span.traceId.substr(span.traceId.length - 16);
   }
-  span.traceId._parentId.ifPresent((id) => {
-    res.parent_id = id;
-  });
-  res.id = span.traceId.spanId;
+  res.parent_id = span.parentId;
+  res.id = span.id;
   res.name = span.name || ''; // undefined is not allowed in v1
 
   // Log timestamp and duration if this tracer started and completed this span.
-  if (!span.shared && span.endTimestamp) {
-    res.timestamp = span.startTimestamp;
-    res.duration = Math.max(span.endTimestamp - span.startTimestamp, 1);
+  if (!span.shared) {
+    res.timestamp = span.timestamp;
+    res.duration = span.duration;
   }
 
   const thriftEndpoint = toThriftEndpoint(span.localEndpoint);
 
-  let addressKey = 'sa'; // TODO: switch to span.kind
-  if (span.annotations.length > 0) { // don't write empty array
-    res.annotations = span.annotations.map((ann) => {
-      if (ann.value === 'sr') {
-        addressKey = 'ca';
-      }
-      return toThriftAnnotation(ann, thriftEndpoint);
-    });
+  let beginAnnotation;
+  let endAnnotation;
+  let addressKey;
+  switch (span.kind) {
+    case 'CLIENT':
+      beginAnnotation = span.timestamp ? 'cs' : undefined;
+      endAnnotation = 'cr';
+      addressKey = 'sa';
+      break;
+    case 'SERVER':
+      beginAnnotation = span.timestamp ? 'sr' : undefined;
+      endAnnotation = 'ss';
+      addressKey = 'ca';
+      break;
+    default:
+  }
+
+  if (span.annotations.length > 0 || beginAnnotation) { // don't write empty array
+    res.annotations = span.annotations.map((ann) =>
+      toThriftAnnotation(ann, thriftEndpoint)
+    );
+  }
+
+  if (beginAnnotation) {
+    res.annotations.push(new thriftTypes.Annotation({
+      value: beginAnnotation,
+      timestamp: span.timestamp,
+      host: thriftEndpoint
+    }));
+    if (span.duration) {
+      res.annotations.push(new thriftTypes.Annotation({
+        value: endAnnotation,
+        timestamp: span.timestamp + span.duration,
+        host: thriftEndpoint
+      }));
+    }
   }
 
   const keys = Object.keys(span.tags);
@@ -112,9 +136,11 @@ const transport = new TBufferedTransport(null, (res) => {
 });
 const protocol = new TBinaryProtocol(transport);
 
-module.exports = function toThrift(span) {
-  const spanThrift = toThriftSpan(span);
-  spanThrift.write(protocol);
-  protocol.flush();
-  return serialized;
+module.exports = {
+  encode(span) {
+    const spanThrift = toThriftSpan(span);
+    spanThrift.write(protocol);
+    protocol.flush();
+    return serialized;
+  }
 };

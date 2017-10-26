@@ -1,5 +1,5 @@
 const kafka = require('kafka-node');
-const serializeSpan = require('zipkin-encoder-thrift');
+const THRIFT = require('zipkin-encoder-thrift');
 
 module.exports = class KafkaLogger {
   constructor(options) {
@@ -29,7 +29,7 @@ module.exports = class KafkaLogger {
 
   logSpan(span) {
     this.producerPromise.then(producer => {
-      const data = serializeSpan(span, 'binary');
+      const data = THRIFT.encode(span);
       producer.send([{
         topic: this.topic,
         messages: data
