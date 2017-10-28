@@ -1,6 +1,6 @@
 {
   "name": "zipkin",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "The core tracer for zipkin.js",
   "main": "lib/index.js",
   "types": "index.d.ts",
