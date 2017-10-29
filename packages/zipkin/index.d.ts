@@ -14,6 +14,19 @@ declare namespace zipkin {
     letContext<V>(ctx: T, callback: () => V): V;
   }
 
+  namespace sampler {
+    class Sampler {
+      constructor(evaluator: (traceId: TraceId) => boolean);
+    }
+
+    class CountingSampler implements Sampler {
+      constructor(sampleRate?: number);
+    }
+
+    const neverSample: (traceId: TraceId) => boolean;
+    const alwaysSample: (traceId: TraceId) => boolean;
+  }
+
   class Tracer {
     constructor(args: { ctxImpl: Context<TraceId>, recorder: Recorder, sampler?: sampler.Sampler, traceId128Bit?: boolean });
     id: TraceId;
@@ -35,6 +48,20 @@ declare namespace zipkin {
   }
 
   class TraceId {
+    _traceId:  option.IOption<string>;
+    _parentId: option.IOption<string>;
+    _spanId:   string;
+    _sampled:  option.IOption<boolean>;
+    _flags:    number;
+
+    traceId:  string;
+    parentId: string;
+    spanId:   string;
+    sampled:  boolean;
+    flags:    number;
+
+    isDebug(): boolean;
+
     constructor(args?: {
       traceId?:  option.IOption<string>,
       parentId?: option.IOption<string>,
@@ -89,6 +116,51 @@ declare namespace zipkin {
       getOrElse: () => T;
       equals: (other: IOption<T>) => boolean;
       toString: () => string;
+    }
+  }
+
+  namespace model {
+    interface Endpoint {
+      constructor(args: { serviceName?: string, ipv4?: InetAddress, port?: number });
+
+      setServiceName(serviceName: string): void;
+      setIpv4(ipv4: string): void;
+      setPort(port: number): void;
+
+      isEmpty(): void;
+    }
+
+    interface Annotation {
+      timestamp: number;
+      value: string;
+    }
+
+    interface Span {
+      readonly traceId:        string;
+      readonly parentId?:      string;
+      readonly id:             string;
+      readonly name?:           string;
+      readonly kind?:           string;
+      readonly timestamp?:      number;
+      readonly duration?:       number;
+      readonly localEndpoint?:  Endpoint;
+      readonly remoteEndpoint?: Endpoint;
+      readonly annotations:    Annotation[];
+      readonly tags:           { [ key: string ]: string };
+      readonly debug:          boolean;
+      readonly shared:         boolean;
+
+      constructor(traceId: TraceId)
+      setName(name: string): void;
+      setKind(kind: string): void;
+      setTimestamp(timestamp: number): void;
+      setDuration(duration: number): void;
+      setLocalEndpoint(endpoint: Endpoint): void;
+      setRemoteEndpoint(endpoint: Endpoint): void;
+      addAnnotation(timestamp: number, value: string): void;
+      putTag(key: string, value: string): void;
+      setDebug(debug: boolean): void;
+      setShared(shared: boolean): void;
     }
   }
 
@@ -159,6 +231,9 @@ declare namespace zipkin {
   class InetAddress {
     constructor(addr: string);
     static getLocalAddress(): InetAddress;
+
+    ipv4(): string;
+    toInt(): number;
   }
 
   namespace HttpHeaders {
@@ -169,19 +244,25 @@ declare namespace zipkin {
     const Flags: string;
   }
 
+  interface Record {
+    traceId: TraceId;
+    timestamp: number;
+    annotation: IAnnotation
+  }
+
   /** The Tracer sends each annotation to a Recorder implementation */
   interface Recorder {
-    record: (rec: any) => void;
+    record: (rec: Record) => void;
   }
 
   class BatchRecorder implements Recorder {
     constructor(args: { logger: Logger, timeout?: number });
-    record: (rec: any) => void;
+    record: (rec: Record) => void;
   }
 
   class ConsoleRecorder implements Recorder {
     constructor(args?: { logger?: Logger });
-    record: (rec: any) => void;
+    record: (rec: Record) => void;
   }
 
   class ExplicitContext implements Context<TraceId> {
@@ -202,11 +283,6 @@ declare namespace zipkin {
     class CountingSampler extends Sampler {
       constructor(sampleRate: number)
     }
-  }
-
-  namespace model {
-    class Endpoint {}
-    class Span {}
   }
 
   class Request {
