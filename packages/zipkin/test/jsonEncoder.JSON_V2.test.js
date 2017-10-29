@@ -70,14 +70,14 @@ describe('JSON v2 Formatting', () => {
 
     const expected = {
       traceId: 'a',
-      name: 'GET',
+      name: 'get',
       id: 'c',
       parentId: 'b',
       kind: 'SERVER',
       timestamp: 1,
       duration: 1,
       localEndpoint: {
-        serviceName: 'PortalService',
+        serviceName: 'portalservice',
         ipv4: '10.57.50.83',
         port: 8080
       },

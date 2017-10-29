@@ -14,7 +14,7 @@ describe('HTTP transport - integration test', () => {
       res.status(202).json({});
       const traceData = req.body;
       expect(traceData.length).to.equal(1);
-      expect(traceData[0].name).to.equal('GET');
+      expect(traceData[0].name).to.equal('get');
       expect(traceData[0].binaryAnnotations.length).to.equal(2);
       expect(traceData[0].annotations.length).to.equal(2);
       this.server.close(done);
@@ -47,7 +47,7 @@ describe('HTTP transport - integration test', () => {
       res.status(202).json({});
       const traceData = req.body;
       expect(traceData.length).to.equal(1);
-      expect(traceData[0].name).to.equal('GET');
+      expect(traceData[0].name).to.equal('get');
       expect(traceData[0].kind).to.equal('SERVER');
       expect(traceData[0].tags['http.url']).to.equal('http://example.com');
       expect(traceData[0].tags['http.response_code']).to.equal('200');

@@ -72,13 +72,13 @@ describe('JSON v1 Formatting', () => {
 
     const expected = {
       traceId: 'a',
-      name: 'GET',
+      name: 'get',
       id: 'c',
       parentId: 'b',
       annotations: [
         {
           endpoint: {
-            serviceName: 'PortalService',
+            serviceName: 'portalservice',
             ipv4: '10.57.50.83',
             port: 8080
           },
@@ -87,7 +87,7 @@ describe('JSON v1 Formatting', () => {
         },
         {
           endpoint: {
-            serviceName: 'PortalService',
+            serviceName: 'portalservice',
             ipv4: '10.57.50.83',
             port: 8080,
           },
@@ -100,7 +100,7 @@ describe('JSON v1 Formatting', () => {
           key: 'warning',
           value: 'The cake is a lie',
           endpoint: {
-            serviceName: 'PortalService',
+            serviceName: 'portalservice',
             ipv4: '10.57.50.83',
             port: 8080
           }

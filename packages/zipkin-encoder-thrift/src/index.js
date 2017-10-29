@@ -3,7 +3,7 @@ const thriftTypes = require('./gen-nodejs/zipkinCore_types');
 const {TBufferedTransport, TBinaryProtocol} = require('thrift');
 
 function toThriftEndpoint(endpoint) {
-  if (endpoint === undefined || endpoint.isUnknown()) {
+  if (endpoint === undefined) {
     return undefined;
   }
   const res = new thriftTypes.Endpoint({

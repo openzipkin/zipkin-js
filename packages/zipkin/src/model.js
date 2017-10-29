@@ -1,11 +1,21 @@
 function Endpoint({serviceName, ipv4, port}) {
-  this.serviceName = serviceName;
-  this.ipv4 = ipv4;
-  this.port = port;
+  this.setServiceName(serviceName);
+  this.setIpv4(ipv4);
+  this.setPort(port);
 }
-Endpoint.prototype.isUnknown = function isUnknown() {
-  return (this.serviceName === undefined || this.serviceName === 'unknown') &&
-          this.ipv4 === undefined && this.port === undefined;
+Endpoint.prototype.setServiceName = function setServiceName(serviceName) {
+  // In zipkin, names are lowercase. This eagerly converts to alert users early.
+  this.serviceName = serviceName ? serviceName.toLocaleLowerCase() : undefined;
+};
+Endpoint.prototype.setIpv4 = function setIpv4(ipv4) {
+  this.ipv4 = ipv4;
+};
+Endpoint.prototype.setPort = function setPort(port) {
+  this.port = port || undefined;
+};
+Endpoint.prototype.isEmpty = function isEmpty() {
+  return this.serviceName === undefined &&
+         this.ipv4 === undefined && this.port === undefined;
 };
 
 function Annotation(timestamp, value) {
@@ -35,7 +45,8 @@ function Span(traceId) {
 }
 
 Span.prototype.setName = function setName(name) {
-  this.name = name;
+  // In zipkin, names are lowercase. This eagerly converts to alert users early.
+  this.name = name ? name.toLocaleLowerCase() : undefined;
 };
 Span.prototype.setKind = function setKind(kind) {
   this.kind = kind;
@@ -50,14 +61,18 @@ Span.prototype.setDuration = function setDuration(duration) {
   }
 };
 Span.prototype.setLocalEndpoint = function setLocalEndpoint(ep) {
-  if (ep && !ep.isUnknown()) {
+  if (ep && !ep.isEmpty()) {
     this.localEndpoint = ep;
   } else {
     this.localEndpoint = undefined;
   }
 };
 Span.prototype.setRemoteEndpoint = function setRemoteEndpoint(ep) {
-  this.remoteEndpoint = ep;
+  if (ep && !ep.isEmpty()) {
+    this.remoteEndpoint = ep;
+  } else {
+    this.remoteEndpoint = undefined;
+  }
 };
 Span.prototype.addAnnotation = function addAnnotation(timestamp, value) {
   this.annotations.push(new Annotation(timestamp, value));

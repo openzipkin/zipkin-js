@@ -6,8 +6,14 @@ function PartialSpan(traceId) {
   this.startTimestamp = now();
   this.startTick = hrtime();
   this.delegate = new Span(traceId);
-  this.localEndpoint = new Endpoint({serviceName: 'unknown'});
+  this.localEndpoint = new Endpoint({});
 }
+PartialSpan.prototype.finish = function finish() {
+  if (this.endTimestamp) {
+    return;
+  }
+  this.endTimestamp = now(this.startTimestamp, this.startTick);
+};
 
 class BatchRecorder {
   constructor({
@@ -38,6 +44,7 @@ class BatchRecorder {
     this.partialSpans.delete(id);
 
     const spanToWrite = span.delegate;
+    spanToWrite.setLocalEndpoint(span.localEndpoint);
     if (span.endTimestamp) {
       spanToWrite.setTimestamp(span.startTimestamp);
       spanToWrite.setDuration(span.endTimestamp - span.startTimestamp);
@@ -64,17 +71,6 @@ class BatchRecorder {
     return span.startTimestamp + this.timeout < now();
   }
 
-  _decorateEndpoint(endpoint, ann) {
-    /* eslint-disable no-param-reassign */
-    if (ann.host) {
-      endpoint.ipv4 = ann.host.ipv4();
-    }
-    if (ann.port && ann.port !== 0) {
-      endpoint.port = ann.port;
-    }
-    return endpoint;
-  }
-
   record(rec) {
     const id = rec.traceId;
 
@@ -84,15 +80,11 @@ class BatchRecorder {
           span.delegate.setKind('CLIENT');
           break;
         case 'ClientRecv':
-          if (!span.endTimestamp) {
-            span.endTimestamp = now(span.startTimestamp, span.startTick);
-          }
+          span.finish();
           span.delegate.setKind('CLIENT');
           break;
         case 'ServerSend':
-          if (!span.endTimestamp) {
-            span.endTimestamp = now(span.startTimestamp, span.startTick);
-          }
+          span.finish();
           span.delegate.setKind('SERVER');
           break;
         case 'ServerRecv':
@@ -107,24 +99,24 @@ class BatchRecorder {
           span.delegate.setName(rec.annotation.name);
           break;
         case 'ServiceName':
-          span.localEndpoint.serviceName = rec.annotation.serviceName;
-          span.delegate.setLocalEndpoint(span.localEndpoint);
+          span.localEndpoint.setServiceName(rec.annotation.serviceName);
           break;
         case 'BinaryAnnotation':
           span.delegate.putTag(rec.annotation.key, rec.annotation.value);
           break;
         case 'LocalAddr':
-          span.delegate.setLocalEndpoint(this._decorateEndpoint(
-            span.delegate.localEndpoint,
-            rec.annotation
-          ));
+          span.localEndpoint.setIpv4(
+            rec.annotation.host && rec.annotation.host.ipv4()
+          );
+          span.localEndpoint.setPort(rec.annotation.port);
           break;
         case 'ServerAddr':
           span.delegate.setKind('CLIENT');
-          span.delegate.setRemoteEndpoint(this._decorateEndpoint(
-            new Endpoint({serviceName: rec.annotation.serviceName}),
-            rec.annotation
-          ));
+          span.delegate.setRemoteEndpoint(new Endpoint({
+            serviceName: rec.annotation.serviceName,
+            ipv4: rec.annotation.host && rec.annotation.host.ipv4(),
+            port: rec.annotation.port
+          }));
           break;
         default:
           break;

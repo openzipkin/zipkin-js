@@ -116,7 +116,7 @@ describe('Thrift v1 Formatting', () => {
     span.putTag('warning', 'The cake is a lie');
 
     const expectedHost = new thriftTypes.Endpoint({
-      service_name: 'PortalService',
+      service_name: 'portalservice',
       ipv4: 171520595,
       port: 8080
     });
@@ -124,7 +124,7 @@ describe('Thrift v1 Formatting', () => {
     expected.trace_id = 'a';
     expected.parent_id = 'b';
     expected.id = 'c';
-    expected.name = 'GET';
+    expected.name = 'get';
     expected.annotations = [
       new thriftTypes.Annotation({
         timestamp: 1,
@@ -202,7 +202,7 @@ describe('Thrift v1 Formatting', () => {
     const expected = new thriftTypes.Span();
     expected.trace_id = '000000000000162e';
     expected.id = '000000000000162e';
-    expected.name = 'GET';
+    expected.name = 'get';
     expected.binary_annotations = [
       new thriftTypes.BinaryAnnotation({
         key: 'sa',
@@ -231,7 +231,7 @@ describe('Thrift v1 Formatting', () => {
     const expected = new thriftTypes.Span();
     expected.trace_id = '000000000000162e';
     expected.id = '000000000000162e';
-    expected.name = 'GET';
+    expected.name = 'get';
     expected.binary_annotations = [
       new thriftTypes.BinaryAnnotation({
         key: 'http.path',
