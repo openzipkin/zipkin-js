@@ -44,9 +44,9 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.traceId).to.equal('a');
       expect(loggedSpan.parentId).to.equal('a');
       expect(loggedSpan.id).to.equal('c');
-      expect(loggedSpan.name).to.eql('buySmoothie');
+      expect(loggedSpan.name).to.eql('buysmoothie');
       expect(loggedSpan.kind).to.equal('SERVER');
-      expect(loggedSpan.localEndpoint.serviceName).to.equal('SmoothieStore');
+      expect(loggedSpan.localEndpoint.serviceName).to.equal('smoothiestore');
       expect(loggedSpan.localEndpoint.ipv4).to.equal('127.0.0.1');
       expect(loggedSpan.localEndpoint.port).to.equal(7070);
       expect(loggedSpan.tags.taste).to.equal('banana');
@@ -81,7 +81,7 @@ describe('Batch Recorder', () => {
 
       const loggedSpan = logSpan.getCall(0).args[0];
 
-      expect(loggedSpan.name).to.eql('rentSmoothie');
+      expect(loggedSpan.name).to.eql('rentsmoothie');
     });
   });
 
@@ -142,7 +142,7 @@ describe('Batch Recorder', () => {
     });
   });
 
-  it('should record minimum duration of 1 microsecond', () => {
+  it('should record duration in microseconds', () => {
     const clock = lolex.install(12345678);
     const logSpan = sinon.spy();
 
@@ -159,13 +159,13 @@ describe('Batch Recorder', () => {
       }));
       trace.recordRpc('GET');
       trace.recordAnnotation(new Annotation.ClientSend());
-      clock.tick(0.000123);
+      clock.tick(0.123456);
       trace.recordAnnotation(new Annotation.ClientRecv());
 
       const loggedSpan = logSpan.getCall(0).args[0];
 
       expect(loggedSpan.timestamp).to.equal(12345678000);
-      expect(loggedSpan.duration).to.equal(1); // rounds up!
+      expect(loggedSpan.duration).to.equal(123);
 
       clock.uninstall();
     });

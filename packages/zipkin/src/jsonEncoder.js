@@ -1,5 +1,5 @@
 function toV1Endpoint(endpoint) {
-  if (endpoint === undefined || endpoint.isUnknown()) {
+  if (endpoint === undefined) {
     return undefined;
   }
   const res = {
