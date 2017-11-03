@@ -11,10 +11,15 @@ const {
 } = require('zipkin');
 
 class HttpLogger {
-  constructor({endpoint, httpInterval = 1000, jsonEncoder = JSON_V1}) {
+  constructor({endpoint, headers = {}, httpInterval = 1000, jsonEncoder = JSON_V1}) {
     this.endpoint = endpoint;
     this.queue = [];
     this.jsonEncoder = jsonEncoder;
+
+    this.headers = Object.assign({
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    }, headers);
 
     const timer = setInterval(() => {
       this.processQueue();
@@ -34,10 +39,7 @@ class HttpLogger {
       fetch(this.endpoint, {
         method: 'POST',
         body: postBody,
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        }
+        headers: this.headers,
       }).then((response) => {
         if (response.status !== 202) {
           console.error('Unexpected response while sending Zipkin data, status:' +
