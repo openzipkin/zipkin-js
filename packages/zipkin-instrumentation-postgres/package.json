@@ -1,0 +1,20 @@
+{
+  "name": "zipkin-instrumentation-postgres",
+  "version": "0.10.1",
+  "description": "Interceptor for postgres clients",
+  "main": "lib/zipkinClient.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "mocha": "^3.2.0",
+    "pg": "^7.4.0",
+    "zipkin": "^0.10.1"
+  }
+}
