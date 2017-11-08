@@ -15,7 +15,7 @@ declare namespace zipkin {
   }
 
   class Tracer {
-    constructor(args: { ctxImpl: Context<TraceId>, recorder: Recorder, sampler?: any, traceId128Bit?: boolean });
+    constructor(args: { ctxImpl: Context<TraceId>, recorder: Recorder, sampler?: sampler.Sampler, traceId128Bit?: boolean });
     id: TraceId;
 
     scoped<V>(callback: () => V): V;
@@ -160,10 +160,26 @@ declare namespace zipkin {
     record: (rec: any) => void;
   }
 
-  class ExplicitContext {
+  class ExplicitContext implements Context<TraceId> {
+    setContext(ctx: TraceId): void;
+    getContext(): TraceId;
+    scoped<V>(callback: () => V): V;
+    letContext<V>(ctx: TraceId, callback: () => V): V;
   }
 
-  const sampler: () => void;
+  namespace sampler {
+    class Sampler {
+      constructor(evaluator: (traceId: TraceId) => boolean)
+      shouldSample(traceId: TraceId): option.IOption<boolean>
+      toString(): String
+    }
+    function neverSample(traceId: TraceId): boolean
+    function alwaysSample(traceId: TraceId): boolean
+    class CountingSampler extends Sampler {
+      constructor(sampleRate: number)
+    }
+  }
+
   namespace model {
     class Endpoint {}
     class Span {}
