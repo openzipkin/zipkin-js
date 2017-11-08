@@ -85,9 +85,9 @@ declare namespace zipkin {
     }
   }
 
+  /** Used by the HttpLogger transport to convert spans to JSON */
   interface JsonEncoder {
-    // TODO: make a typesafe def for model.Endpoint,Span using Span here
-    encode: (span: any) => string;
+    encode: (span: model.Span) => string;
   }
 
   namespace jsonEncoder {
@@ -164,11 +164,19 @@ declare namespace zipkin {
   }
 
   const sampler: () => void;
+  namespace model {
+    class Endpoint {}
+    class Span {}
+  }
 
   class Request {
   }
 
+  /** The Logger (or transport) is what the Recorder uses to send spans to Zipkin.
+   * @see https://github.com/openzipkin/zipkin-js/#transports Official transport implementations
+   */
   interface Logger {
+    logSpan(span: model.Span): void;
   }
 
   namespace Instrumentation {
