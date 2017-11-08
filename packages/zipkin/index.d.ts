@@ -169,6 +169,7 @@ declare namespace zipkin {
     const Flags: string;
   }
 
+  /** The Tracer sends each annotation to a Recorder implementation */
   interface Recorder {
     record: (rec: any) => void;
   }
