@@ -103,40 +103,56 @@ declare namespace zipkin {
   }
 
   interface IAnnotation {
+    readonly annotationType: string
   }
 
   namespace Annotation {
-    class ClientSend implements IAnnotation { }
-    class ClientRecv implements IAnnotation { }
-    class ServerSend implements IAnnotation { }
-    class ServerRecv implements IAnnotation { }
+    class ClientSend implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class ClientRecv implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class ServerSend implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class ServerRecv implements IAnnotation {
+      readonly annotationType: string;
+    }
 
     class Message implements IAnnotation {
       constructor(message: string);
+      readonly annotationType: string;
     }
 
     class ServiceName implements IAnnotation {
       constructor(serviceName: string);
+      readonly annotationType: string;
     }
 
     class Rpc implements IAnnotation {
       constructor(name: string);
+      readonly annotationType: string;
     }
 
     class ClientAddr implements IAnnotation {
       constructor(args: { host: InetAddress, port: number });
+      readonly annotationType: string;
     }
 
     class ServerAddr implements IAnnotation {
       constructor(args: { serviceName: string, host?: InetAddress, port?: number });
+      readonly annotationType: string;
     }
 
     class LocalAddr implements IAnnotation {
       constructor(args?: { host?: InetAddress, port?: number });
+      readonly annotationType: string;
     }
 
     class BinaryAnnotation implements IAnnotation {
       constructor(key: string, value: boolean | string | number);
+      readonly annotationType: string;
     }
   }
 
