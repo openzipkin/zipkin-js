@@ -42,6 +42,13 @@ declare namespace zipkin {
       sampled?:  option.IOption<string>,
       flags?:    number
     });
+    readonly spanId: string;
+    readonly parentId: string;
+    readonly traceId: string;
+    readonly sampled: option.IOption<boolean>;
+    readonly flags: number;
+    isDebug(): boolean;
+    toString(): string;
   }
 
   const createNoopTracer: () => void;
