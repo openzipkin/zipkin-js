@@ -3,6 +3,7 @@
   "version": "0.10.1",
   "description": "Transports Zipkin trace data via HTTP",
   "main": "lib/index.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha --require ../../test/helper.js",
