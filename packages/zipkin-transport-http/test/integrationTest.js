@@ -12,7 +12,6 @@ describe('HTTP transport - integration test', () => {
     app.use(bodyParser.json());
     app.post('/api/v1/spans', (req, res) => {
       res.status(202).json({});
-      expect(req.headers.accept).to.equal('application/json');
       expect(req.headers['content-type']).to.equal('application/json');
       const traceData = req.body;
       expect(traceData.length).to.equal(1);
@@ -47,7 +46,6 @@ describe('HTTP transport - integration test', () => {
     app.use(bodyParser.json());
     app.post('/api/v1/spans', (req, res) => {
       res.status(202).json({});
-      expect(req.headers.accept).to.equal('application/json');
       expect(req.headers['content-type']).to.equal('application/json');
       expect(req.headers.authorization).to.equal('Token');
       const traceData = req.body;
