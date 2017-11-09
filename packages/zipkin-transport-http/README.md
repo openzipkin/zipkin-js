@@ -16,7 +16,9 @@ const {HttpLogger} = require('zipkin-transport-http');
 const recorder = new BatchRecorder({
   logger: new HttpLogger({
     endpoint: 'http://localhost:9411/api/v2/spans',
-    jsonEncoder: JSON_V2
+    jsonEncoder: JSON_V2, // optional, defaults to JSON_V1
+    httpInterval: 1000, // how often to sync spans. optional, defaults to 1000
+    headers: {'Authorization': 'secret'} // optional custom HTTP headers
   })
 });
 
@@ -25,3 +27,4 @@ const tracer = new Tracer({
   ctxImpl // this would typically be a CLSContext or ExplicitContext
 });
 ```
+
