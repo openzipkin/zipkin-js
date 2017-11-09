@@ -17,7 +17,6 @@ class HttpLogger {
     this.jsonEncoder = jsonEncoder;
 
     this.headers = Object.assign({
-      Accept: 'application/json',
       'Content-Type': 'application/json'
     }, headers);
 
