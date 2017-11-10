@@ -80,6 +80,17 @@ class Tracer {
     return childId;
   }
 
+  local(operationName, callable) {
+    return this.scoped(() => {
+      const traceId = this.createChildId();
+      this.setId(traceId);
+      this.recordAnnotation(new Annotation.LocalOperationStart(operationName));
+      const result = callable();
+      this.recordAnnotation(new Annotation.LocalOperationStop());
+      return result;
+    });
+  }
+
   letChildId(callable) {
     return this.scoped(() => {
       const traceId = this.createChildId();

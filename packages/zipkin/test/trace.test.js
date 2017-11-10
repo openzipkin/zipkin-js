@@ -39,6 +39,32 @@ describe('Tracer', () => {
     });
   });
 
+  it('should make a local span', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      const result = tracer.local('test', () => {
+        tracer.recordMessage('error');
+        return 'foo';
+      });
+
+      expect(result).to.eql('foo');
+
+      expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStart('test')
+      );
+      expect(record.getCall(1).args[0].annotation).to.eql(
+        new Annotation.Message('error')
+      );
+      expect(record.getCall(2).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStop()
+      );
+    });
+  });
+
   function runTest(bool, done) {
     const recorder = {
       record: sinon.spy()

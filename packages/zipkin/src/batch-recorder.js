@@ -92,6 +92,12 @@ class BatchRecorder {
           span.delegate.setShared(id.parentId !== id.spanId);
           span.delegate.setKind('CLIENT');
           break;
+        case 'LocalOperationStart':
+          span.delegate.setName(rec.annotation.name);
+          break;
+        case 'LocalOperationStop':
+          span.finish();
+          break;
         case 'Message':
           span.delegate.addAnnotation(rec.timestamp, rec.annotation.message);
           break;

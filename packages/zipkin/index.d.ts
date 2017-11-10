@@ -34,6 +34,7 @@ declare namespace zipkin {
     id: TraceId;
 
     scoped<V>(callback: () => V): V;
+    local<V>(name: string, callback: () => V): V;
     createRootId(): TraceId;
     createChildId(): TraceId;
     letChildId<V>(callback: (traceId: TraceId) => V): V;
