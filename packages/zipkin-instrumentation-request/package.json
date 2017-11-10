@@ -3,6 +3,7 @@
   "version": "0.10.1",
   "description": "Instrumentation for request with Zipkin.js",
   "main": "lib/index.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha --require ../../test/helper.js",
@@ -11,7 +12,11 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
+  "peerDependencies": {
+    "@types/request": "^2.0.8"
+  },
   "devDependencies": {
+    "@types/request": "^2.0.8",
     "babel-cli": "^6.23.0",
     "express": "^4.13.4",
     "mocha": "^3.2.0",
