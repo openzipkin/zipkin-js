@@ -1,9 +1,9 @@
 const sinon = require('sinon');
-const {Tracer, ExplicitContext, InetAddress} = require('zipkin');
+const {Tracer, ExplicitContext, BatchRecorder} = require('zipkin');
 const zipkinClient = require('../src/zipkinClient');
 
 const postgresConnectionOptions = {
-  host: 'localhost',
+  host: '127.0.0.1',
   port: 5432,
   database: 'postgres',
   user: 'postgres',
@@ -16,42 +16,20 @@ function getPostgres(tracer) {
   return zipkinClient(tracer, Postgres);
 }
 
-function expectAnnotationsDescribePostgresInteraction(annotations) {
-  const sn = annotations[1].annotation;
-  expect(sn.annotationType).to.equal('ServiceName');
-  expect(sn.serviceName).to.equal('unknown');
-
-  const sa = annotations[2].annotation;
-  expect(sa.annotationType).to.equal('ServerAddr');
-  expect(sa.serviceName).to.equal('postgres');
-  expect(sa.host).to.deep.equal(new InetAddress('localhost'));
-  expect(sa.port).to.equal(5432);
-}
-
-function expectAnnotationsBelongToTheSameSpan(annotations) {
-  let lastSpanId;
-  annotations.forEach((ann) => {
-    if (!lastSpanId) {
-      lastSpanId = ann.traceId.spanId;
-    }
-    expect(ann.traceId.spanId).to.equal(lastSpanId);
-  });
-}
-
-function expectErrorAnnotation(annotation, error) {
-  expect(annotation.annotation.key).to.equal('error');
-  expect(annotation.annotation.value).to.equal(error.toString());
-}
-
-function runTest(annotations) {
-  expectAnnotationsDescribePostgresInteraction(annotations);
-  expectAnnotationsBelongToTheSameSpan(annotations);
+function expectCorrectSpanData(span) {
+  expect(span.name).to.equal(`query ${postgresConnectionOptions.database}`);
+  expect(span.localEndpoint.serviceName).to.equal('unknown');
+  expect(span.remoteEndpoint.serviceName).to.equal('postgres');
+  expect(span.remoteEndpoint.ipv4).to.equal(postgresConnectionOptions.host);
+  expect(span.remoteEndpoint.port).to.equal(postgresConnectionOptions.port);
 }
 
 describe('postgres interceptor', () => {
   it('should add zipkin annotations', (done) => {
+    const logSpan = sinon.spy();
+
     const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
+    const recorder = new BatchRecorder({logger: {logSpan}});
     const tracer = new Tracer({ctxImpl, recorder});
     tracer.setId(tracer.createRootId());
 
@@ -62,27 +40,9 @@ describe('postgres interceptor', () => {
         const query = new Postgres.Query('SELECT NOW()');
         const result = postgres.query(query);
         result.on('end', () => {
-          const annotations = recorder.record.args.map(args => args[0]);
-          const firstAnn = annotations[0];
-          expect(annotations).to.have.length(15);
-
-          // we expect three spans, run annotations tests for each
-          runTest(annotations.slice(0, 5));
-          runTest(annotations.slice(5, 10));
-          runTest(annotations.slice(10, 15));
-
-          expect(
-            annotations[0].traceId.spanId
-          ).not.to.equal(annotations[5].traceId.spanId);
-          expect(
-            annotations[0].traceId.spanId
-          ).not.to.equal(annotations[10].traceId.spanId);
-
-          annotations.forEach(ann => {
-            expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
-          });
+          const spans = logSpan.args.map(arg => arg[0]);
+          expect(spans).to.have.length(3);
+          spans.forEach(expectCorrectSpanData);
 
           done();
         });
@@ -90,9 +50,32 @@ describe('postgres interceptor', () => {
     });
   });
 
-  it('should annotate postgres errors', (done) => {
+  it('should annotate pool', (done) => {
+    const logSpan = sinon.spy();
+
     const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
+    const recorder = new BatchRecorder({logger: {logSpan}});
+    const tracer = new Tracer({ctxImpl, recorder});
+    tracer.setId(tracer.createRootId());
+
+    const postgres = new (getPostgres(tracer).Pool)(postgresConnectionOptions);
+    postgres.connect();
+    postgres.query('SELECT NOW()', () => {
+      postgres.query('SELECT NOW()').then(() => {
+        const spans = logSpan.args.map(arg => arg[0]);
+        expect(spans).to.have.length(2);
+        spans.forEach(expectCorrectSpanData);
+
+        done();
+      });
+    });
+  });
+
+  it('should annotate postgres errors', (done) => {
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const recorder = new BatchRecorder({logger: {logSpan}});
     const tracer = new Tracer({ctxImpl, recorder});
     tracer.setId(tracer.createRootId());
 
@@ -104,10 +87,10 @@ describe('postgres interceptor', () => {
         const query = new Postgres.Query('FAILED QUERY()');
         const result = postgres.query(query);
         result.on('error', (thirdError) => {
-          const annotations = recorder.record.args.map(args => args[0]);
-          expectErrorAnnotation(annotations[5], firstError);
-          expectErrorAnnotation(annotations[11], secondError);
-          expectErrorAnnotation(annotations[17], thirdError);
+          const errorTags = logSpan.args.map(arg => arg[0].tags.error);
+          expect(errorTags[0]).to.equal(firstError.toString());
+          expect(errorTags[1]).to.equal(secondError.toString());
+          expect(errorTags[2]).to.equal(thirdError.toString());
         });
 
         done();
@@ -142,24 +125,6 @@ describe('postgres interceptor', () => {
 
           done();
         });
-      });
-    });
-  });
-
-  it('should annotate pool', (done) => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
-    const tracer = new Tracer({ctxImpl, recorder});
-    tracer.setId(tracer.createRootId());
-
-    const postgres = new (getPostgres(tracer).Pool)(postgresConnectionOptions);
-    postgres.connect();
-    postgres.query('SELECT NOW()', () => {
-      postgres.query('SELECT NOW()').then(() => {
-        const annotations = recorder.record.args.map(args => args[0]);
-        expect(annotations).to.have.length(10);
-
-        done();
       });
     });
   });

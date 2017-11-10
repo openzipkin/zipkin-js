@@ -15,8 +15,8 @@ module.exports = function zipkinClient(
   function annotateError(id, error) {
     tracer.scoped(() => {
       tracer.setId(id);
-      tracer.recordAnnotation(new Annotation.ClientRecv());
       tracer.recordBinary('error', error.toString());
+      tracer.recordAnnotation(new Annotation.ClientRecv());
     });
   }
   function mkZipkinCallback(callback, id) {
