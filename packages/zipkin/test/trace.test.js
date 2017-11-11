@@ -43,24 +43,82 @@ describe('Tracer', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ctxImpl, recorder});
+    const trace = new Tracer({ctxImpl, recorder});
 
     ctxImpl.scoped(() => {
-      const result = tracer.local('test', () => {
-        tracer.recordMessage('error');
-        return 'foo';
+      const result = trace.local('buy-smoothie', () => {
+        trace.recordBinary('taste', 'banana');
+        return 'smoothie';
       });
 
-      expect(result).to.eql('foo');
+      expect(result).to.eql('smoothie');
 
       expect(record.getCall(0).args[0].annotation).to.eql(
-        new Annotation.LocalOperationStart('test')
+        new Annotation.LocalOperationStart('buy-smoothie')
       );
       expect(record.getCall(1).args[0].annotation).to.eql(
-        new Annotation.Message('error')
+        new Annotation.BinaryAnnotation('taste', 'banana')
       );
       expect(record.getCall(2).args[0].annotation).to.eql(
         new Annotation.LocalOperationStop()
+      );
+    });
+  });
+
+  it('should complete a local span on error type', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      let error;
+      try {
+        trace.local('buy-smoothie', () => {
+          throw new Error('no smoothies. try our cake');
+        });
+      } catch (err) {
+        error = err; // error wasn't swallowed
+      }
+
+      // sanity check
+      expect(error).to.eql(new Error('no smoothies. try our cake'));
+
+      expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStart('buy-smoothie')
+      );
+      expect(record.getCall(1).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
+      );
+      expect(record.getCall(2).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStop() // stopped on error
+      );
+    });
+  });
+
+  // not repeating lifecycle tests already done above
+  it('should complete a local span on error literal', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      let error;
+      try {
+        trace.local('buy-smoothie', () => {
+          /* eslint-disable no-throw-literal */
+          throw 'no smoothies. try our cake';
+        });
+      } catch (err) {
+        error = err; // error wasn't swallowed
+      }
+
+      // sanity check
+      expect(error).to.eql('no smoothies. try our cake');
+
+      expect(record.getCall(1).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
       );
     });
   });

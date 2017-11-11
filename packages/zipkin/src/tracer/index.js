@@ -80,14 +80,20 @@ class Tracer {
     return childId;
   }
 
+  // creates a span, timing the given callable, adding any error as a tag
   local(operationName, callable) {
     return this.scoped(() => {
       const traceId = this.createChildId();
       this.setId(traceId);
       this.recordAnnotation(new Annotation.LocalOperationStart(operationName));
-      const result = callable();
-      this.recordAnnotation(new Annotation.LocalOperationStop());
-      return result;
+      try {
+        return callable();
+      } catch (err) {
+        this.recordBinary('error', err.message ? err.message : err.toString());
+        throw err;
+      } finally {
+        this.recordAnnotation(new Annotation.LocalOperationStop());
+      }
     });
   }
 
