@@ -5,8 +5,11 @@ install:
   - node --version
   - yarn --version
   - yarn
+services:
+  - postgresql
 environment:
   KAFKA_PLEASE_LOG: verbose
+  POSTGRES_PWD: Password12!
 build_script:
   - yarn lint
   - yarn test

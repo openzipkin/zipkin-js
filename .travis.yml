@@ -13,6 +13,7 @@ script:
 services:
   - memcached
   - redis
+  - postgresql
 
 compiler: clang-3.6
 env:

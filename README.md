@@ -28,6 +28,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [memcached](packages/zipkin-instrumentation-memcached) (zipkin-instrumentation-memcached)
 - [redis](packages/zipkin-instrumentation-redis) (zipkin-instrumentation-redis)
 - [restify](packages/zipkin-instrumentation-restify) (zipkin-instrumentation-restify)
+- [postgres](packages/zipkin-instrumentation-postgres) (zipkin-instrumentation-postgres)
 
 Every module has a README.md file that describes how to use it.
 
@@ -69,7 +70,7 @@ yarn
 
 Running tests: `yarn test`
 
-Note that the memcached integration test requires you to have a local memcached instance running.
+Note that the memcached, redis and postgres integration tests requires you to have local instances running.
 The Kafka integration test will start an embedded Kafka server for the test, which requires you to have
 Java installed on your machine.
 
