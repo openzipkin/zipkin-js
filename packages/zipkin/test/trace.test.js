@@ -3,7 +3,7 @@ const lolex = require('lolex');
 
 const Tracer = require('../src/tracer');
 const Annotation = require('../src/annotation');
-const {Sampler} = require('../src/tracer/sampler');
+const {Sampler, neverSample} = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
 const {Some} = require('../src/option');
 
@@ -62,6 +62,21 @@ describe('Tracer', () => {
 
   it('should set sampled flag when shouldSample is false', done => {
     runTest(false, done);
+  });
+
+  it('should not record unsampled spans', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const sampler = new Sampler(neverSample);
+    const trace = new Tracer({ctxImpl, recorder, sampler});
+
+    ctxImpl.scoped(() => {
+      trace.recordAnnotation(new Annotation.ServerSend());
+      trace.recordMessage('error');
+
+      expect(record.getCall(0)).to.equal(null);
+    });
   });
 
   it('should log timestamps in microseconds', () => {

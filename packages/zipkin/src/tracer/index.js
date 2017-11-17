@@ -86,11 +86,15 @@ class Tracer {
   }
 
   recordAnnotation(annotation) {
-    this.recorder.record(new Record({
-      traceId: this.id,
-      timestamp: now(this._startTimestamp, this._startTick),
-      annotation
-    }));
+    this.id.sampled.ifPresent(sampled => {
+      // sampled present is different than sampled == true
+      if (!sampled) return;
+      this.recorder.record(new Record({
+        traceId: this.id,
+        timestamp: now(this._startTimestamp, this._startTick),
+        annotation
+      }));
+    });
   }
 
   recordMessage(message) {
