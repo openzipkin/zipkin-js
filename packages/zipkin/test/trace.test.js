@@ -1,6 +1,7 @@
 const sinon = require('sinon');
 const lolex = require('lolex');
-
+const Promise = require('bluebird');
+const isPromise = require('is-promise');
 const Tracer = require('../src/tracer');
 const Annotation = require('../src/annotation');
 const {Sampler, neverSample} = require('../src/tracer/sampler');
@@ -96,30 +97,78 @@ describe('Tracer', () => {
     });
   });
 
-  // not repeating lifecycle tests already done above
-  it('should complete a local span on error literal', () => {
+  it('should make a local span for a promise', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const trace = new Tracer({ctxImpl, recorder});
 
     ctxImpl.scoped(() => {
-      let error;
-      try {
-        trace.local('buy-smoothie', () => {
-          /* eslint-disable no-throw-literal */
-          throw 'no smoothies. try our cake';
-        });
-      } catch (err) {
-        error = err; // error wasn't swallowed
-      }
-
-      // sanity check
-      expect(error).to.eql('no smoothies. try our cake');
-
-      expect(record.getCall(1).args[0].annotation).to.eql(
-        new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
+      const promise = trace.local('buy-smoothie', () =>
+        Promise.delay(10)
+               .then(() => {
+                 throw new Error('no smoothies. try our cake');
+               })
       );
+
+      expect(isPromise(promise)).to.eql(true);
+
+      // but the start event's timestamp is still correct
+      expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStart('buy-smoothie')
+      );
+
+      // hasn't finished yet, due to the delay
+      expect(record.getCall(1)).to.eql(null);
+
+      return promise.catch((error) => {
+        expect(error).to.eql(new Error('no smoothies. try our cake'));
+
+        expect(record.getCall(1).args[0].annotation).to.eql(
+          new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
+        );
+        expect(record.getCall(2).args[0].annotation).to.eql(
+          new Annotation.LocalOperationStop()
+        );
+      });
+    });
+  });
+
+  it('should make a local span for a promise that produces an error', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      const promise = trace.local('buy-smoothie', () =>
+        Promise.delay(10)
+               .then(() => {
+                 trace.recordBinary('taste', 'banana');
+                 return 'smoothie';
+               })
+      );
+
+      expect(isPromise(promise)).to.eql(true);
+
+      // but the start event's timestamp is still correct
+      expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStart('buy-smoothie')
+      );
+
+      // hasn't finished yet, due to the delay
+      expect(record.getCall(1)).to.eql(null);
+
+      return promise.then((result) => {
+        expect(result).to.eql('smoothie');
+
+        expect(record.getCall(1).args[0].annotation).to.eql(
+          new Annotation.BinaryAnnotation('taste', 'banana')
+        );
+        expect(record.getCall(2).args[0].annotation).to.eql(
+          new Annotation.LocalOperationStop()
+        );
+      });
     });
   });
 

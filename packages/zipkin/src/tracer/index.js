@@ -8,6 +8,7 @@ const randomTraceId = require('./randomTraceId');
 const {now, hrtime} = require('../time');
 const {Endpoint} = require('../model');
 
+const isPromise = require('is-promise');
 
 function requiredArg(name) {
   throw new Error(`Tracer: Missing required argument ${name}.`);
@@ -81,19 +82,42 @@ class Tracer {
   }
 
   // creates a span, timing the given callable, adding any error as a tag
+  // if the callable returns a promise, a span stops after the promise resolves
   local(operationName, callable) {
+    if (typeof callable !== 'function') {
+      throw new Error('you must pass a function');
+    }
     return this.scoped(() => {
       const traceId = this.createChildId();
       this.setId(traceId);
       this.recordAnnotation(new Annotation.LocalOperationStart(operationName));
+
+      let result;
       try {
-        return callable();
+        result = callable();
       } catch (err) {
         this.recordBinary('error', err.message ? err.message : err.toString());
-        throw err;
-      } finally {
         this.recordAnnotation(new Annotation.LocalOperationStop());
+        throw err;
       }
+
+      // Finish the span on a synchronous success
+      if (!isPromise(result)) {
+        this.recordAnnotation(new Annotation.LocalOperationStop());
+        return result;
+      }
+
+      // Ensure the span representing the promise completes
+      return result
+        .then((output) => {
+          this.recordAnnotation(new Annotation.LocalOperationStop());
+          return output;
+        })
+        .catch((err) => {
+          this.recordBinary('error', err.message ? err.message : err.toString());
+          this.recordAnnotation(new Annotation.LocalOperationStop());
+          throw err;
+        });
     });
   }
 
