@@ -17,10 +17,12 @@ declare namespace zipkin {
   namespace sampler {
     class Sampler {
       constructor(evaluator: (traceId: TraceId) => boolean);
+      shouldSample(traceId: TraceId): option.IOption<boolean>
     }
 
     class CountingSampler implements Sampler {
       constructor(sampleRate?: number);
+      shouldSample(traceId: TraceId): option.IOption<boolean>
     }
 
     const neverSample: (traceId: TraceId) => boolean;
@@ -54,11 +56,11 @@ declare namespace zipkin {
     _sampled:  option.IOption<boolean>;
     _flags:    number;
 
-    traceId:  string;
-    parentId: string;
-    spanId:   string;
-    sampled:  boolean;
-    flags:    number;
+    readonly traceId: string;
+    readonly parentId: string;
+    readonly spanId: string;
+    readonly sampled: option.IOption<boolean>;
+    readonly flags: number;
 
     isDebug(): boolean;
 
@@ -69,11 +71,6 @@ declare namespace zipkin {
       sampled?:  option.IOption<string>,
       flags?:    number
     });
-    readonly spanId: string;
-    readonly parentId: string;
-    readonly traceId: string;
-    readonly sampled: option.IOption<boolean>;
-    readonly flags: number;
     isDebug(): boolean;
     toString(): string;
   }
@@ -120,7 +117,7 @@ declare namespace zipkin {
   }
 
   namespace model {
-    interface Endpoint {
+    class Endpoint {
       constructor(args: { serviceName?: string, ipv4?: InetAddress, port?: number });
 
       setServiceName(serviceName: string): void;
@@ -135,7 +132,7 @@ declare namespace zipkin {
       value: string;
     }
 
-    interface Span {
+    class Span {
       readonly traceId:        string;
       readonly parentId?:      string;
       readonly id:             string;
@@ -270,19 +267,6 @@ declare namespace zipkin {
     getContext(): TraceId;
     scoped<V>(callback: () => V): V;
     letContext<V>(ctx: TraceId, callback: () => V): V;
-  }
-
-  namespace sampler {
-    class Sampler {
-      constructor(evaluator: (traceId: TraceId) => boolean)
-      shouldSample(traceId: TraceId): option.IOption<boolean>
-      toString(): String
-    }
-    function neverSample(traceId: TraceId): boolean
-    function alwaysSample(traceId: TraceId): boolean
-    class CountingSampler extends Sampler {
-      constructor(sampleRate: number)
-    }
   }
 
   class Request {
