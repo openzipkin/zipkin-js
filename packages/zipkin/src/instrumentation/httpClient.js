@@ -8,7 +8,7 @@ function requiredArg(name) {
 class HttpClientInstrumentation {
   constructor({
     tracer = requiredArg('tracer'),
-    serviceName = requiredArg('serviceName'),
+    serviceName = tracer.localEndpoint.serviceName,
     remoteServiceName
   }) {
     this.tracer = tracer;

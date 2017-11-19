@@ -21,7 +21,7 @@ function formatRequestUrl(request) {
   });
 }
 
-module.exports = function restifyMiddleware({tracer, serviceName = 'unknown', port = 0}) {
+module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
   return function zipkinRestifyMiddleware(req, res, next) {
     const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
     const readHeader = headerOption.bind(null, req);

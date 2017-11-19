@@ -10,10 +10,11 @@ or [node-fetch](https://www.npmjs.com/package/node-fetch) on Node.js.
 const {Tracer} = require('zipkin');
 const wrapFetch = require('zipkin-instrumentation-fetch');
 
-const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+const localServiceName = 'service-a'; // name of this application
+const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
-const nameOfRemoteService = 'youtube';
-const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName: nameOfRemoteService});
+const remoteServiceName = 'youtube';
+const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName});
 
 // Your application code here
 zipkinFetch('http://www.youtube.com/').then(res => res.json()).then(data => ...);

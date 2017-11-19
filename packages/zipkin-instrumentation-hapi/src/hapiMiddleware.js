@@ -14,7 +14,7 @@ function headerOption(headers, header) {
   }
 }
 
-exports.register = (server, {tracer, serviceName = 'unknown', port = 0}, next) => {
+exports.register = (server, {tracer, serviceName, port = 0}, next) => {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
   if (tracer == null) {
     next(new Error('No tracer specified'));

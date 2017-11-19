@@ -26,7 +26,7 @@ function requiredArg(name) {
 class HttpServerInstrumentation {
   constructor({
     tracer = requiredArg('tracer'),
-    serviceName = requiredArg('serviceName'),
+    serviceName = tracer.localEndpoint.serviceName,
     port = requiredArg('port')
   }) {
     this.tracer = tracer;

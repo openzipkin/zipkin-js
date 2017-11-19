@@ -6,6 +6,7 @@ const Annotation = require('../src/annotation');
 const {Sampler, neverSample} = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
 const {Some} = require('../src/option');
+const {Endpoint} = require('../src/model');
 
 describe('Tracer', () => {
   it('should make parent and child spans', () => {
@@ -77,6 +78,38 @@ describe('Tracer', () => {
 
       expect(record.getCall(0)).to.equal(null);
     });
+  });
+
+  it('should default to unknown endpoint', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const trace = new Tracer({ctxImpl, recorder});
+
+    expect(trace.localEndpoint).to.eql(new Endpoint({serviceName: 'unknown'}));
+  });
+
+  it('should accept localServiceName parameter', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const trace = new Tracer({ctxImpl, recorder, localServiceName: 'robot'});
+
+    expect(trace.localEndpoint).to.eql(new Endpoint({serviceName: 'robot'}));
+  });
+
+  it('should accept localEndpoint parameter', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const localEndpoint = new Endpoint({
+      serviceName: 'portal-service',
+      ipv4: '10.57.50.83',
+      port: 8080
+    });
+    const trace = new Tracer({ctxImpl, recorder, localEndpoint});
+
+    expect(trace.localEndpoint).to.eql(localEndpoint);
   });
 
   it('should log timestamps in microseconds', () => {

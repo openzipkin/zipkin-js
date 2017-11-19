@@ -57,7 +57,7 @@ class ExpressHttpProxyInstrumentation {
   }
 }
 
-function wrapProxy(proxy, {tracer, serviceName = 'unknown', remoteServiceName}) {
+function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
   return function zipkinProxy(host, options = {}) {
     function wrapDecorateRequest(instrumentation, originalDecorateRequest) {
       return (proxyReq, originalReq) => {

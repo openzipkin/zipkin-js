@@ -24,7 +24,8 @@ const recorder = new BatchRecorder({
 
 const tracer = new Tracer({
   recorder,
-  ctxImpl // this would typically be a CLSContext or ExplicitContext
+  ctxImpl, // this would typically be a CLSContext or ExplicitContext
+  localServiceName: 'service-a' // name of this application
 });
 ```
 

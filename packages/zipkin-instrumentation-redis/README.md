@@ -8,7 +8,8 @@ This library will wrap the [redis client](https://www.npmjs.com/package/redis).
 const {Tracer} = require('zipkin');
 const Redis = require('redis');
 const zipkinClient = require('zipkin-instrumentation-redis');
-const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+const localServiceName = 'service-a'; // name of this application
+const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 const redisConnectionOptions = {
   host: 'localhost',
   port: '6379'

@@ -19,7 +19,7 @@ import {CoreOptions, Request, RequestAPI} from "request"
  */
 declare function wrapRequest<TRequest extends Request, TOptions extends CoreOptions, TUriUrlOptions>(
   request: RequestAPI<TRequest, TOptions, TUriUrlOptions>,
-  options: {tracer: Tracer, serviceName?: string, remoteServiceName?: string}
+  options: {tracer: Tracer, remoteServiceName?: string}
 ): RequestAPI<TRequest, TOptions, TUriUrlOptions>;
 
 export = wrapRequest

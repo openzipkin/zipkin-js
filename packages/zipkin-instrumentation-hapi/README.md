@@ -12,16 +12,14 @@ const zipkinMiddleware = require('zipkin-instrumentation-hapi').hapiMiddleware;
 const ctxImpl = new ExplicitContext();
 const recorder = new ConsoleRecorder();
 
-const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+const localServiceName = 'service-a'; // name of this application
+const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
 const server = new Hapi.Server();
 
 // Add the Zipkin middleware
 server.register({
   register: zipkinMiddleware,
-  options: {
-    tracer,
-    serviceName: 'service-a' // name of this application
-  }
+  options: {tracer}
 });
 ```

@@ -4,7 +4,7 @@ module.exports = function zipkinClient(
   tracer,
   redis,
   options,
-  serviceName = 'unknown',
+  serviceName = tracer.localEndpoint.serviceName,
   remoteServiceName = 'redis'
 ) {
   const sa = {
