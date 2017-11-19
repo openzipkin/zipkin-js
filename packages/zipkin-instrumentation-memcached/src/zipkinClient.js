@@ -3,7 +3,7 @@ const {Annotation} = require('zipkin');
 module.exports = function zipkinClient(
   tracer,
   Memcached,
-  serviceName = 'unknown',
+  serviceName = tracer.localEndpoint.serviceName,
   remoteServiceName = 'memcached'
 ) {
   function mkZipkinCallback(callback, id) {

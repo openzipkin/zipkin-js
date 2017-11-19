@@ -13,11 +13,40 @@ how tracing services looks.
 
 `npm install zipkin --save`
 
+## Basic Setup:
+
+```javascript
+const {
+  Tracer,
+  BatchRecorder,
+  jsonEncoder: {JSON_V2}
+} = require('zipkin');
+const CLSContext = require('zipkin-context-cls');
+const {HttpLogger} = require('zipkin-transport-http');
+
+// Setup the tracer to use http and implicit trace context
+const tracer = new Tracer({
+  ctxImpl: new CLSContext('zipkin'),
+  recorder: new BatchRecorder({
+    logger: new HttpLogger({
+      endpoint: 'http://localhost:9411/api/v2/spans',
+      jsonEncoder: JSON_V2
+    })
+  }),
+  localServiceName: 'service-a' // name of this application
+});
+
+// now use tracer to construct instrumentation! For example, fetch
+const wrapFetch = require('zipkin-instrumentation-fetch');
+
+const remoteServiceName = 'youtube';
+const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName});
+```
 
 ## Instrumentations
 
 Various Node.js libraries have been instrumented with Zipkin support.
-Every instrumentation has an npm package called zipkin-instrumentation-*.
+Every instrumentation has an npm package called `zipkin-instrumentation-*`.
 
 At the time of writing, zipkin-js instruments these libraries:
 
@@ -34,7 +63,7 @@ Every module has a README.md file that describes how to use it.
 
 ## Transports
 
-You can choose between multiple transports; they are npm packages called zipkin-transport-*.
+You can choose between multiple transports; they are npm packages called `zipkin-transport-*`.
 
 Currently, the following transports are available:
 

@@ -11,14 +11,11 @@ const zipkinMiddleware = require('zipkin-instrumentation-restify').restifyMiddle
 
 const ctxImpl = new ExplicitContext();
 const recorder = new ConsoleRecorder();
-
-const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+const localServiceName = 'service-a'; // name of this application
+const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
 const app = restify.createServer();
 
 // Add the Zipkin middleware
-app.use(zipkinMiddleware({
-  tracer,
-  serviceName: 'service-a' // name of this application
-}));
+app.use(zipkinMiddleware({tracer}));
 ```

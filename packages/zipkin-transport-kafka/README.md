@@ -19,8 +19,9 @@ const kafkaRecorder = new BatchRecorder({
 });
 
 const tracer = new Tracer({
-  recorder: kafkaRecorder,
-  ctxImpl // this would typically be a CLSContext or ExplicitContext
+  recorder,
+  ctxImpl, // this would typically be a CLSContext or ExplicitContext
+  localServiceName: 'service-a' // name of this application
 });
 ```
 

@@ -3,7 +3,7 @@ const {Annotation, InetAddress} = require('zipkin');
 module.exports = function zipkinClient(
   tracer,
   Postgres,
-  serviceName = 'unknown',
+  serviceName = tracer.localEndpoint.serviceName,
   remoteServiceName = 'postgres'
 ) {
   function annotateSuccess(id) {

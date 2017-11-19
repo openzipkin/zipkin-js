@@ -14,7 +14,7 @@ function formatRequestUrl(req) {
   });
 }
 
-module.exports = function expressMiddleware({tracer, serviceName = 'unknown', port = 0}) {
+module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
   return function zipkinExpressMiddleware(req, res, next) {
     tracer.scoped(() => {

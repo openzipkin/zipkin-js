@@ -30,7 +30,7 @@ declare namespace zipkin {
   }
 
   class Tracer {
-    constructor(args: { ctxImpl: Context<TraceId>, recorder: Recorder, sampler?: sampler.Sampler, traceId128Bit?: boolean });
+    constructor(args: { ctxImpl: Context<TraceId>, recorder: Recorder, sampler?: sampler.Sampler, traceId128Bit?: boolean, localServiceName?: string, localEndpoint?: model.Endpoint });
     id: TraceId;
 
     scoped<V>(callback: () => V): V;
@@ -282,7 +282,7 @@ declare namespace zipkin {
 
   namespace Instrumentation {
     class HttpServer {
-      constructor(args: { tracer: Tracer, serviceName: string, port: string | number });
+      constructor(args: { tracer: Tracer, port: number });
 
       recordRequest(
         method: string,
@@ -293,7 +293,7 @@ declare namespace zipkin {
     }
 
     class HttpClient {
-      constructor(args: { tracer: Tracer, serviceName: string, remoteServiceName?: string });
+      constructor(args: { tracer: Tracer, remoteServiceName?: string });
 
       recordRequest<T>(
         request: T,

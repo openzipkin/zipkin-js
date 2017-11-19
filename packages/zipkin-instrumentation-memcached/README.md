@@ -9,7 +9,8 @@ const {Tracer} = require('zipkin');
 const Memcached = require('memcached');
 const zipkinClient = require('zipkin-instrumentation-memcached');
 
-const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+const localServiceName = 'service-a'; // name of this application
+const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
 const connectionString = ''localhost:11211'';
 const options = {timeout: 1000};

@@ -15,7 +15,7 @@ function getRequestMethod(req) {
   return method;
 }
 
-function request(req, {tracer, serviceName = 'unknown', remoteServiceName}) {
+function request(req, {tracer, serviceName, remoteServiceName}) {
   this.instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
   return tracer.scoped(() => {
     const reqWithHeaders =

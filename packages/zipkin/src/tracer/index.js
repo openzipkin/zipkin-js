@@ -6,6 +6,8 @@ const Record = require('./record');
 const TraceId = require('./TraceId');
 const randomTraceId = require('./randomTraceId');
 const {now, hrtime} = require('../time');
+const {Endpoint} = require('../model');
+
 
 function requiredArg(name) {
   throw new Error(`Tracer: Missing required argument ${name}.`);
@@ -20,11 +22,20 @@ class Tracer {
     // needs to create a root span. By default regular 64 bit traceIDs are used.
     // Regardless of this setting, the library will propagate and support both
     // 64 and 128 bit incoming traces from upstream sources.
-    traceId128Bit = false
+    traceId128Bit = false,
+    localServiceName,
+    localEndpoint
   }) {
     this.recorder = recorder;
     this.sampler = sampler;
     this.traceId128Bit = traceId128Bit;
+    if (localEndpoint) {
+      this._localEndpoint = localEndpoint;
+    } else {
+      this._localEndpoint = new Endpoint({
+        serviceName: localServiceName || 'unknown'
+      });
+    }
     this._ctxImpl = ctxImpl;
     this._defaultTraceId = this.createRootId();
     this._startTimestamp = now();
@@ -83,6 +94,10 @@ class Tracer {
 
   get id() {
     return this._ctxImpl.getContext() || this._defaultTraceId;
+  }
+
+  get localEndpoint() {
+    return this._localEndpoint;
   }
 
   recordAnnotation(annotation) {

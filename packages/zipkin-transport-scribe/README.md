@@ -19,7 +19,8 @@ const scribeRecorder = new BatchRecorder({
 });
 
 const tracer = new Tracer({
-  scribeRecorder,
-  ctxImpl // this would typically be a CLSContext or ExplicitContext
+  recorder,
+  ctxImpl, // this would typically be a CLSContext or ExplicitContext
+  localServiceName: 'service-a' // name of this application
 });
 ```

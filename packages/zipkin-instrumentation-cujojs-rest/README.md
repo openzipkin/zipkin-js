@@ -9,10 +9,11 @@ const {Tracer} = require('zipkin');
 const rest = require('rest');
 const {restInterceptor} = require('zipkin-instrumentation-cujojs-rest');
 
-const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+const localServiceName = 'service-a'; // name of this application
+const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
-const nameOfRemoteService = 'youtube';
-const client = rest.wrap(restInterceptor, {tracer, remoteServiceName: nameOfRemoteService});
+const remoteServiceName = 'youtube';
+const client = rest.wrap(restInterceptor, {tracer, remoteServiceName});
 
 // Your application code here
 client('http://www.youtube.com/').then(success => {

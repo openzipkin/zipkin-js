@@ -12,11 +12,11 @@ const request = require('request');
 
 const ctxImpl = new ExplicitContext();
 const recorder = new ConsoleRecorder();
-const tracer = new Tracer({ctxImpl, recorder}); // configure your tracer properly here
+const localServiceName = 'service-a'; // name of this application
+const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
-const serviceName = 'weather-app';
 const remoteServiceName = 'weather-api';
-const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
 
 zipkinRequest({
     url: 'http://api.weather.com',

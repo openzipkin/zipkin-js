@@ -2,7 +2,7 @@ const {
   Instrumentation
 } = require('zipkin');
 
-function wrapFetch(fetch, {tracer, serviceName = 'unknown', remoteServiceName}) {
+function wrapFetch(fetch, {tracer, serviceName, remoteServiceName}) {
   const instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
   return function zipkinfetch(url, opts = {}) {
     return new Promise((resolve, reject) => {
