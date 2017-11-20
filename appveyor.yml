@@ -1,7 +1,6 @@
 install:
   - choco install redis
   - choco install nodejs --version 6.9.4
-  - choco install yarn
   - node --version
   - yarn --version
   - yarn
