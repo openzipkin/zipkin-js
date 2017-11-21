@@ -90,6 +90,7 @@ class Tracer {
     return this.scoped(() => {
       const traceId = this.createChildId();
       this.setId(traceId);
+      this.recordServiceName(this._localEndpoint.serviceName);
       this.recordAnnotation(new Annotation.LocalOperationStart(operationName));
 
       let result;

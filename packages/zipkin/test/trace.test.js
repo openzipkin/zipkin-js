@@ -44,7 +44,8 @@ describe('Tracer', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const trace = new Tracer({ctxImpl, recorder});
+    const localServiceName = 'smoothie-store';
+    const trace = new Tracer({ctxImpl, recorder, localServiceName});
 
     ctxImpl.scoped(() => {
       const result = trace.local('buy-smoothie', () => {
@@ -55,12 +56,15 @@ describe('Tracer', () => {
       expect(result).to.eql('smoothie');
 
       expect(record.getCall(0).args[0].annotation).to.eql(
-        new Annotation.LocalOperationStart('buy-smoothie')
+        new Annotation.ServiceName('smoothie-store')
       );
       expect(record.getCall(1).args[0].annotation).to.eql(
-        new Annotation.BinaryAnnotation('taste', 'banana')
+        new Annotation.LocalOperationStart('buy-smoothie')
       );
       expect(record.getCall(2).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('taste', 'banana')
+      );
+      expect(record.getCall(3).args[0].annotation).to.eql(
         new Annotation.LocalOperationStop()
       );
     });
@@ -70,7 +74,8 @@ describe('Tracer', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const trace = new Tracer({ctxImpl, recorder});
+    const localServiceName = 'smoothie-store';
+    const trace = new Tracer({ctxImpl, recorder, localServiceName});
 
     ctxImpl.scoped(() => {
       let error;
@@ -86,12 +91,15 @@ describe('Tracer', () => {
       expect(error).to.eql(new Error('no smoothies. try our cake'));
 
       expect(record.getCall(0).args[0].annotation).to.eql(
-        new Annotation.LocalOperationStart('buy-smoothie')
+        new Annotation.ServiceName('smoothie-store')
       );
       expect(record.getCall(1).args[0].annotation).to.eql(
-        new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
+        new Annotation.LocalOperationStart('buy-smoothie')
       );
       expect(record.getCall(2).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
+      );
+      expect(record.getCall(3).args[0].annotation).to.eql(
         new Annotation.LocalOperationStop() // stopped on error
       );
     });
@@ -101,7 +109,8 @@ describe('Tracer', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const trace = new Tracer({ctxImpl, recorder});
+    const localServiceName = 'smoothie-store';
+    const trace = new Tracer({ctxImpl, recorder, localServiceName});
 
     ctxImpl.scoped(() => {
       const promise = trace.local('buy-smoothie', () =>
@@ -115,19 +124,22 @@ describe('Tracer', () => {
 
       // but the start event's timestamp is still correct
       expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.ServiceName('smoothie-store')
+      );
+      expect(record.getCall(1).args[0].annotation).to.eql(
         new Annotation.LocalOperationStart('buy-smoothie')
       );
 
       // hasn't finished yet, due to the delay
-      expect(record.getCall(1)).to.eql(null);
+      expect(record.getCall(2)).to.eql(null);
 
       return promise.catch((error) => {
         expect(error).to.eql(new Error('no smoothies. try our cake'));
 
-        expect(record.getCall(1).args[0].annotation).to.eql(
+        expect(record.getCall(2).args[0].annotation).to.eql(
           new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
         );
-        expect(record.getCall(2).args[0].annotation).to.eql(
+        expect(record.getCall(3).args[0].annotation).to.eql(
           new Annotation.LocalOperationStop()
         );
       });
@@ -138,7 +150,8 @@ describe('Tracer', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const trace = new Tracer({ctxImpl, recorder});
+    const localServiceName = 'smoothie-store';
+    const trace = new Tracer({ctxImpl, recorder, localServiceName});
 
     ctxImpl.scoped(() => {
       const promise = trace.local('buy-smoothie', () =>
@@ -153,19 +166,22 @@ describe('Tracer', () => {
 
       // but the start event's timestamp is still correct
       expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.ServiceName('smoothie-store')
+      );
+      expect(record.getCall(1).args[0].annotation).to.eql(
         new Annotation.LocalOperationStart('buy-smoothie')
       );
 
       // hasn't finished yet, due to the delay
-      expect(record.getCall(1)).to.eql(null);
+      expect(record.getCall(2)).to.eql(null);
 
       return promise.then((result) => {
         expect(result).to.eql('smoothie');
 
-        expect(record.getCall(1).args[0].annotation).to.eql(
+        expect(record.getCall(2).args[0].annotation).to.eql(
           new Annotation.BinaryAnnotation('taste', 'banana')
         );
-        expect(record.getCall(2).args[0].annotation).to.eql(
+        expect(record.getCall(3).args[0].annotation).to.eql(
           new Annotation.LocalOperationStop()
         );
       });
