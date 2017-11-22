@@ -1,6 +1,6 @@
 {
   "name": "zipkin",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "The core tracer for zipkin.js",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -19,8 +19,8 @@
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
-    "mocha": "^3.2.0",
     "bluebird": "^3.5.1",
+    "mocha": "^3.2.0",
     "typescript": "^2.4.2"
   }
 }
