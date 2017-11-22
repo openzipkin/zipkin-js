@@ -10,6 +10,15 @@ class ClientRecv extends SimpleAnnotation {}
 class ServerSend extends SimpleAnnotation {}
 class ServerRecv extends SimpleAnnotation {}
 
+function LocalOperationStart(name) {
+  this.name = name;
+}
+LocalOperationStart.prototype.toString = function() {
+  return `LocalOperationStart("${this.name}")`;
+};
+
+class LocalOperationStop extends SimpleAnnotation {}
+
 function Message(message) {
   this.message = message;
 }
@@ -75,7 +84,9 @@ const annotation = {
   ClientAddr,
   ServerAddr,
   LocalAddr,
-  BinaryAnnotation
+  BinaryAnnotation,
+  LocalOperationStart,
+  LocalOperationStop
 };
 
 Object.keys(annotation).forEach(key => {

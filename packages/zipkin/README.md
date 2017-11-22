@@ -27,3 +27,25 @@ const tracer = new zipkin.Tracer({
   localServiceName: 'my-service' // indicates this node in your service graph
 });
 ```
+
+### Local tracing
+Sometimes you have activity that precedes a remote request that you want to
+capture in a trace. `tracer.local` can time an operation, placing a
+corresponding span ID in scope so that any downstream commands end up in the
+same trace.
+
+Here's an example tracing a synchronous function:
+```javascript
+// A span representing checkout completes before result is returned
+const result = tracer.local('checkout', () => {
+  return someComputation();
+});
+```
+
+Here's an example tracing a function that returns a promise:
+```javascript
+// A span is in progress and completes when the promise is resolved.
+const result = tracer.local('checkout', () => {
+  return createAPromise();
+});
+```

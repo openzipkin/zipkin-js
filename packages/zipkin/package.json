@@ -14,11 +14,13 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "base64-js": "^1.1.2",
+    "is-promise": "^2.1.0",
     "network-address": "^1.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
     "mocha": "^3.2.0",
+    "bluebird": "^3.5.1",
     "typescript": "^2.4.2"
   }
 }
