@@ -108,15 +108,27 @@ class Tracer {
         return result;
       }
 
+      if (!traceId.sampled.getOrElse(false)) {
+        return result; // no need to stop as it was never started
+      }
+
+      // At this point we know we are sampled. Explicitly record against the ID
+      const explicitRecord = (annotation) => this.recorder.record(new Record({
+        traceId,
+        timestamp: now(this._startTimestamp, this._startTick),
+        annotation
+      }));
+
       // Ensure the span representing the promise completes
       return result
         .then((output) => {
-          this.recordAnnotation(new Annotation.LocalOperationStop());
+          explicitRecord(new Annotation.LocalOperationStop());
           return output;
         })
         .catch((err) => {
-          this.recordBinary('error', err.message ? err.message : err.toString());
-          this.recordAnnotation(new Annotation.LocalOperationStop());
+          const message = err.message ? err.message : err.toString();
+          explicitRecord(new Annotation.BinaryAnnotation('error', message));
+          explicitRecord(new Annotation.LocalOperationStop());
           throw err;
         });
     });

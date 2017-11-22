@@ -115,9 +115,7 @@ describe('Tracer', () => {
     ctxImpl.scoped(() => {
       const promise = trace.local('buy-smoothie', () =>
         Promise.delay(10)
-               .then(() => {
-                 throw new Error('no smoothies. try our cake');
-               })
+               .then(() => 'smoothie')
       );
 
       expect(isPromise(promise)).to.eql(true);
@@ -133,14 +131,40 @@ describe('Tracer', () => {
       // hasn't finished yet, due to the delay
       expect(record.getCall(2)).to.eql(null);
 
-      return promise.catch((error) => {
-        expect(error).to.eql(new Error('no smoothies. try our cake'));
+      return promise.then((result) => {
+        expect(result).to.eql('smoothie');
 
         expect(record.getCall(2).args[0].annotation).to.eql(
-          new Annotation.BinaryAnnotation('error', 'no smoothies. try our cake')
-        );
-        expect(record.getCall(3).args[0].annotation).to.eql(
           new Annotation.LocalOperationStop()
+        );
+      });
+    });
+  });
+
+  it('should close the correct span for a promise', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const localServiceName = 'smoothie-store';
+    const trace = new Tracer({ctxImpl, recorder, localServiceName});
+
+    ctxImpl.scoped(() => {
+      const promise = trace.local('buy-smoothie', () =>
+        Promise.delay(10)
+               .then(() => 'smoothie')
+      );
+
+      expect(isPromise(promise)).to.eql(true);
+
+      // hasn't finished yet, due to the delay
+      expect(record.getCall(2)).to.eql(null);
+      const expectedTraceId = record.getCall(1).args[0].traceId;
+
+      return promise.then((result) => {
+        expect(result).to.eql('smoothie');
+
+        expect(record.getCall(2).args[0].traceId).to.eql(
+          expectedTraceId
         );
       });
     });
