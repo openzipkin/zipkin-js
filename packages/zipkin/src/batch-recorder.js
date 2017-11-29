@@ -40,6 +40,12 @@ class BatchRecorder {
 
   _writeSpan(id) {
     const span = this.partialSpans.get(id);
+
+    if (span === undefined) {
+      // Span not found.  Could have been expired.
+      return;
+    }
+
     // ready for garbage collection
     this.partialSpans.delete(id);
 

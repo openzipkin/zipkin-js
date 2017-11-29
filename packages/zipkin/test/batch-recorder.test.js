@@ -179,22 +179,32 @@ describe('Batch Recorder', () => {
     const logger = {logSpan};
     const recorder = new BatchRecorder({logger});
     const trace = new Tracer({ctxImpl, recorder});
+    const traceId = new TraceId({
+      traceId: None,
+      parentId: new Some('a'),
+      spanId: 'c',
+      sampled: new Some(true)
+    });
 
     ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: None,
-        parentId: new Some('a'),
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
+      trace.setId(traceId);
 
       trace.recordServiceName('SmoothieStore');
+      trace.recordAnnotation(new Annotation.ServerRecv());
+    });
 
-      clock.tick('02'); // polling interval is every second
-      expect(logSpan.calledOnce).to.equal(false);
+    clock.tick('02'); // polling interval is every second
+    expect(logSpan.calledOnce).to.equal(false);
 
-      clock.tick('01:00'); // 1 minute is the default timeout
-      expect(logSpan.calledOnce).to.equal(true);
+    clock.tick('01:00'); // 1 minute is the default timeout
+    expect(logSpan.calledOnce).to.equal(true);
+
+    ctxImpl.scoped(() => {
+      trace.setId(traceId);
+
+      // ServerSend terminates the span, but it's already expired.
+      // Span is dropped silently.
+      trace.recordAnnotation(new Annotation.ServerSend());
     });
 
     clock.uninstall();
