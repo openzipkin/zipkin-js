@@ -4,7 +4,7 @@ const TraceId = require('../tracer/TraceId');
 const Annotation = require('../annotation');
 
 function stringToBoolean(str) {
-  return str === '1';
+  return str === '1' || str === 'true';
 }
 
 function stringToIntOption(str) {
