@@ -119,7 +119,7 @@ declare namespace zipkin {
 
   namespace model {
     class Endpoint {
-      constructor(args: { serviceName?: string, ipv4?: InetAddress, port?: number });
+      constructor(args: { serviceName?: string, ipv4?: string, port?: number });
 
       setServiceName(serviceName: string): void;
       setIpv4(ipv4: string): void;
