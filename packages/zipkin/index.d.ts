@@ -193,16 +193,19 @@ declare namespace zipkin {
     class Message implements IAnnotation {
       constructor(message: string);
       readonly annotationType: string;
+      message: string;
     }
 
     class ServiceName implements IAnnotation {
       constructor(serviceName: string);
       readonly annotationType: string;
+      serviceName: string;
     }
 
     class Rpc implements IAnnotation {
       constructor(name: string);
       readonly annotationType: string;
+      name: string;
     }
 
     class ClientAddr implements IAnnotation {
@@ -213,16 +216,23 @@ declare namespace zipkin {
     class ServerAddr implements IAnnotation {
       constructor(args: { serviceName: string, host?: InetAddress, port?: number });
       readonly annotationType: string;
+      serviceName: string
+      host: InetAddress;
+      port: number;
     }
 
     class LocalAddr implements IAnnotation {
       constructor(args?: { host?: InetAddress, port?: number });
       readonly annotationType: string;
+      host: InetAddress;
+      port: number;
     }
 
     class BinaryAnnotation implements IAnnotation {
       constructor(key: string, value: boolean | string | number);
       readonly annotationType: string;
+      key: string;
+      value: string;
     }
   }
 
