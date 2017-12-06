@@ -174,8 +174,7 @@ describe('Http Server Instrumentation', () => {
     const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
     ctxImpl.scoped(() => {
       const id = instrumentation.recordRequest('POST', url, readHeader);
-      expect(id._sampled.value).to.equal(true);     
-    });   
+      expect(id._sampled.value).to.equal(true);
+    });
   });
-
 });
