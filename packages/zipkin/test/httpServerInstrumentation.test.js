@@ -154,4 +154,27 @@ describe('Http Server Instrumentation', () => {
 
     annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
   });
+
+  it('should tolerate boolean literals for sampled header received from the client', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    const headers = {
+      'X-B3-TraceId': 'aaa',
+      'X-B3-SpanId': 'bbb',
+      'X-B3-Flags': '1',
+      'X-B3-Sampled': 'true'
+    };
+
+    const port = 80;
+    const url = `http://127.0.0.1:${port}`;
+    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+    const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
+    ctxImpl.scoped(() => {
+      const id = instrumentation.recordRequest('POST', url, readHeader);
+      expect(id._sampled.value).to.equal(true);
+    });
+  });
 });
