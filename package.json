@@ -3,7 +3,8 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
-    "lerna": "^2.1.2"
+    "lerna": "^2.1.2",
+    "yarn": "^1.3.2"
   },
   "scripts": {
     "lint": "eslint packages",
