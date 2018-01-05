@@ -6,7 +6,7 @@ module.exports = function zipkinClient(
   serviceName = tracer.localEndpoint.serviceName,
   remoteServiceName = 'memcached'
 ) {
-  function mkZipkinCallback(callback, id) {
+  function mkZipkinCallback(callback, id, originalID) {
     return function zipkinCallback(...args) {
       tracer.scoped(() => {
         tracer.setId(id);
@@ -17,6 +17,7 @@ module.exports = function zipkinClient(
         }));
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
+      tracer.setId(originalID);
       callback.apply(this, args);
     };
   }
@@ -53,6 +54,7 @@ module.exports = function zipkinClient(
     const actualFn = ZipkinMemcached.prototype[key];
     ZipkinMemcached.prototype[key] = function(...args) {
       const callback = args.pop();
+      const originalID = tracer.id;
       let id;
       tracer.scoped(() => {
         id = tracer.createChildId();
@@ -64,7 +66,7 @@ module.exports = function zipkinClient(
           defaultAnnotator.apply(this, args);
         }
       });
-      const wrapper = mkZipkinCallback(callback, id);
+      const wrapper = mkZipkinCallback(callback, id, originalID);
       const newArgs = [...args, wrapper];
       actualFn.apply(this, newArgs);
     };
