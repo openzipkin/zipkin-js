@@ -152,7 +152,7 @@ describe('memcached interceptor', () => {
         expect(tracer.id.traceID).to.equal(fakeID.traceID);
         expect(data).to.equal('doo');
         done();
-      })
+      });
     });
-  })
+  });
 });
