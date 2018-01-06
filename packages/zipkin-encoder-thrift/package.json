@@ -1,6 +1,6 @@
 {
   "name": "zipkin-encoder-thrift",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "Encode a zipkin span to thrift",
   "main": "lib/index.js",
   "scripts": {
@@ -25,6 +25,6 @@
   "devDependencies": {
     "babel-cli": "^6.23.0",
     "mocha": "^4.0.1",
-    "zipkin": "^0.11.1"
+    "zipkin": "^0.11.2"
   }
 }
