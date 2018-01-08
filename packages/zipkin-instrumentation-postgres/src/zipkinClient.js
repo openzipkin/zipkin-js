@@ -7,14 +7,12 @@ module.exports = function zipkinClient(
   remoteServiceName = 'postgres'
 ) {
   function annotateSuccess(id) {
-    tracer.scoped(() => {
-      tracer.setId(id);
+    tracer.letId(id, () => {
       tracer.recordAnnotation(new Annotation.ClientRecv());
     });
   }
   function annotateError(id, error) {
-    tracer.scoped(() => {
-      tracer.setId(id);
+    tracer.letId(id, () => {
       tracer.recordBinary('error', error.toString());
       tracer.recordAnnotation(new Annotation.ClientRecv());
     });
@@ -40,10 +38,8 @@ module.exports = function zipkinClient(
 
   const actualFn = ZipkinPostgresClient.prototype.query;
   ZipkinPostgresClient.prototype.query = function(config, values, callback) {
-    let id;
-    tracer.scoped(() => {
-      id = tracer.createChildId();
-      tracer.setId(id);
+    const id = tracer.createChildId();
+    tracer.letId(id, () => {
       tracer.recordAnnotation(new Annotation.ClientSend());
       tracer.recordAnnotation(new Annotation.ServiceName(serviceName));
       tracer.recordAnnotation(new Annotation.ServerAddr({

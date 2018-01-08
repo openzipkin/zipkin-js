@@ -37,7 +37,7 @@ declare namespace zipkin {
     local<V>(name: string, callback: () => V): V;
     createRootId(): TraceId;
     createChildId(): TraceId;
-    letChildId<V>(callback: (traceId: TraceId) => V): V;
+    letId<V>(traceId: TraceId, callback: () => V): V;
     setId(traceId: TraceId): void;
     recordAnnotation(annotation: IAnnotation): void;
     recordMessage(message: any): void;

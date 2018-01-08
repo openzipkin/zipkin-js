@@ -8,8 +8,7 @@ module.exports = function zipkinClient(
 ) {
   function mkZipkinCallback(callback, id) {
     return function zipkinCallback(...args) {
-      tracer.scoped(() => {
-        tracer.setId(id);
+      tracer.letId(id, () => {
         // TODO: parse host and port from details in callback
         // https://github.com/3rd-Eden/memcached#details-object
         tracer.recordAnnotation(new Annotation.ServerAddr({
@@ -53,10 +52,8 @@ module.exports = function zipkinClient(
     const actualFn = ZipkinMemcached.prototype[key];
     ZipkinMemcached.prototype[key] = function(...args) {
       const callback = args.pop();
-      let id;
-      tracer.scoped(() => {
-        id = tracer.createChildId();
-        tracer.setId(id);
+      const id = tracer.createChildId();
+      tracer.letId(id, () => {
         commonAnnotations(key);
         if (annotator) {
           annotator.apply(this, args);
