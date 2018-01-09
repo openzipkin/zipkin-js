@@ -11,7 +11,7 @@ const {
 } = require('zipkin');
 
 class HttpLogger {
-  constructor({endpoint, headers = {}, httpInterval = 1000, jsonEncoder = JSON_V1}) {
+  constructor({endpoint, headers = {}, httpInterval = 1000, jsonEncoder = JSON_V1, timeout = 0}) {
     this.endpoint = endpoint;
     this.queue = [];
     this.jsonEncoder = jsonEncoder;
@@ -19,6 +19,11 @@ class HttpLogger {
     this.headers = Object.assign({
       'Content-Type': 'application/json'
     }, headers);
+
+    // req/res timeout in ms, it resets on redirect. 0 to disable (OS limit applies)
+    // only supported by node-fetch; silently ignored by browser fetch clients
+    // @see https://github.com/bitinn/node-fetch#fetch-options
+    this.timeout = timeout;
 
     const timer = setInterval(() => {
       this.processQueue();
@@ -39,6 +44,7 @@ class HttpLogger {
         method: 'POST',
         body: postBody,
         headers: this.headers,
+        timeout: this.timeout,
       }).then((response) => {
         if (response.status !== 202) {
           console.error('Unexpected response while sending Zipkin data, status:' +

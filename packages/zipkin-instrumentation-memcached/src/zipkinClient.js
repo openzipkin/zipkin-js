@@ -6,10 +6,10 @@ module.exports = function zipkinClient(
   serviceName = tracer.localEndpoint.serviceName,
   remoteServiceName = 'memcached'
 ) {
-  function mkZipkinCallback(callback, id, originalID) {
+  function mkZipkinCallback(callback, id) {
+    const originalId = tracer.id;
     return function zipkinCallback(...args) {
-      tracer.scoped(() => {
-        tracer.setId(id);
+      tracer.letId(id, () => {
         // TODO: parse host and port from details in callback
         // https://github.com/3rd-Eden/memcached#details-object
         tracer.recordAnnotation(new Annotation.ServerAddr({
@@ -17,8 +17,9 @@ module.exports = function zipkinClient(
         }));
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
-      tracer.setId(originalID);
-      callback.apply(this, args);
+      tracer.letId(originalId, () => {
+        callback.apply(this, args);
+      });
     };
   }
   function commonAnnotations(rpc) {
@@ -54,11 +55,8 @@ module.exports = function zipkinClient(
     const actualFn = ZipkinMemcached.prototype[key];
     ZipkinMemcached.prototype[key] = function(...args) {
       const callback = args.pop();
-      const originalID = tracer.id;
-      let id;
-      tracer.scoped(() => {
-        id = tracer.createChildId();
-        tracer.setId(id);
+      const id = tracer.createChildId();
+      tracer.letId(id, () => {
         commonAnnotations(key);
         if (annotator) {
           annotator.apply(this, args);
@@ -66,7 +64,7 @@ module.exports = function zipkinClient(
           defaultAnnotator.apply(this, args);
         }
       });
-      const wrapper = mkZipkinCallback(callback, id, originalID);
+      const wrapper = mkZipkinCallback(callback, id);
       const newArgs = [...args, wrapper];
       actualFn.apply(this, newArgs);
     };
