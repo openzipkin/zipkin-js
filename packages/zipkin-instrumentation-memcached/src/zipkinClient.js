@@ -7,6 +7,7 @@ module.exports = function zipkinClient(
   remoteServiceName = 'memcached'
 ) {
   function mkZipkinCallback(callback, id) {
+    const originalId = tracer.id;
     return function zipkinCallback(...args) {
       tracer.letId(id, () => {
         // TODO: parse host and port from details in callback
@@ -16,7 +17,10 @@ module.exports = function zipkinClient(
         }));
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
-      callback.apply(this, args);
+      // callback runs after the client request, so let's restore the former ID
+      tracer.letId(originalId, () => {
+        callback.apply(this, args);
+      });
     };
   }
   function commonAnnotations(rpc) {

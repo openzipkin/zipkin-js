@@ -13,11 +13,15 @@ module.exports = function zipkinClient(
     port: options.port
   };
   function mkZipkinCallback(callback, id) {
+    const originalId = tracer.id;
     return function zipkinCallback(...args) {
       tracer.letId(id, () => {
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
-      callback.apply(this, args);
+      // callback runs after the client request, so let's restore the former ID
+      tracer.letId(originalId, () => {
+        callback.apply(this, args);
+      });
     };
   }
   function commonAnnotations(rpc) {
