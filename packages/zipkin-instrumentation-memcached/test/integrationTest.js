@@ -147,9 +147,9 @@ describe('memcached interceptor', () => {
     const memcached = getMemcached(tracer);
     memcached.on('error', done);
     memcached.set('scooby', 'doo', 10, () => {
-      expect(tracer.id.traceID).to.equal(fakeID.traceID);
+      expect(tracer.id.traceId).to.equal(fakeID.traceId);
       memcached.get('scooby', (err, data) => {
-        expect(tracer.id.traceID).to.equal(fakeID.traceID);
+        expect(tracer.id.traceId).to.equal(fakeID.traceId);
         expect(data).to.equal('doo');
         done();
       });
