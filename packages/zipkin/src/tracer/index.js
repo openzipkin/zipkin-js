@@ -47,6 +47,10 @@ class Tracer {
     return this._ctxImpl.scoped(callback);
   }
 
+  letId(id, callback) {
+    return this._ctxImpl.letContext(id, callback);
+  }
+
   createRootId() {
     const rootSpanId = randomTraceId();
     const traceId = this.traceId128Bit
@@ -131,14 +135,6 @@ class Tracer {
           explicitRecord(new Annotation.LocalOperationStop());
           throw err;
         });
-    });
-  }
-
-  letChildId(callable) {
-    return this.scoped(() => {
-      const traceId = this.createChildId();
-      this.setId(traceId);
-      return callable(traceId);
     });
   }
 

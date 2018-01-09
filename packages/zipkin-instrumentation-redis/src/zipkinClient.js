@@ -14,8 +14,7 @@ module.exports = function zipkinClient(
   };
   function mkZipkinCallback(callback, id) {
     return function zipkinCallback(...args) {
-      tracer.scoped(() => {
-        tracer.setId(id);
+      tracer.letId(id, () => {
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
       callback.apply(this, args);
@@ -53,10 +52,8 @@ module.exports = function zipkinClient(
       if (methodsThatReturnMulti.indexOf(method) > -1) {
         clientNeedsToBeModified[method] = function(...args) {
           const multiInstance = actualFn.apply(this, args);
-          let id;
-          tracer.scoped(() => {
-            id = tracer.createChildId();
-            tracer.setId(id);
+          const id = tracer.createChildId();
+          tracer.letId(id, () => {
             tracer.recordBinary('commands', JSON.stringify(args[0]));
           });
           wrap(multiInstance, id);
@@ -66,12 +63,8 @@ module.exports = function zipkinClient(
       }
       clientNeedsToBeModified[method] = function(...args) {
         const callback = args.pop();
-        let id = traceId;
-        tracer.scoped(() => {
-          if (id === undefined) {
-            id = tracer.createChildId();
-          }
-          tracer.setId(id);
+        const id = traceId || tracer.createChildId();
+        tracer.letId(id, () => {
           commonAnnotations(method);
         });
         const wrapper = mkZipkinCallback(callback, id);

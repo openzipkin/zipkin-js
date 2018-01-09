@@ -40,6 +40,32 @@ describe('Tracer', () => {
     });
   });
 
+  it('should clear scope after letId', () => {
+    const recorder = {
+      record: () => {}
+    };
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      const parentId = tracer.createRootId();
+      const childId = tracer.createChildId();
+
+      tracer.setId(parentId);
+      tracer.letId(childId, () => {
+        expect(tracer.id).to.equal(childId);
+
+        tracer.letId(parentId, () => {
+          expect(tracer.id).to.equal(parentId);
+        });
+
+        expect(tracer.id).to.equal(childId);
+      });
+
+      expect(tracer.id).to.equal(parentId);
+    });
+  });
+
   it('should make a local span', () => {
     const record = sinon.spy();
     const recorder = {record};
