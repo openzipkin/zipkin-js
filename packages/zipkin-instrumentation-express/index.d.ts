@@ -13,7 +13,7 @@ import {Handler} from "express"
  * go to the correct spans
  */
 export declare function expressMiddleware(
-  options: {tracer: Tracer, port?: number}
+  options: {tracer: Tracer, serviceName: string, port?: number}
 ): Handler;
 
 export declare function wrapExpressHttpProxy(

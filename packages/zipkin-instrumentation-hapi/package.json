@@ -11,7 +11,11 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
+  "peerDependencies": {
+    "@types/hapi": "^16.1.12"
+  },
   "devDependencies": {
+    "@types/hapi": "^16.1.12",
     "babel-cli": "^6.23.0",
     "hapi": "^15.1.1",
     "mocha": "^3.2.0",
