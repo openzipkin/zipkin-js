@@ -3,7 +3,6 @@ import {PluginRegistrationObject} from "hapi"
 
 export interface ZipkinPluginOptions {
     tracer: Tracer;
-    serviceName?: string;
     port?: number;
 }
 
