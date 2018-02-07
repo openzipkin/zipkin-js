@@ -34,7 +34,8 @@ module.exports = class KafkaLogger {
         topic: this.topic,
         messages: data
       }], () => {});
-    });
+      producer.removeAllListeners();
+    }).catch(() => { producer.removeAllListeners(); });
   }
 
   close() {
