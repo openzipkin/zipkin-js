@@ -1,4 +1,4 @@
-# zipkin-instrumetation-postgres
+# zipkin-instrumentation-postgres
 
 This library will wrap the [pg client](https://www.npmjs.com/package/pg).
 
