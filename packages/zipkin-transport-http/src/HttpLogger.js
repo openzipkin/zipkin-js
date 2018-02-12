@@ -10,11 +10,16 @@ const {
   jsonEncoder: {JSON_V1}
 } = require('zipkin');
 
-class HttpLogger {
+const EventEmitter = require('events').EventEmitter;
+
+class HttpLogger extends EventEmitter {
   constructor({endpoint, headers = {}, httpInterval = 1000, jsonEncoder = JSON_V1, timeout = 0}) {
+    super(); // must be before any reference to *this*
     this.endpoint = endpoint;
     this.queue = [];
     this.jsonEncoder = jsonEncoder;
+
+    this.errorListenerSet = false;
 
     this.headers = Object.assign({
       'Content-Type': 'application/json'
@@ -33,27 +38,41 @@ class HttpLogger {
     }
   }
 
+  on(...args) {
+    const eventName = args[0];
+    // if the instance has an error handler set then we don't need to
+    // console.log errors anymore
+    if (eventName.toLowerCase() === 'error') this.errorListenerSet = true;
+    super.on.apply(this, args);
+  }
+
   logSpan(span) {
     this.queue.push(this.jsonEncoder.encode(span));
   }
 
   processQueue() {
-    if (this.queue.length > 0) {
-      const postBody = `[${this.queue.join(',')}]`;
-      fetch(this.endpoint, {
+    const self = this;
+    if (self.queue.length > 0) {
+      const postBody = `[${self.queue.join(',')}]`;
+      fetch(self.endpoint, {
         method: 'POST',
         body: postBody,
-        headers: this.headers,
-        timeout: this.timeout,
+        headers: self.headers,
+        timeout: self.timeout,
       }).then((response) => {
         if (response.status !== 202) {
-          console.error('Unexpected response while sending Zipkin data, status:' +
-            `${response.status}, body: ${postBody}`);
+          const err = 'Unexpected response while sending Zipkin data, status:' +
+            `${response.status}, body: ${postBody}`;
+
+          if (self.errorListenerSet) this.emit('error', new Error(err));
+          else console.error(err);
         }
       }).catch((error) => {
-        console.error('Error sending Zipkin data', error);
+        const err = `Error sending Zipkin data ${error}`;
+        if (self.errorListenerSet) this.emit('error', new Error(err));
+        else console.error(err);
       });
-      this.queue.length = 0;
+      self.queue.length = 0;
     }
   }
 }
