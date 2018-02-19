@@ -256,9 +256,7 @@ class Deferred {
         return null;
       }
       return function scopedFunc(...args) {
-        return tracer.letId(traceId, () => {
-          return func.apply(this, args);
-        });
+        return tracer.letId(traceId, () => func.apply(this, args));
       };
     };
 
