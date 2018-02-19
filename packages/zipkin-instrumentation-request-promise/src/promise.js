@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle, no-use-before-define, no-param-reassign*/
 import asap from 'asap/raw';
 
 const noop = () => {};
@@ -104,7 +105,7 @@ function resolve(self, newValue) {
   if (newValue === self) {
     return reject(
       self,
-      new TypeError('A promise cannot be resolved with itself.'),
+      new TypeError('A promise cannot be resolved with itself.')
     );
   }
   if (
@@ -203,9 +204,10 @@ class Promise {
     handle(this, new Handler(wrappedOnFulfilled, wrappedOnRejected, res));
     return res;
   }
-  done(onFulfilled, onRejected) {
+  done(...args) {
+    const [onFulfilled, onRejected] = args;
     let self = this;
-    if (arguments.length) {
+    if (args.length) {
       self = this.then.apply(this, [onFulfilled, onRejected]);
     }
     self.then(null, (err) => {
@@ -263,4 +265,4 @@ class Deferred {
   }
 }
 
-export { Promise, Deferred };
+export {Promise, Deferred};

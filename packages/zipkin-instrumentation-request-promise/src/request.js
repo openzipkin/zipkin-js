@@ -1,17 +1,16 @@
 import request from 'request-promise';
 import _ from 'lodash';
-import { Instrumentation } from 'zipkin';
-import { Deferred } from './promise';
+import {Instrumentation} from 'zipkin';
+import {Deferred} from './promise';
 
 const normalizeParameter = function(param) {
   let options = param;
   if (!param) {
     options = {};
-  }
-  else if (typeof param === 'string') {
+  } else if (typeof param === 'string') {
     options = {
       uri: param,
-    }
+    };
   }
   return options;
 };
@@ -81,21 +80,22 @@ export default class Request {
   }
 
   send(options, callback) {
-    const { tracer } = this;
-    const defer = new Deferred(tracer)
+    const {tracer} = this;
+    const defer = new Deferred(tracer);
 
     /**
      * It's better to bind the callback because request module
      * will destroy the response object during a timeout which
      * breaks zipkin scope
      */
+    let cb = callback;
     if (_.isFunction(callback)) {
-      callback = this.tracer.ctxImpl._session.bind(callback);
+      cb = this.tracer.ctxImpl._session.bind(callback);
     }
 
-    const instance = this.httpRequest(options, callback);
+    const instance = this.httpRequest(options, cb);
 
-    if (_.isFunction(callback)) {
+    if (_.isFunction(cb)) {
       return instance;
     }
     instance.catch(defer.reject);

@@ -1,6 +1,6 @@
 # zipkin-instrumentation-request-promise
 
-Adds Zipkin tracing to the [request-promise](https://www.npmjs.com/package/request-promise) library.
+Adds Zipkin tracing to the [request](https://www.npmjs.com/package/request) and [request-promise](https://www.npmjs.com/package/request-promise) libraries.
 
 ## Usage
 

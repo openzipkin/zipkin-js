@@ -64,10 +64,11 @@ describe(__filename, () => {
         return Promise.reject(new Error(-90));
       }).then(() => {
         assert.isFalse('Callback should not run');
-      }).catch((err) => {
-        assert.equal(-90, err.message);
-        done();
-      });
+      })
+        .catch((err) => {
+          assert.equal(-90, err.message);
+          done();
+        });
     });
   });
 
