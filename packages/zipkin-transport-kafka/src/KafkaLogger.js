@@ -23,7 +23,7 @@ module.exports = class KafkaLogger {
       }
       const producer = new kafka.HighLevelProducer(this.client, producerOpts);
       producer.on('ready', () => resolve(producer));
-      producer.on('error', reject);
+      producer.on('error', () => reject(producer));
     });
   }
 
@@ -34,7 +34,8 @@ module.exports = class KafkaLogger {
         topic: this.topic,
         messages: data
       }], () => {});
-    });
+      producer.removeAllListeners();
+    }).catch((producer) => { producer.removeAllListeners(); });
   }
 
   close() {

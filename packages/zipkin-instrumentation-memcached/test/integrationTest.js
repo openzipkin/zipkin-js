@@ -137,4 +137,22 @@ describe('memcached interceptor', () => {
       }
     });
   });
+
+  it('should restore original trace ID', done => {
+    const ctxImpl = new ExplicitContext();
+    const recorder = {record: () => { }};
+    const tracer = new Tracer({ctxImpl, recorder});
+    const fakeID = tracer.createRootId();
+    tracer.setId(fakeID);
+    const memcached = getMemcached(tracer);
+    memcached.on('error', done);
+    memcached.set('scooby', 'doo', 10, () => {
+      expect(tracer.id.traceId).to.equal(fakeID.traceId);
+      memcached.get('scooby', (err, data) => {
+        expect(tracer.id.traceId).to.equal(fakeID.traceId);
+        expect(data).to.equal('doo');
+        done();
+      });
+    });
+  });
 });
