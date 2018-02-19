@@ -1,3 +1,9 @@
+/**
+ * IMPORTANT: Some of the codes in this file were imported
+ * from promise open source library https://github.com/then/promise.
+ * The intent is to overcome some a limitation of zipkinjs reported in
+ * https://github.com/openzipkin/zipkin-js/issues/179
+ */
 /* eslint-disable no-underscore-dangle, no-use-before-define, no-param-reassign*/
 import asap from 'asap/raw';
 
@@ -250,8 +256,7 @@ class Deferred {
         return null;
       }
       return function scopedFunc(...args) {
-        return tracer.scoped(() => {
-          tracer.setId(traceId);
+        return tracer.letId(traceId, () => {
           return func.apply(this, args);
         });
       };

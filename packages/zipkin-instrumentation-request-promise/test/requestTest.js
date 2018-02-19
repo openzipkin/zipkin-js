@@ -44,9 +44,8 @@ describe(__filename, () => {
       log('traceId id2:', id2.traceId);
       tracer.setId(id1);
       const req = new Request(tracer);
-      const resolvedId = yield tracer.scoped(() => {
+      const resolvedId = yield tracer.letId(id2, () => {
         log('mm:', tracer.id.traceId);
-        tracer.setId(id2);
         return req.send({
           uri: 'http://disneyland.test/students',
           json: true,
@@ -73,8 +72,7 @@ describe(__filename, () => {
       log('traceId id2:', id2.traceId);
       tracer.setId(id1);
       const req = new Request(tracer);
-      tracer.scoped(() => {
-        tracer.setId(id2);
+      tracer.letId(id2, () => {
         req.send({
           uri: 'http://disneyland.test/food',
           json: true,

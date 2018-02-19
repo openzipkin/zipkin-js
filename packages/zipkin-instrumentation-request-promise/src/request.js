@@ -90,7 +90,7 @@ export default class Request {
      */
     let cb = callback;
     if (_.isFunction(callback)) {
-      cb = this.tracer.ctxImpl._session.bind(callback);
+      cb = this.tracer._ctxImpl._session.bind(callback);
     }
 
     const instance = this.httpRequest(options, cb);
