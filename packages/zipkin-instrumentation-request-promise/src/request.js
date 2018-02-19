@@ -82,7 +82,17 @@ export default class Request {
 
   send(options, callback) {
     const { tracer } = this;
-    const defer = new Deferred(tracer);
+    const defer = new Deferred(tracer)
+
+    /**
+     * It's better to bind the callback because request module
+     * will destroy the response object during a timeout which
+     * breaks zipkin scope
+     */
+    if (_.isFunction(callback)) {
+      callback = this.tracer.ctxImpl._session.bind(callback);
+    }
+
     const instance = this.httpRequest(options, callback);
 
     if (_.isFunction(callback)) {
