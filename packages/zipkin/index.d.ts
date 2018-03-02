@@ -299,7 +299,7 @@ declare namespace zipkin {
         method: string,
         requestUrl: string,
         readHeader: <T> (header: string) => option.IOption<T>
-      ): string;
+      ): TraceId;
       recordResponse(traceId: string, statusCode: string, error?: Error): void;
     }
 
