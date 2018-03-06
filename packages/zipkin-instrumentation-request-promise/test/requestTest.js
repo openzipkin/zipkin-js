@@ -102,7 +102,6 @@ describe(__filename, () => {
         assert.equal(resp.body.name, 'Martin');
         return Promise.resolve(30);
       }).then((data) => {
-        log('Callack2:', data);
         assert.equal(data, 30);
         return data;
       });

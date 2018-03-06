@@ -16,17 +16,15 @@ const normalizeParameter = function(param) {
 };
 
 export default class Request {
-  constructor(tracer, serviceName, remoteServiceName) {
+  constructor(tracer) {
     this.tracer = tracer;
     this.instrumentation =
       new Instrumentation.HttpClient({
-        tracer,
-        serviceName,
-        remoteServiceName,
+        tracer
       });
 
     /**
-     * This section is very important, it guaranty correct trace duration
+     * This section is very important, it guarantee correct trace duration
      */
     this.httpRequest = request.defaults((options, callback) => tracer.scoped(() => {
       const method = options.method || 'GET';

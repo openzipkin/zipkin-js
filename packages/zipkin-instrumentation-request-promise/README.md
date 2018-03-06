@@ -15,7 +15,7 @@ const localServiceName = 'service-a'; // name of this application
 const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
 const remoteServiceName = 'weather-api';
-const request = new ZipkinRequest(tracer, localServiceName, remoteServiceName);
+const request = new ZipkinRequest(tracer);
 
 request.send({
     url: 'http://api.weather.com',
