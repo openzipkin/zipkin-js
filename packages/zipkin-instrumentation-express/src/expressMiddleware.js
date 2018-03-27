@@ -27,8 +27,9 @@ module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
         }
       }
 
+      const name = req.method + ' ' + req.route.path;
       const id =
-        instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
+        instrumentation.recordRequest(name, formatRequestUrl(req), readHeader);
 
       res.on('finish', () => {
         tracer.scoped(() => {
