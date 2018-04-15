@@ -2,18 +2,26 @@
 const globalFetch =
   (typeof window !== 'undefined' && window.fetch) ||
   (typeof global !== 'undefined' && global.fetch);
-
 // eslint-disable-next-line global-require
 const fetch = globalFetch || require.call(null, 'node-fetch');
 
 const {
   jsonEncoder: {JSON_V1}
 } = require('zipkin');
+const HttpsProxyAgent = require('https-proxy-agent');
+const HttpProxyAgent = require('http-proxy-agent');
 
 const EventEmitter = require('events').EventEmitter;
 
 class HttpLogger extends EventEmitter {
-  constructor({endpoint, headers = {}, httpInterval = 1000, jsonEncoder = JSON_V1, timeout = 0}) {
+  constructor({
+    endpoint,
+    headers = {},
+    httpInterval = 1000,
+    jsonEncoder = JSON_V1,
+    timeout = 0,
+    proxy = null
+  }) {
     super(); // must be before any reference to *this*
     this.endpoint = endpoint;
     this.queue = [];
@@ -29,6 +37,9 @@ class HttpLogger extends EventEmitter {
     // only supported by node-fetch; silently ignored by browser fetch clients
     // @see https://github.com/bitinn/node-fetch#fetch-options
     this.timeout = timeout;
+
+    // prioritise passed in proxy, followed by secure proxies and insecure proxies if they exist
+    this.proxy = proxy;
 
     const timer = setInterval(() => {
       this.processQueue();
@@ -50,6 +61,16 @@ class HttpLogger extends EventEmitter {
     this.queue.push(this.jsonEncoder.encode(span));
   }
 
+  createProxyAgentIfAvailable() {
+    if (typeof this.proxy !== 'string') {
+      return undefined;
+    } else if (this.proxy.indexOf('https') === 0) {
+      return new HttpsProxyAgent(this.proxy);
+    } else {
+      return new HttpProxyAgent(this.proxy);
+    }
+  }
+
   processQueue() {
     const self = this;
     if (self.queue.length > 0) {
@@ -59,11 +80,11 @@ class HttpLogger extends EventEmitter {
         body: postBody,
         headers: self.headers,
         timeout: self.timeout,
+        agent: this.createProxyAgentIfAvailable(),
       }).then((response) => {
         if (response.status !== 202) {
           const err = 'Unexpected response while sending Zipkin data, status:' +
             `${response.status}, body: ${postBody}`;
-
           if (self.errorListenerSet) this.emit('error', new Error(err));
           else console.error(err);
         }
