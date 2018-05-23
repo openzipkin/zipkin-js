@@ -12,12 +12,13 @@ module.exports = class KafkaLogger {
       requireAcks: 0
     };
     const producerOpts = Object.assign({}, producerDefaults, options.producerOpts || {});
-    this.onProducerError = options.onProducerError || function(err) { console.error(err); };
+    this.onError = options.onError || function(err) { console.error(err); };
 
     this.topic = options.topic || 'zipkin';
+
     if (clientOpts.connectionString) {
       this.client = new kafka.Client(
-        clientOpts.connectionString, clientOpts.clientId, clientOpts.zkOpts,
+        clientOpts.connectionString, clientOpts.clientId, clientOpts.zkOpts
       );
     } else {
       this.client = new kafka.KafkaClient(clientOpts);
@@ -30,26 +31,35 @@ module.exports = class KafkaLogger {
       this.producer.removeAllListeners('ready');
     });
 
-    this.producer.on('error', this.onProducerError);
+    this.producer.on('error', this.onError);
+    this.client.on('error', this.onError);
   }
 
   logSpan(span) {
+    const sendSpan = (data) => {
+      this.producer.send([{
+        topic: this.topic,
+        messages: data,
+      }], (err, data) => {
+        if (err) {
+          this.onError(err);
+        }
+      });
+    }
+    try {
       const data = THRIFT.encode(span);
       if (this.producerState === 'ready') {
-        this.producer.send([{
-          topic: this.topic,
-          messages: data,
-        }], () => {});
+        sendSpan(data);
       } else {
         this.producer.on('ready', () => {
           this.producerState = 'ready';
-          this.producer.send([{
-            topic: this.topic,
-            messages: data,
-          }], () => {});
+          sendSpan(data);
           this.producer.removeAllListeners('ready');
         });
       }
+    } catch(err) {
+      this.onError(err);
+    }
   }
 
   close() {
