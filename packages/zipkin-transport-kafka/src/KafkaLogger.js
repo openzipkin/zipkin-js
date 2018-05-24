@@ -12,7 +12,10 @@ module.exports = class KafkaLogger {
       requireAcks: 0
     };
     const producerOpts = Object.assign({}, producerDefaults, options.producerOpts || {});
-    this.onError = options.onError || function(err) { console.error(err); };
+    this.onError = options.onError || function(err) {
+      /* eslint-disable no-console */
+      console.error(err);
+    };
 
     this.topic = options.topic || 'zipkin';
 
@@ -25,7 +28,7 @@ module.exports = class KafkaLogger {
     }
     this.producer = new kafka.HighLevelProducer(this.client, producerOpts);
     this.producerState = 'pending';
-    
+
     this.producer.on('ready', () => {
       this.producerState = 'ready';
       this.producer.removeAllListeners('ready');
@@ -40,24 +43,24 @@ module.exports = class KafkaLogger {
       this.producer.send([{
         topic: this.topic,
         messages: data,
-      }], (err, data) => {
+      }], (err) => {
         if (err) {
           this.onError(err);
         }
       });
-    }
+    };
     try {
-      const data = THRIFT.encode(span);
+      const encodedSpan = THRIFT.encode(span);
       if (this.producerState === 'ready') {
-        sendSpan(data);
+        sendSpan(encodedSpan);
       } else {
         this.producer.on('ready', () => {
           this.producerState = 'ready';
-          sendSpan(data);
+          sendSpan(encodedSpan);
           this.producer.removeAllListeners('ready');
         });
       }
-    } catch(err) {
+    } catch (err) {
       this.onError(err);
     }
   }
