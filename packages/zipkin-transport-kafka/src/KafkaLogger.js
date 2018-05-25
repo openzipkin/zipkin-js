@@ -12,30 +12,57 @@ module.exports = class KafkaLogger {
       requireAcks: 0
     };
     const producerOpts = Object.assign({}, producerDefaults, options.producerOpts || {});
-    this.producerPromise = new Promise((resolve, reject) => {
-      this.topic = options.topic || 'zipkin';
-      if (clientOpts.connectionString) {
-        this.client = new kafka.Client(
-          clientOpts.connectionString, clientOpts.clientId, clientOpts.zkOpts
-        );
-      } else {
-        this.client = new kafka.KafkaClient(clientOpts);
-      }
-      const producer = new kafka.HighLevelProducer(this.client, producerOpts);
-      producer.on('ready', () => resolve(producer));
-      producer.on('error', () => reject(producer));
+    this.onError = options.onError || function(err) {
+      /* eslint-disable no-console */
+      console.error(err);
+    };
+
+    this.topic = options.topic || 'zipkin';
+
+    if (clientOpts.connectionString) {
+      this.client = new kafka.Client(
+        clientOpts.connectionString, clientOpts.clientId, clientOpts.zkOpts
+      );
+    } else {
+      this.client = new kafka.KafkaClient(clientOpts);
+    }
+    this.producer = new kafka.HighLevelProducer(this.client, producerOpts);
+    this.producerState = 'pending';
+
+    this.producer.on('ready', () => {
+      this.producerState = 'ready';
+      this.producer.removeAllListeners('ready');
     });
+
+    this.producer.on('error', this.onError);
+    this.client.on('error', this.onError);
   }
 
   logSpan(span) {
-    this.producerPromise.then(producer => {
-      const data = THRIFT.encode(span);
-      producer.send([{
+    const sendSpan = (data) => {
+      this.producer.send([{
         topic: this.topic,
-        messages: data
-      }], () => {});
-      producer.removeAllListeners();
-    }).catch((producer) => { producer.removeAllListeners(); });
+        messages: data,
+      }], (err) => {
+        if (err) {
+          this.onError(err);
+        }
+      });
+    };
+    try {
+      const encodedSpan = THRIFT.encode(span);
+      if (this.producerState === 'ready') {
+        sendSpan(encodedSpan);
+      } else {
+        this.producer.on('ready', () => {
+          this.producerState = 'ready';
+          sendSpan(encodedSpan);
+          this.producer.removeAllListeners('ready');
+        });
+      }
+    } catch (err) {
+      this.onError(err);
+    }
   }
 
   close() {
