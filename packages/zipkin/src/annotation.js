@@ -9,6 +9,10 @@ class ClientSend extends SimpleAnnotation {}
 class ClientRecv extends SimpleAnnotation {}
 class ServerSend extends SimpleAnnotation {}
 class ServerRecv extends SimpleAnnotation {}
+class MessageSend extends SimpleAnnotation {}
+class MessageRecv extends SimpleAnnotation {}
+class WireSend extends SimpleAnnotation {}
+class WireRecv extends SimpleAnnotation {}
 
 function LocalOperationStart(name) {
   this.name = name;
@@ -78,6 +82,10 @@ const annotation = {
   ClientRecv,
   ServerSend,
   ServerRecv,
+  MessageSend,
+  MessageRecv,
+  WireSend,
+  WireRecv,
   Message,
   ServiceName,
   Rpc,
