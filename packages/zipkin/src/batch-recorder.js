@@ -113,6 +113,13 @@ class BatchRecorder {
           span.finish();
           span.delegate.setKind('CONSUMER');
           break;
+        case 'MessageAddr':
+          span.delegate.setRemoteEndpoint(new Endpoint({
+            serviceName: rec.annotation.serviceName,
+            ipv4: rec.annotation.host && rec.annotation.host.ipv4(),
+            port: rec.annotation.port
+          }));
+          break;
         case 'LocalOperationStart':
           span.delegate.setName(rec.annotation.name);
           break;

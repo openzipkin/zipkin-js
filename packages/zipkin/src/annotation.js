@@ -69,6 +69,15 @@ LocalAddr.prototype.toString = function() {
   return `LocalAddr(host="${this.host.toString()}", port=${this.port})`;
 };
 
+function MessageAddr({serviceName, host, port}) {
+  this.serviceName = serviceName;
+  this.host = host;
+  this.port = port;
+}
+MessageAddr.prototype.toString = function() {
+  return `MessageAddr(serviceName="${this.serviceName}", host="${this.host}", port=${this.port})`;
+};
+
 function BinaryAnnotation(key, value) {
   this.key = key;
   this.value = value;
@@ -86,6 +95,7 @@ const annotation = {
   ProducerStop,
   ConsumerStart,
   ConsumerStop,
+  MessageAddr,
   Message,
   ServiceName,
   Rpc,
