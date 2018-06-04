@@ -99,15 +99,17 @@ class BatchRecorder {
           span.delegate.setShared(id.parentId !== id.spanId);
           span.delegate.setKind('CLIENT');
           break;
-        case 'MessageSend':
+        case 'ProducerStart':
+          span.delegate.setKind('PRODUCER');
+          break;
+        case 'ProducerStop':
           span.finish();
           span.delegate.setKind('PRODUCER');
           break;
-        case 'WireSend':
+        case 'ConsumerStart':
+          span.delegate.setKind('CONSUMER');
           break;
-        case 'WireRecv':
-          break;
-        case 'MessageRecv':
+        case 'ConsumerStop':
           span.finish();
           span.delegate.setKind('CONSUMER');
           break;
