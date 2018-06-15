@@ -33,8 +33,14 @@ module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
         res.removeListener('close', onCloseOrFinish);
         res.removeListener('finish', onCloseOrFinish);
 
+        const error = null;
+
+        if(res.statusCode >= 400) {
+          error = res.statusMessage;
+        }
+
         tracer.scoped(() => {
-          instrumentation.recordResponse(id, res.statusCode);
+          instrumentation.recordResponse(id, res.statusCode, error);
         });
       };
 
