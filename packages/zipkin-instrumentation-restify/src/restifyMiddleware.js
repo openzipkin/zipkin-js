@@ -33,7 +33,7 @@ module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
         res.removeListener('close', onCloseOrFinish);
         res.removeListener('finish', onCloseOrFinish);
 
-        const error = null;
+        let error = null;
 
         if(res.statusCode >= 400) {
           error = res.statusMessage;
