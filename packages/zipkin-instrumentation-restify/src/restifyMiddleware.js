@@ -35,7 +35,7 @@ module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
 
         let error = null;
 
-        if(res.statusCode >= 400) {
+        if (res.statusCode >= 400) {
           error = res.statusCode;
         }
 
