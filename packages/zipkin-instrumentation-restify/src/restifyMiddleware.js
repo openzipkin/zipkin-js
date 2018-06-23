@@ -3,6 +3,8 @@ const {
   Instrumentation
 } = require('zipkin');
 const url = require('url');
+const LOWER_LIMIT = 200;
+const UPPER_LIMIT = 399;
 
 function headerOption(req, header) {
   const val = req.header(header);
@@ -33,13 +35,12 @@ module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
         res.removeListener('close', onCloseOrFinish);
         res.removeListener('finish', onCloseOrFinish);
 
-        let error = null;
-
-        if (res.statusCode >= 400) {
-          error = res.statusCode;
-        }
-
         tracer.scoped(() => {
+          const error =
+            res.statusCode !== 0 && (res.statusCode < LOWER_LIMIT || res.statusCode > UPPER_LIMIT)
+            ? res.statusCode
+            : null;
+
           instrumentation.recordResponse(id, res.statusCode, error);
         });
       };
