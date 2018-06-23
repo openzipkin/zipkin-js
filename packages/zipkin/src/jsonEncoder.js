@@ -54,6 +54,20 @@ function encodeV1(span) {
       endAnnotation = 'ss';
       addressKey = 'ca';
       break;
+    case 'PRODUCER':
+      beginAnnotation = span.timestamp ? 'ms' : undefined;
+      endAnnotation = 'ws';
+      addressKey = 'ma';
+      break;
+    case 'CONSUMER':
+      if (span.timestamp && span.duration) {
+        beginAnnotation = 'wr';
+        endAnnotation = 'mr';
+      } else if (span.timestamp) {
+        beginAnnotation = 'mr';
+      }
+      addressKey = 'ma';
+      break;
     default:
   }
 

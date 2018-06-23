@@ -9,6 +9,10 @@ class ClientSend extends SimpleAnnotation {}
 class ClientRecv extends SimpleAnnotation {}
 class ServerSend extends SimpleAnnotation {}
 class ServerRecv extends SimpleAnnotation {}
+class ProducerStart extends SimpleAnnotation {}
+class ProducerStop extends SimpleAnnotation {}
+class ConsumerStart extends SimpleAnnotation {}
+class ConsumerStop extends SimpleAnnotation {}
 
 function LocalOperationStart(name) {
   this.name = name;
@@ -65,6 +69,15 @@ LocalAddr.prototype.toString = function() {
   return `LocalAddr(host="${this.host.toString()}", port=${this.port})`;
 };
 
+function MessageAddr({serviceName, host, port}) {
+  this.serviceName = serviceName;
+  this.host = host;
+  this.port = port;
+}
+MessageAddr.prototype.toString = function() {
+  return `MessageAddr(serviceName="${this.serviceName}", host="${this.host}", port=${this.port})`;
+};
+
 function BinaryAnnotation(key, value) {
   this.key = key;
   this.value = value;
@@ -78,6 +91,11 @@ const annotation = {
   ClientRecv,
   ServerSend,
   ServerRecv,
+  ProducerStart,
+  ProducerStop,
+  ConsumerStart,
+  ConsumerStop,
+  MessageAddr,
   Message,
   ServiceName,
   Rpc,
