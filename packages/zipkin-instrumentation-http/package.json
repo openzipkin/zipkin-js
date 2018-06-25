@@ -1,0 +1,20 @@
+{
+  "name": "zipkin-instrumentation-http",
+  "version": "0.0.1",
+  "description": "Instrumentation for http with Zipkin.js",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "express": "^4.13.4",
+    "mocha": "^3.2.0",
+    "zipkin": "^0.6.1"
+  }
+}
