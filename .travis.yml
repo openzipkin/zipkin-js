@@ -15,18 +15,41 @@ services:
   - redis
   - postgresql
 
-compiler: clang-3.6
-env:
-  - CXX=clang-3.6 KAFKA_PLEASE_LOG=verbose
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      #- llvm-toolchain-precise-3.7
-    packages:
-      - libgnome-keyring-dev
-      #- clang-3.7
-      - clang
+jobs:
+  include:
+    # E2E tests node
+    - stage: E2E-Tests
+      language: node_js
+      node_js: 8
+      services:
+        - docker
+      install:
+        - docker run -d -p 9411:9411 openzipkin/zipkin
+        - npm install
+        - ./node_modules/.bin/lerna bootstrap --concurrency 1
+      before_script:
+        - cd test/e2e/node
+      script:
+        - npm test
+
+    - stage: E2E-Tests
+      language: node_js
+      node_js: 8
+      services:
+        - docker
+      install:
+        - docker run -d -p 9411:9411 openzipkin/zipkin
+        - npm install
+        - ./node_modules/.bin/lerna bootstrap --concurrency 1
+        - cd test/e2e/web
+        - npm install
+      before_script:
+        - npm run build
+        - ./node_modules/.bin/serve -s build & SERVER_PID=$!
+      script:
+        - npm test
+      after_script:
+        - kill -9 $SERVER_PID
 
 # === This is setup for automatic deploy to npm when we push tags.
 # === It's commented out because it probably won't work too well with Lerna.

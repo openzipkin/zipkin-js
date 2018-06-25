@@ -1,0 +1,26 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "react-scripts": "1.0.14",
+    "zipkin": "^0.10.1",
+    "zipkin-context-cls": "^0.6.1",
+    "zipkin-instrumentation-fetch": "^0.10.1",
+    "zipkin-transport-http": "^0.10.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "cp -R ../shared ./src && react-scripts build",
+    "test:build": "serve -s build",
+    "test": "cypress run"
+  },
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0",
+    "cypress": "^1.0.2",
+    "node-fetch": "^1.7.3",
+    "serve": "^6.3.1"
+  }
+}

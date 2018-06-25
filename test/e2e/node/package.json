@@ -1,0 +1,19 @@
+{
+  "name": "zipkin-e2e-test-node",
+  "version": "1.0.0",
+  "description": "E2E tests for zipkin in a node environment",
+  "scripts": {
+    "test": "mocha --reporter spec --require ../../helper.js  *.test.js"
+  },
+  "author": "Openzipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0",
+    "mocha": "^4.0.1",
+    "node-fetch": "^1.7.3",
+    "zipkin": "^0.10.1",
+    "zipkin-context-cls": "^0.6.1",
+    "zipkin-instrumentation-fetch": "^0.10.1",
+    "zipkin-transport-http": "^0.10.1"
+  }
+}
