@@ -14,7 +14,10 @@ describe('Http Client Instrumentation', () => {
       serviceName: 'weather-app',
       remoteServiceName: 'weather-forecast-service'});
 
-    const url = 'http://127.0.0.1:80/weather?index=10&count=300';
+    const port = '80';
+    const host = '127.0.0.1';
+    const urlPath = '/weather';
+    const url = `http://${host}:${port}${urlPath}?index=10&count=300`;
     tracer.scoped(() => {
       instrumentation.recordRequest({}, url, 'GET');
       instrumentation.recordResponse(tracer.id, '202');
@@ -32,19 +35,23 @@ describe('Http Client Instrumentation', () => {
     expect(annotations[1].annotation.name).to.equal('GET');
 
     expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[2].annotation.key).to.equal('http.url');
-    expect(annotations[2].annotation.value).to.equal(url);
+    expect(annotations[2].annotation.key).to.equal('http.path');
+    expect(annotations[2].annotation.value).to.equal(urlPath);
 
-    expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+    expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[3].annotation.key).to.equal('http.host');
+    expect(annotations[3].annotation.value).to.equal(host);
 
-    expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-    expect(annotations[4].annotation.serviceName).to.equal('weather-forecast-service');
+    expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
 
-    expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[5].annotation.key).to.equal('http.status_code');
-    expect(annotations[5].annotation.value).to.equal('202');
+    expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+    expect(annotations[5].annotation.serviceName).to.equal('weather-forecast-service');
 
-    expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+    expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[6].annotation.key).to.equal('http.status_code');
+    expect(annotations[6].annotation.value).to.equal('202');
+
+    expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
   });
 
   it('should record an error', () => {
@@ -68,8 +75,8 @@ describe('Http Client Instrumentation', () => {
       .to.equal(initialTraceId).and
       .to.have.lengthOf(16));
 
-    expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[5].annotation.key).to.equal('error');
-    expect(annotations[5].annotation.value).to.equal('Error: nasty error');
+    expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[6].annotation.key).to.equal('error');
+    expect(annotations[6].annotation.value).to.equal('Error: nasty error');
   });
 });

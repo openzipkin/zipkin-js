@@ -1,5 +1,6 @@
 const Annotation = require('../annotation');
 const Request = require('../request');
+const parseRequestUrl = require('../parseUrl');
 
 function requiredArg(name) {
   throw new Error(`HttpClientInstrumentation: Missing required argument ${name}.`);
@@ -19,10 +20,12 @@ class HttpClientInstrumentation {
   recordRequest(request, url, method) {
     this.tracer.setId(this.tracer.createChildId());
     const traceId = this.tracer.id;
+    const { path, host } = parseRequestUrl(url);
 
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
-    this.tracer.recordBinary('http.url', url);
+    this.tracer.recordBinary('http.path', path);
+    this.tracer.recordBinary('http.host', host);
     this.tracer.recordAnnotation(new Annotation.ClientSend());
     if (this.remoteServiceName) {
       // TODO: can we get the host and port of the http connection?

@@ -11,9 +11,10 @@ describe('Http Server Instrumentation', () => {
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
     const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port: 80});
+    const url = '/foo';
 
     ctxImpl.scoped(() => {
-      const id = instrumentation.recordRequest('POST', '/foo', () => None);
+      const id = instrumentation.recordRequest('POST', url, () => None);
       tracer.recordBinary('message', 'hello from within app');
       instrumentation.recordResponse(id, 202);
     });
@@ -35,22 +36,26 @@ describe('Http Server Instrumentation', () => {
     expect(annotations[1].annotation.name).to.equal('POST');
 
     expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[2].annotation.key).to.equal('http.url');
-    expect(annotations[2].annotation.value).to.equal('/foo');
+    expect(annotations[2].annotation.key).to.equal('http.path');
+    expect(annotations[2].annotation.value).to.equal(url);
 
-    expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
+    expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[3].annotation.key).to.equal('http.host');
+    expect(annotations[3].annotation.value).to.equal(null);
 
-    expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+    expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
 
-    expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[5].annotation.key).to.equal('message');
-    expect(annotations[5].annotation.value).to.equal('hello from within app');
+    expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
 
     expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[6].annotation.key).to.equal('http.status_code');
-    expect(annotations[6].annotation.value).to.equal('202');
+    expect(annotations[6].annotation.key).to.equal('message');
+    expect(annotations[6].annotation.value).to.equal('hello from within app');
 
-    expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
+    expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[7].annotation.key).to.equal('http.status_code');
+    expect(annotations[7].annotation.value).to.equal('202');
+
+    expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
   });
 
   it('should receive trace info from the client', () => {
@@ -65,7 +70,8 @@ describe('Http Server Instrumentation', () => {
       'X-B3-Flags': '1'
     };
     const port = 80;
-    const url = `http://127.0.0.1:${port}`;
+    const host = '127.0.0.1';
+    const url = `http://${host}:${port}`;
     const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
     const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
     ctxImpl.scoped(() => {
@@ -85,22 +91,26 @@ describe('Http Server Instrumentation', () => {
     expect(annotations[1].annotation.name).to.equal('POST');
 
     expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[2].annotation.key).to.equal('http.url');
-    expect(annotations[2].annotation.value).to.equal(url);
+    expect(annotations[2].annotation.key).to.equal('http.path');
+    expect(annotations[2].annotation.value).to.equal('/');
 
-    expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
+    expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[3].annotation.key).to.equal('http.host');
+    expect(annotations[3].annotation.value).to.equal(host);
 
-    expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+    expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
 
-    expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[5].annotation.key).to.equal('message');
-    expect(annotations[5].annotation.value).to.equal('hello from within app');
+    expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
 
     expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[6].annotation.key).to.equal('http.status_code');
-    expect(annotations[6].annotation.value).to.equal('202');
+    expect(annotations[6].annotation.key).to.equal('message');
+    expect(annotations[6].annotation.value).to.equal('hello from within app');
 
-    expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
+    expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[7].annotation.key).to.equal('http.status_code');
+    expect(annotations[7].annotation.value).to.equal('202');
+
+    expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
   });
 
   it('should properly report the URL with a query string', () => {
@@ -110,8 +120,10 @@ describe('Http Server Instrumentation', () => {
     const tracer = new Tracer({recorder, ctxImpl});
 
     const port = 80;
+    const host = '127.0.0.1';
+    const urlPath = '/foo';
     const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
-    const url = `http://127.0.0.1:${port}/foo?abc=123`;
+    const url = `http://${host}:${port}${urlPath}?abc=123`;
     ctxImpl.scoped(() => {
       const id = instrumentation.recordRequest('GET', url, () => None);
       tracer.recordBinary('message', 'hello from within app');
@@ -120,8 +132,12 @@ describe('Http Server Instrumentation', () => {
     const annotations = record.args.map(args => args[0]);
 
     expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[2].annotation.key).to.equal('http.url');
-    expect(annotations[2].annotation.value).to.equal(url);
+    expect(annotations[2].annotation.key).to.equal('http.path');
+    expect(annotations[2].annotation.value).to.equal(urlPath);
+
+    expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[3].annotation.key).to.equal('http.host');
+    expect(annotations[3].annotation.value).to.equal(host);
   });
 
   it('should accept a 128bit X-B3-TraceId', () => {
