@@ -1,16 +1,9 @@
 const {Request, Annotation} = require('zipkin');
 const url = require('url');
 
-function formatRequestUrl(proxyReq) {
-  // Protocol is not available in proxyReq by express-http-proxy
-  const parsedPath = url.parse(proxyReq.path);
-  return url.format({
-    hostname: proxyReq.hostname,
-    port: proxyReq.port,
-    pathname: parsedPath.pathname,
-    search: parsedPath.search,
-    slashes: true // https://github.com/nodejs/node/issues/11103
-  });
+function getPathnameFromPath (path) {
+  const parsedPath = url.parse(path);
+  return parsedPath.pathname
 }
 
 class ExpressHttpProxyInstrumentation {
@@ -38,7 +31,8 @@ class ExpressHttpProxyInstrumentation {
   _recordRequest(proxyReq) {
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(proxyReq.method.toUpperCase());
-    this.tracer.recordBinary('http.url', formatRequestUrl(proxyReq));
+    this.tracer.recordBinary('http.path', getPathnameFromPath(proxyReq.path));
+    this.tracer.recordBinary('http.host', proxyReq.hostname);
     this.tracer.recordAnnotation(new Annotation.ClientSend());
     if (this.remoteServiceName) {
       this.tracer.recordAnnotation(new Annotation.ServerAddr({

@@ -29,10 +29,11 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1'
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
-        app.use(zipkinProxy(`127.0.0.1:${apiPort}`, {
+        app.use(zipkinProxy(`${apiHost}:${apiPort}`, {
           decorateRequest: (proxyReq) => {
             const modifiedReq = proxyReq;
             modifiedReq.method = 'POST';
@@ -47,7 +48,8 @@ describe('express http proxy instrumentation - integration test', () => {
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const url = `http://127.0.0.1:${appPort}/weather?index=10&count=300`;
+          const urlPath = '/weather'
+          const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url)
             .then(res => res.json())
             .then(() => {
@@ -67,20 +69,22 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[1].annotation.name).to.equal('POST');
 
               expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[2].annotation.key).to.equal('http.url');
-              // express-http-proxy does not include protocol when intercepting request
-              const apiUrlWithoutProtocol = `//127.0.0.1:${apiPort}/weather?index=10&count=300`;
-              expect(annotations[2].annotation.value).to.equal(apiUrlWithoutProtocol);
+              expect(annotations[2].annotation.key).to.equal('http.path');
+              expect(annotations[2].annotation.value).to.equal(urlPath);
 
-              expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+              expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[3].annotation.key).to.equal('http.host');
+              expect(annotations[3].annotation.value).to.equal(apiHost);
 
-              expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+              expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
 
-              expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[5].annotation.key).to.equal('http.status_code');
-              expect(annotations[5].annotation.value).to.equal('203');
+              expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
 
-              expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+              expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[6].annotation.key).to.equal('http.status_code');
+              expect(annotations[6].annotation.value).to.equal('203');
+
+              expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
               done();
             })
             .catch(err => {
@@ -105,14 +109,16 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1'
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
-        app.use(zipkinProxy(`127.0.0.1:${apiPort}`));
+        app.use(zipkinProxy(`${apiHost}:${apiPort}`));
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const url = `http://127.0.0.1:${appPort}/weather?index=10&count=300`;
+          const urlPath = '/weather'
+          const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url)
             .then(res => res.json())
             .then(() => {
@@ -132,20 +138,22 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[1].annotation.name).to.equal('GET');
 
               expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[2].annotation.key).to.equal('http.url');
-              // express-http-proxy does not include protocol when intercepting request
-              const apiUrlWithoutProtocol = `//127.0.0.1:${apiPort}/weather?index=10&count=300`;
-              expect(annotations[2].annotation.value).to.equal(apiUrlWithoutProtocol);
+              expect(annotations[2].annotation.key).to.equal('http.path');
+              expect(annotations[2].annotation.value).to.equal(urlPath);
 
-              expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+              expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[3].annotation.key).to.equal('http.host');
+              expect(annotations[3].annotation.value).to.equal(apiHost);
 
-              expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+              expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
 
-              expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[5].annotation.key).to.equal('http.status_code');
-              expect(annotations[5].annotation.value).to.equal('202');
+              expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
 
-              expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+              expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[6].annotation.key).to.equal('http.status_code');
+              expect(annotations[6].annotation.value).to.equal('202');
+
+              expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
               done();
             })
             .catch(err => {
@@ -170,10 +178,11 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1'
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
-        app.use(middleware({tracer, serviceName}), zipkinProxy(`127.0.0.1:${apiPort}`, {
+        app.use(middleware({tracer, serviceName}), zipkinProxy(`${apiHost}:${apiPort}`, {
           decorateRequest: (proxyReq) => {
             const modifiedReq = proxyReq;
             modifiedReq.method = 'POST';
@@ -188,7 +197,8 @@ describe('express http proxy instrumentation - integration test', () => {
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const url = `http://127.0.0.1:${appPort}/weather?index=10&count=300`;
+          const urlPath = '/weather'
+          const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url, {
             method: 'put',
             headers: {
@@ -212,40 +222,46 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[1].annotation.name).to.equal('PUT');
 
               expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[2].annotation.key).to.equal('http.url');
-              expect(annotations[2].annotation.value).to.equal(url);
+              expect(annotations[2].annotation.key).to.equal('http.path');
+              expect(annotations[2].annotation.value).to.equal(urlPath);
 
-              expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
+              expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[3].annotation.key).to.equal('http.host');
+              expect(annotations[3].annotation.value).to.equal(apiHost);
 
-              expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+              expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
 
-              expect(annotations[5].annotation.annotationType).to.equal('ServiceName');
-              expect(annotations[5].annotation.serviceName).to.equal('weather-app');
+              expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
 
-              expect(annotations[6].annotation.annotationType).to.equal('Rpc');
-              expect(annotations[6].annotation.name).to.equal('POST');
+              expect(annotations[6].annotation.annotationType).to.equal('ServiceName');
+              expect(annotations[6].annotation.serviceName).to.equal('weather-app');
 
-              expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[7].annotation.key).to.equal('http.url');
-              // express-http-proxy does not include protocol when intercepting request
-              const apiUrlWithoutProtocol = `//127.0.0.1:${apiPort}/weather?index=10&count=300`;
-              expect(annotations[7].annotation.value).to.equal(apiUrlWithoutProtocol);
+              expect(annotations[7].annotation.annotationType).to.equal('Rpc');
+              expect(annotations[7].annotation.name).to.equal('POST');
 
-              expect(annotations[8].annotation.annotationType).to.equal('ClientSend');
+              expect(annotations[8].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[8].annotation.key).to.equal('http.path');
+              expect(annotations[8].annotation.value).to.equal(urlPath);
 
-              expect(annotations[9].annotation.annotationType).to.equal('ServerAddr');
+              expect(annotations[9].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[9].annotation.key).to.equal('http.host');
+              expect(annotations[9].annotation.value).to.equal(apiHost);
 
-              expect(annotations[10].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[10].annotation.key).to.equal('http.status_code');
-              expect(annotations[10].annotation.value).to.equal('202');
+              expect(annotations[10].annotation.annotationType).to.equal('ClientSend');
 
-              expect(annotations[11].annotation.annotationType).to.equal('ClientRecv');
+              expect(annotations[11].annotation.annotationType).to.equal('ServerAddr');
 
               expect(annotations[12].annotation.annotationType).to.equal('BinaryAnnotation');
               expect(annotations[12].annotation.key).to.equal('http.status_code');
-              expect(annotations[12].annotation.value).to.equal('203');
+              expect(annotations[12].annotation.value).to.equal('202');
 
-              expect(annotations[13].annotation.annotationType).to.equal('ServerSend');
+              expect(annotations[13].annotation.annotationType).to.equal('ClientRecv');
+
+              expect(annotations[14].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[14].annotation.key).to.equal('http.status_code');
+              expect(annotations[14].annotation.value).to.equal('203');
+
+              expect(annotations[15].annotation.annotationType).to.equal('ServerSend');
 
               done();
             })
