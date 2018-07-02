@@ -50,19 +50,15 @@ describe('hapi middleware - integration test', () => {
         expect(annotations[2].annotation.key).to.equal('http.path');
         expect(annotations[2].annotation.value).to.equal(url);
 
-        expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[3].annotation.key).to.equal('http.host');
-        expect(annotations[3].annotation.value).to.equal(null);
+        expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
 
-        expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
+        expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
 
-        expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
+        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+        expect(annotations[5].annotation.key).to.equal('http.status_code');
+        expect(annotations[5].annotation.value).to.equal('202');
 
-        expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[6].annotation.key).to.equal('http.status_code');
-        expect(annotations[6].annotation.value).to.equal('202');
-
-        expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
+        expect(annotations[6].annotation.annotationType).to.equal('ServerSend');
 
         done();
       });
@@ -87,9 +83,9 @@ describe('hapi middleware - integration test', () => {
       const url = '/foo';
       server.inject({method, url}, () => {
         const annotations = record.args.map((args) => args[0]);
-        expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[6].annotation.key).to.equal('http.status_code');
-        expect(annotations[6].annotation.value).to.equal('404');
+        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+        expect(annotations[5].annotation.key).to.equal('http.status_code');
+        expect(annotations[5].annotation.value).to.equal('404');
         done();
       });
     });
@@ -127,10 +123,6 @@ describe('hapi middleware - integration test', () => {
         expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
         expect(annotations[2].annotation.key).to.equal('http.path');
         expect(annotations[2].annotation.value).to.equal(path);
-
-        expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[3].annotation.key).to.equal('http.host');
-        expect(annotations[3].annotation.value).to.equal(null);
 
         done();
       });

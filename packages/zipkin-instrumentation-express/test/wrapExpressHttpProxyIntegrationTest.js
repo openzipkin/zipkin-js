@@ -72,19 +72,15 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[2].annotation.key).to.equal('http.path');
               expect(annotations[2].annotation.value).to.equal(urlPath);
 
-              expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[3].annotation.key).to.equal('http.host');
-              expect(annotations[3].annotation.value).to.equal(apiHost);
+              expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-              expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+              expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-              expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+              expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[5].annotation.key).to.equal('http.status_code');
+              expect(annotations[5].annotation.value).to.equal('203');
 
-              expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[6].annotation.key).to.equal('http.status_code');
-              expect(annotations[6].annotation.value).to.equal('203');
-
-              expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+              expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
               done();
             })
             .catch(err => {
@@ -141,19 +137,15 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[2].annotation.key).to.equal('http.path');
               expect(annotations[2].annotation.value).to.equal(urlPath);
 
-              expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[3].annotation.key).to.equal('http.host');
-              expect(annotations[3].annotation.value).to.equal(apiHost);
+              expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-              expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+              expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-              expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+              expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[5].annotation.key).to.equal('http.status_code');
+              expect(annotations[5].annotation.value).to.equal('202');
 
-              expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[6].annotation.key).to.equal('http.status_code');
-              expect(annotations[6].annotation.value).to.equal('202');
-
-              expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+              expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
               done();
             })
             .catch(err => {
@@ -225,43 +217,35 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[2].annotation.key).to.equal('http.path');
               expect(annotations[2].annotation.value).to.equal(urlPath);
 
-              expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[3].annotation.key).to.equal('http.host');
-              expect(annotations[3].annotation.value).to.equal(apiHost);
+              expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
 
-              expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
+              expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
 
-              expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
+              expect(annotations[5].annotation.annotationType).to.equal('ServiceName');
+              expect(annotations[5].annotation.serviceName).to.equal('weather-app');
 
-              expect(annotations[6].annotation.annotationType).to.equal('ServiceName');
-              expect(annotations[6].annotation.serviceName).to.equal('weather-app');
+              expect(annotations[6].annotation.annotationType).to.equal('Rpc');
+              expect(annotations[6].annotation.name).to.equal('POST');
 
-              expect(annotations[7].annotation.annotationType).to.equal('Rpc');
-              expect(annotations[7].annotation.name).to.equal('POST');
+              expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[7].annotation.key).to.equal('http.path');
+              expect(annotations[7].annotation.value).to.equal(urlPath);
 
-              expect(annotations[8].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[8].annotation.key).to.equal('http.path');
-              expect(annotations[8].annotation.value).to.equal(urlPath);
+              expect(annotations[8].annotation.annotationType).to.equal('ClientSend');
 
-              expect(annotations[9].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[9].annotation.key).to.equal('http.host');
-              expect(annotations[9].annotation.value).to.equal(apiHost);
+              expect(annotations[9].annotation.annotationType).to.equal('ServerAddr');
 
-              expect(annotations[10].annotation.annotationType).to.equal('ClientSend');
+              expect(annotations[10].annotation.annotationType).to.equal('BinaryAnnotation');
+              expect(annotations[10].annotation.key).to.equal('http.status_code');
+              expect(annotations[10].annotation.value).to.equal('202');
 
-              expect(annotations[11].annotation.annotationType).to.equal('ServerAddr');
+              expect(annotations[11].annotation.annotationType).to.equal('ClientRecv');
 
               expect(annotations[12].annotation.annotationType).to.equal('BinaryAnnotation');
               expect(annotations[12].annotation.key).to.equal('http.status_code');
-              expect(annotations[12].annotation.value).to.equal('202');
+              expect(annotations[12].annotation.value).to.equal('203');
 
-              expect(annotations[13].annotation.annotationType).to.equal('ClientRecv');
-
-              expect(annotations[14].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[14].annotation.key).to.equal('http.status_code');
-              expect(annotations[14].annotation.value).to.equal('203');
-
-              expect(annotations[15].annotation.annotationType).to.equal('ServerSend');
+              expect(annotations[13].annotation.annotationType).to.equal('ServerSend');
 
               done();
             })

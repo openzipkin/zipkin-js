@@ -52,20 +52,16 @@ describe('cujojs rest interceptor - integration test', () => {
           expect(annotations[2].annotation.key).to.equal('http.path');
           expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[3].annotation.key).to.equal('http.host');
-          expect(annotations[3].annotation.value).to.equal(host);
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[4].annotation.serviceName).to.equal('callee');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[5].annotation.serviceName).to.equal('callee');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('202');
 
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('202');
-
-          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
           const traceIdOnServer = responseData.traceId;
           expect(traceIdOnServer).to.equal(traceId);

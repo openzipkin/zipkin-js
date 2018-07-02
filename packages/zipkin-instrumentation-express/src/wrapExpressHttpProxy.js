@@ -32,7 +32,6 @@ class ExpressHttpProxyInstrumentation {
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(proxyReq.method.toUpperCase());
     this.tracer.recordBinary('http.path', getPathnameFromPath(proxyReq.path));
-    this.tracer.recordBinary('http.host', proxyReq.hostname);
     this.tracer.recordAnnotation(new Annotation.ClientSend());
     if (this.remoteServiceName) {
       this.tracer.recordAnnotation(new Annotation.ServerAddr({

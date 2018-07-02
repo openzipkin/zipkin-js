@@ -71,12 +71,11 @@ class HttpServerInstrumentation {
   recordRequest(method, requestUrl, readHeader) {
     this._createIdFromHeaders(readHeader).ifPresent(id => this.tracer.setId(id));
     const id = this.tracer.id;
-    const {path, host} = parseRequestUrl(requestUrl);
+    const {path} = parseRequestUrl(requestUrl);
 
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.path', path);
-    this.tracer.recordBinary('http.host', host);
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
     this.tracer.recordAnnotation(new Annotation.LocalAddr({port: this.port}));
 

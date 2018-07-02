@@ -55,19 +55,15 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[2].annotation.key).to.equal('http.path');
           expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[3].annotation.key).to.equal('http.host');
-          expect(annotations[3].annotation.value).to.equal(apiHost);
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('202');
 
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('202');
-
-          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
           done();
         });
       });
@@ -98,19 +94,15 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[2].annotation.key).to.equal('http.path');
           expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[3].annotation.key).to.equal('http.host');
-          expect(annotations[3].annotation.value).to.equal(apiHost);
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('202');
 
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('202');
-
-          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
           done();
         });
       });
@@ -141,19 +133,15 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[2].annotation.key).to.equal('http.path');
           expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[3].annotation.key).to.equal('http.host');
-          expect(annotations[3].annotation.value).to.equal(apiHost);
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('202');
 
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('202');
-
-          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
           done();
         });
       });
@@ -185,19 +173,15 @@ describe('request instrumentation - integration test', () => {
             expect(annotations[2].annotation.key).to.equal('http.path');
             expect(annotations[2].annotation.value).to.equal(urlPath);
 
-            expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-            expect(annotations[3].annotation.key).to.equal('http.host');
-            expect(annotations[3].annotation.value).to.equal(apiHost);
+            expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-            expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+            expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-            expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+            expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+            expect(annotations[5].annotation.key).to.equal('http.status_code');
+            expect(annotations[5].annotation.value).to.equal('202');
 
-            expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-            expect(annotations[6].annotation.key).to.equal('http.status_code');
-            expect(annotations[6].annotation.value).to.equal('202');
-
-            expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+            expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
             done();
           }
         });
@@ -229,19 +213,15 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[2].annotation.key).to.equal('http.path');
           expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[3].annotation.key).to.equal('http.host');
-          expect(annotations[3].annotation.value).to.equal(apiHost);
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('202');
 
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('202');
-
-          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
           done();
         });
       });
@@ -273,21 +253,17 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[2].annotation.key).to.equal('http.path');
           expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[3].annotation.key).to.equal('http.host');
-          expect(annotations[3].annotation.value).to.equal(apiHost);
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('404');
 
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('404');
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
-          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
-
-          expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
 
           done();
         });
@@ -319,22 +295,18 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[2].annotation.key).to.equal('http.path');
           expect(annotations[2].annotation.value).to.equal('/');
 
-          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[3].annotation.key).to.equal('http.host');
-          expect(annotations[3].annotation.value).to.equal(host);
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
 
-          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
-
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('error');
-          expect(annotations[6].annotation.value)
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('error');
+          expect(annotations[5].annotation.value)
             .to.contain('Error: getaddrinfo ENOTFOUND bad.invalid.url bad.invalid.url:80');
 
-          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
-          expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
           done();
         });
       });
