@@ -38,8 +38,10 @@ describe('wrapFetch', () => {
       const id = tracer.createChildId();
       tracer.setId(id);
 
-      const path = `http://127.0.0.1:${this.port}/user`;
-      fetch(path, {method: 'post'})
+      const host = '127.0.0.1';
+      const urlPath = '/user';
+      const url = `http://${host}:${this.port}${urlPath}`;
+      fetch(url, {method: 'post'})
         .then(res => res.json())
         .then(data => {
           const annotations = record.args.map(args => args[0]);
@@ -57,19 +59,23 @@ describe('wrapFetch', () => {
           expect(annotations[1].annotation.name).to.equal('POST');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(path);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[3].annotation.key).to.equal('http.host');
+          expect(annotations[3].annotation.value).to.equal(host);
 
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
+          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('202');
+          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.serviceName).to.equal('callee');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[6].annotation.key).to.equal('http.status_code');
+          expect(annotations[6].annotation.value).to.equal('202');
+
+          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
 
           const traceIdOnServer = data.traceId;
           expect(traceIdOnServer).to.equal(traceId);
@@ -112,8 +118,9 @@ describe('wrapFetch', () => {
       const id = tracer.createChildId();
       tracer.setId(id);
 
-      const path = 'http://domain.invalid';
-      fetch(path, {method: 'post'})
+      const host = 'domain.invalid';
+      const url = `http://${host}`;
+      fetch(url, {method: 'post'})
         .then(() => expect.fail())
         .catch(() => {
           const annotations = record.args.map(args => args[0]);
@@ -131,22 +138,26 @@ describe('wrapFetch', () => {
           expect(annotations[1].annotation.name).to.equal('POST');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(path);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal('/');
 
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[3].annotation.key).to.equal('http.host');
+          expect(annotations[3].annotation.value).to.equal(host);
 
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
+          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('error');
-          expect(annotations[5].annotation.value)
+          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.serviceName).to.equal('callee');
+
+          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[6].annotation.key).to.equal('error');
+          expect(annotations[6].annotation.value)
             .to.contain('getaddrinfo ENOTFOUND domain.invalid');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
 
-          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
           done();
         });
     });

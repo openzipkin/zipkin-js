@@ -1,9 +1,9 @@
 const {Request, Annotation} = require('zipkin');
 const url = require('url');
 
-function getPathnameFromPath (path) {
+function getPathnameFromPath(path) {
   const parsedPath = url.parse(path);
-  return parsedPath.pathname
+  return parsedPath.pathname;
 }
 
 class ExpressHttpProxyInstrumentation {

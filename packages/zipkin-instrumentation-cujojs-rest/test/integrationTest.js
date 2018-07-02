@@ -27,8 +27,10 @@ describe('cujojs rest interceptor - integration test', () => {
           remoteServiceName: 'callee'
         });
         const port = server.address().port;
-        const path = `http://127.0.0.1:${port}/abc`;
-        client(path).then(successResponse => {
+        const host = '127.0.0.1';
+        const urlPath = '/abc';
+        const url = `http://${host}:${port}${urlPath}`;
+        client(url).then(successResponse => {
           const responseData = JSON.parse(successResponse.entity);
           server.close();
 
@@ -47,19 +49,23 @@ describe('cujojs rest interceptor - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(path);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[3].annotation.key).to.equal('http.host');
+          expect(annotations[3].annotation.value).to.equal(host);
 
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
+          expect(annotations[4].annotation.annotationType).to.equal('ClientSend');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('202');
+          expect(annotations[5].annotation.annotationType).to.equal('ServerAddr');
+          expect(annotations[5].annotation.serviceName).to.equal('callee');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[6].annotation.key).to.equal('http.status_code');
+          expect(annotations[6].annotation.value).to.equal('202');
+
+          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
 
           const traceIdOnServer = responseData.traceId;
           expect(traceIdOnServer).to.equal(traceId);

@@ -30,7 +30,9 @@ describe('restify middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const port = server.address().port;
-        const url = `http://127.0.0.1:${port}/foo`;
+        const host = '127.0.0.1';
+        const urlPath = '/foo';
+        const url = `http://${host}:${port}${urlPath}`;
         fetch(url, {
           method: 'post',
           headers: {
@@ -53,22 +55,27 @@ describe('restify middleware - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('POST');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
+          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[3].annotation.key).to.equal('http.host');
+          expect(annotations[3].annotation.value).to.equal(host);
 
-          expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('message');
-          expect(annotations[5].annotation.value).to.equal('hello from within app');
+          expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('202');
+          expect(annotations[6].annotation.key).to.equal('message');
+          expect(annotations[6].annotation.value).to.equal('hello from within app');
 
-          expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
+          expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[7].annotation.key).to.equal('http.status_code');
+          expect(annotations[7].annotation.value).to.equal('202');
+
+          expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
+
           done();
         })
         .catch(err => {
@@ -154,7 +161,9 @@ describe('restify middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const port = server.address().port;
-        const url = `http://127.0.0.1:${port}/foo`;
+        const host = '127.0.0.1';
+        const urlPath = '/foo';
+        const url = `http://${host}:${port}${urlPath}`;
         fetch(url, {
           method: 'post',
           headers: {
@@ -177,26 +186,30 @@ describe('restify middleware - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('POST');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
-          expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
+          expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[3].annotation.key).to.equal('http.host');
+          expect(annotations[3].annotation.value).to.equal(host);
 
-          expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+          expect(annotations[4].annotation.annotationType).to.equal('ServerRecv');
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('message');
-          expect(annotations[5].annotation.value).to.equal('testing error annotation recording');
+          expect(annotations[5].annotation.annotationType).to.equal('LocalAddr');
 
           expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('404');
+          expect(annotations[6].annotation.key).to.equal('message');
+          expect(annotations[6].annotation.value).to.equal('testing error annotation recording');
 
           expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[7].annotation.key).to.equal('error');
+          expect(annotations[7].annotation.key).to.equal('http.status_code');
           expect(annotations[7].annotation.value).to.equal('404');
 
-          expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
+          expect(annotations[8].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[8].annotation.key).to.equal('error');
+          expect(annotations[8].annotation.value).to.equal('404');
+
+          expect(annotations[9].annotation.annotationType).to.equal('ServerSend');
 
           done();
         })

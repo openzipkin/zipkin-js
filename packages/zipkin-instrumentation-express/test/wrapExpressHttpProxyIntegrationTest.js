@@ -29,7 +29,7 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
-        const apiHost = '127.0.0.1'
+        const apiHost = '127.0.0.1';
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
@@ -48,7 +48,7 @@ describe('express http proxy instrumentation - integration test', () => {
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const urlPath = '/weather'
+          const urlPath = '/weather';
           const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url)
             .then(res => res.json())
@@ -109,7 +109,7 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
-        const apiHost = '127.0.0.1'
+        const apiHost = '127.0.0.1';
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
@@ -117,7 +117,7 @@ describe('express http proxy instrumentation - integration test', () => {
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const urlPath = '/weather'
+          const urlPath = '/weather';
           const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url)
             .then(res => res.json())
@@ -178,7 +178,7 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
-        const apiHost = '127.0.0.1'
+        const apiHost = '127.0.0.1';
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
@@ -197,7 +197,7 @@ describe('express http proxy instrumentation - integration test', () => {
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const urlPath = '/weather'
+          const urlPath = '/weather';
           const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url, {
             method: 'put',

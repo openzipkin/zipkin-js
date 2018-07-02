@@ -20,7 +20,7 @@ class HttpClientInstrumentation {
   recordRequest(request, url, method) {
     this.tracer.setId(this.tracer.createChildId());
     const traceId = this.tracer.id;
-    const { path, host } = parseRequestUrl(url);
+    const {path, host} = parseRequestUrl(url);
 
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
