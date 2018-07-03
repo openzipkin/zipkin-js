@@ -105,6 +105,64 @@ describe('Http Server Instrumentation', () => {
     expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
   });
 
+  it('should receive sampling flags from the client', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    const port = 80;
+    const url = `http://127.0.0.1:${port}`;
+    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+
+    const headersCases = [
+        {},
+        {'X-B3-Flags': '0'},
+        {'X-B3-Flags': '1'},
+        {'X-B3-Sampled': '0'},
+        {'X-B3-Sampled': '1'},
+        {'X-B3-Sampled': '0', 'X-B3-Flags': '0'},
+        {'X-B3-Sampled': '0', 'X-B3-Flags': '1'},
+        {'X-B3-Sampled': '1', 'X-B3-Flags': '0'},
+        {'X-B3-Sampled': '1', 'X-B3-Flags': '1'},
+    ];
+
+    headersCases.forEach(headers => {
+      const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
+
+      ctxImpl.scoped(() => {
+        const id = instrumentation.recordRequest('POST', url, readHeader);
+        tracer.recordBinary('message', 'hello from within app');
+        instrumentation.recordResponse(id, 202);
+      });
+      const annotations = record.args.map(args => args[0]);
+
+      expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
+      expect(annotations[0].annotation.serviceName).to.equal('service-a');
+
+      expect(annotations[1].annotation.annotationType).to.equal('Rpc');
+      expect(annotations[1].annotation.name).to.equal('POST');
+
+      expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[2].annotation.key).to.equal('http.path');
+      expect(annotations[2].annotation.value).to.equal('/');
+
+      expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
+
+      expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
+
+      expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[5].annotation.key).to.equal('message');
+      expect(annotations[5].annotation.value).to.equal('hello from within app');
+
+      expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[6].annotation.key).to.equal('http.status_code');
+      expect(annotations[6].annotation.value).to.equal('202');
+
+      expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
+    });
+  });
+
   it('should properly report the URL with a query string', () => {
     const record = sinon.spy();
     const recorder = {record};
