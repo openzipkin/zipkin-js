@@ -27,8 +27,10 @@ describe('cujojs rest interceptor - integration test', () => {
           remoteServiceName: 'callee'
         });
         const port = server.address().port;
-        const path = `http://127.0.0.1:${port}/abc`;
-        client(path).then(successResponse => {
+        const host = '127.0.0.1';
+        const urlPath = '/abc';
+        const url = `http://${host}:${port}${urlPath}`;
+        client(url).then(successResponse => {
           const responseData = JSON.parse(successResponse.entity);
           server.close();
 
@@ -47,8 +49,8 @@ describe('cujojs rest interceptor - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(path);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 

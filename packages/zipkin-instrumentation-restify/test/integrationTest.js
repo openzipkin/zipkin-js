@@ -30,7 +30,9 @@ describe('restify middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const port = server.address().port;
-        const url = `http://127.0.0.1:${port}/foo`;
+        const host = '127.0.0.1';
+        const urlPath = '/foo';
+        const url = `http://${host}:${port}${urlPath}`;
         fetch(url, {
           method: 'post',
           headers: {
@@ -53,8 +55,8 @@ describe('restify middleware - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('POST');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
 
@@ -69,6 +71,7 @@ describe('restify middleware - integration test', () => {
           expect(annotations[6].annotation.value).to.equal('202');
 
           expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
+
           done();
         })
         .catch(err => {
@@ -154,7 +157,9 @@ describe('restify middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const port = server.address().port;
-        const url = `http://127.0.0.1:${port}/foo`;
+        const host = '127.0.0.1';
+        const urlPath = '/foo';
+        const url = `http://${host}:${port}${urlPath}`;
         fetch(url, {
           method: 'post',
           headers: {
@@ -177,8 +182,8 @@ describe('restify middleware - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('POST');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
 

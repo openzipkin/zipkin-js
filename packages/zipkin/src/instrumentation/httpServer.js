@@ -2,6 +2,7 @@ const Header = require('../httpHeaders');
 const {Some, None} = require('../option');
 const TraceId = require('../tracer/TraceId');
 const Annotation = require('../annotation');
+const parseRequestUrl = require('../parseUrl');
 
 function stringToBoolean(str) {
   return str === '1' || str === 'true';
@@ -70,10 +71,11 @@ class HttpServerInstrumentation {
   recordRequest(method, requestUrl, readHeader) {
     this._createIdFromHeaders(readHeader).ifPresent(id => this.tracer.setId(id));
     const id = this.tracer.id;
+    const {path} = parseRequestUrl(requestUrl);
 
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
-    this.tracer.recordBinary('http.url', requestUrl);
+    this.tracer.recordBinary('http.path', path);
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
     this.tracer.recordAnnotation(new Annotation.LocalAddr({port: this.port}));
 

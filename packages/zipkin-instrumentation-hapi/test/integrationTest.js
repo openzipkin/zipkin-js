@@ -47,7 +47,7 @@ describe('hapi middleware - integration test', () => {
         expect(annotations[1].annotation.name).to.equal(method);
 
         expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.url');
+        expect(annotations[2].annotation.key).to.equal('http.path');
         expect(annotations[2].annotation.value).to.equal(url);
 
         expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
@@ -115,13 +115,14 @@ describe('hapi middleware - integration test', () => {
       });
 
       const method = 'GET';
-      const url = '/foo?abc=123';
+      const path = '/foo';
+      const url = `${path}?abc=123`;
       server.inject({method, url}, () => {
         const annotations = record.args.map(args => args[0]);
 
         expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.url');
-        expect(annotations[2].annotation.value).to.equal(url);
+        expect(annotations[2].annotation.key).to.equal('http.path');
+        expect(annotations[2].annotation.value).to.equal(path);
 
         done();
       });

@@ -29,10 +29,11 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
-        app.use(zipkinProxy(`127.0.0.1:${apiPort}`, {
+        app.use(zipkinProxy(`${apiHost}:${apiPort}`, {
           decorateRequest: (proxyReq) => {
             const modifiedReq = proxyReq;
             modifiedReq.method = 'POST';
@@ -47,7 +48,8 @@ describe('express http proxy instrumentation - integration test', () => {
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const url = `http://127.0.0.1:${appPort}/weather?index=10&count=300`;
+          const urlPath = '/weather';
+          const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url)
             .then(res => res.json())
             .then(() => {
@@ -67,10 +69,8 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[1].annotation.name).to.equal('POST');
 
               expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[2].annotation.key).to.equal('http.url');
-              // express-http-proxy does not include protocol when intercepting request
-              const apiUrlWithoutProtocol = `//127.0.0.1:${apiPort}/weather?index=10&count=300`;
-              expect(annotations[2].annotation.value).to.equal(apiUrlWithoutProtocol);
+              expect(annotations[2].annotation.key).to.equal('http.path');
+              expect(annotations[2].annotation.value).to.equal(urlPath);
 
               expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
@@ -105,14 +105,16 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
-        app.use(zipkinProxy(`127.0.0.1:${apiPort}`));
+        app.use(zipkinProxy(`${apiHost}:${apiPort}`));
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const url = `http://127.0.0.1:${appPort}/weather?index=10&count=300`;
+          const urlPath = '/weather';
+          const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url)
             .then(res => res.json())
             .then(() => {
@@ -132,10 +134,8 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[1].annotation.name).to.equal('GET');
 
               expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[2].annotation.key).to.equal('http.url');
-              // express-http-proxy does not include protocol when intercepting request
-              const apiUrlWithoutProtocol = `//127.0.0.1:${apiPort}/weather?index=10&count=300`;
-              expect(annotations[2].annotation.value).to.equal(apiUrlWithoutProtocol);
+              expect(annotations[2].annotation.key).to.equal('http.path');
+              expect(annotations[2].annotation.value).to.equal(urlPath);
 
               expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
@@ -170,10 +170,11 @@ describe('express http proxy instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const app = express();
         const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
 
         const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
 
-        app.use(middleware({tracer, serviceName}), zipkinProxy(`127.0.0.1:${apiPort}`, {
+        app.use(middleware({tracer, serviceName}), zipkinProxy(`${apiHost}:${apiPort}`, {
           decorateRequest: (proxyReq) => {
             const modifiedReq = proxyReq;
             modifiedReq.method = 'POST';
@@ -188,7 +189,8 @@ describe('express http proxy instrumentation - integration test', () => {
 
         const appServer = app.listen(0, () => {
           const appPort = appServer.address().port;
-          const url = `http://127.0.0.1:${appPort}/weather?index=10&count=300`;
+          const urlPath = '/weather';
+          const url = `http://${apiHost}:${appPort}${urlPath}?index=10&count=300`;
           fetch(url, {
             method: 'put',
             headers: {
@@ -212,8 +214,8 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[1].annotation.name).to.equal('PUT');
 
               expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[2].annotation.key).to.equal('http.url');
-              expect(annotations[2].annotation.value).to.equal(url);
+              expect(annotations[2].annotation.key).to.equal('http.path');
+              expect(annotations[2].annotation.value).to.equal(urlPath);
 
               expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
 
@@ -226,10 +228,8 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[6].annotation.name).to.equal('POST');
 
               expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
-              expect(annotations[7].annotation.key).to.equal('http.url');
-              // express-http-proxy does not include protocol when intercepting request
-              const apiUrlWithoutProtocol = `//127.0.0.1:${apiPort}/weather?index=10&count=300`;
-              expect(annotations[7].annotation.value).to.equal(apiUrlWithoutProtocol);
+              expect(annotations[7].annotation.key).to.equal('http.path');
+              expect(annotations[7].annotation.value).to.equal(urlPath);
 
               expect(annotations[8].annotation.annotationType).to.equal('ClientSend');
 

@@ -19,6 +19,7 @@ const Instrumentation = require('./instrumentation');
 
 const model = require('./model');
 const jsonEncoder = require('./jsonEncoder');
+const parseRequestUrl = require('./parseUrl');
 
 module.exports = {
   Tracer,
@@ -35,5 +36,6 @@ module.exports = {
   Request,
   Instrumentation,
   model,
-  jsonEncoder
+  jsonEncoder,
+  parseRequestUrl
 };
