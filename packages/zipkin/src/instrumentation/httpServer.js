@@ -52,14 +52,15 @@ class HttpServerInstrumentation {
         });
       });
     } else {
-      if (readHeader(Header.Flags) !== None) {
+      if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
         const currentId = this.tracer.id;
         const idWithFlags = new TraceId({
-          traceId: currentId.traceId,
-          parentId: currentId.parentId,
-          spanId: currentId.spanId,
-          sampled: currentId.sampled,
-          flags: readHeader(Header.Flags)
+          traceId: new Some(currentId.traceId),
+          parentId: None,
+          spanId: new Some(currentId.spanId),
+          sampled: readHeader(Header.Sampled) === None ?
+              currentId.sampled : readHeader(Header.Sampled),
+          flags: readHeader(Header.Flags) === None ? currentId.flags : readHeader(Header.Flags),
         });
         return new Some(idWithFlags);
       } else {
