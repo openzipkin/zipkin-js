@@ -121,6 +121,8 @@ describe('Http Server Instrumentation', () => {
         {'X-B3-Flags': '1'},
         {'X-B3-Sampled': '0'},
         {'X-B3-Sampled': '1'},
+        {'X-B3-Sampled': 'true'},
+        {'X-B3-Sampled': 'false'},
         {'X-B3-Sampled': '0', 'X-B3-Flags': '0'},
         {'X-B3-Sampled': '0', 'X-B3-Flags': '1'},
         {'X-B3-Sampled': '1', 'X-B3-Flags': '0'},
@@ -135,6 +137,7 @@ describe('Http Server Instrumentation', () => {
         tracer.recordBinary('message', 'hello from within app');
         instrumentation.recordResponse(id, 202);
       });
+
       const annotations = record.args.map(args => args[0]);
 
       expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
@@ -219,20 +222,30 @@ describe('Http Server Instrumentation', () => {
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
 
-    const headers = {
-      'X-B3-TraceId': 'aaa',
-      'X-B3-SpanId': 'bbb',
-      'X-B3-Flags': '1',
-      'X-B3-Sampled': 'true'
-    };
+    const headersCases = [
+      {
+        'X-B3-TraceId': 'aaa',
+        'X-B3-SpanId': 'bbb',
+        'X-B3-Flags': '1',
+        'X-B3-Sampled': 'true'
+      },
+      {
+        'X-B3-Flags': '1',
+        'X-B3-Sampled': 'true'
+      }
+    ];
 
-    const port = 80;
-    const url = `http://127.0.0.1:${port}`;
-    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
-    const readHeader = function(name) { return headers[name] ? new Some(headers[name]) : None; };
-    ctxImpl.scoped(() => {
-      const id = instrumentation.recordRequest('POST', url, readHeader);
-      expect(id._sampled.value).to.equal(true);
+    headersCases.forEach(headers => {
+      const port = 80;
+      const url = `http://127.0.0.1:${port}`;
+      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+      const readHeader = function(name) {
+        return headers[name] ? new Some(headers[name]) : None;
+      };
+      ctxImpl.scoped(() => {
+        const id = instrumentation.recordRequest('POST', url, readHeader);
+        expect(id._sampled.value).to.equal(true);
+      });
     });
   });
 });
