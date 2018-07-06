@@ -130,4 +130,48 @@ describe('express middleware - integration test', () => {
       });
     });
   });
+
+  it('should mark 500 respones as errors', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    ctxImpl.scoped(() => {
+      const app = express();
+      app.use(middleware({
+        tracer,
+        serviceName: 'service-a'
+      }));
+      app.get('/error', (req, res) => {
+        tracer.recordBinary('message', 'hello from within app');
+        res.status(500).send({status: 'An Error Occurred'});
+      });
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const urlPath = `http://127.0.0.1:${port}/error`;
+
+        fetch(urlPath, {
+          method: 'get'
+        }).then(res => {
+          server.close();
+
+          expect(res.status).to.equal(500);
+
+          const annotations = record.args.map(args => args[0]);
+
+          expect(annotations[6].annotation.key).to.equal('http.status_code');
+          expect(annotations[6].annotation.value).to.equal('500');
+          expect(annotations[7].annotation.key).to.equal('error');
+          expect(annotations[7].annotation.value).to.equal('500');
+
+          done();
+        })
+        .catch(err => {
+          server.close();
+          done(err);
+        });
+      });
+    });
+  });
 });
