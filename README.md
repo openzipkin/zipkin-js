@@ -1,6 +1,7 @@
-[![Build Status](https://travis-ci.org/openzipkin/zipkin-js.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-js)
-
 # Zipkin.js
+
+[![Build Status](https://travis-ci.org/openzipkin/zipkin-js.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-js)
+[![npm version](https://badge.fury.io/js/zipkin.svg)](https://badge.fury.io/js/zipkin)
 
 This is a library for instrumenting Node.js applications. It uses a lot of
 new JavaScript features and syntax, so Node.js version 6 or newer is required.
