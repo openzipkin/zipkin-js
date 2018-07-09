@@ -2,8 +2,22 @@ const Request = require('../src/request.js');
 const HttpHeaders = require('../src/httpHeaders');
 const {Some} = require('../src/option');
 const TraceId = require('../src/tracer/TraceId');
+const {IncomingMessage} = require('http');
 
 describe('Request', () => {
+  it('should not change an object\'s existing methods', () => {
+    const traceId = new TraceId({
+      traceId: new Some('48485a3953bb6124'),
+      spanId: '48485a3953bb6124'
+    });
+
+    const testRequest = new IncomingMessage();
+    const resultRequest = Request.addZipkinHeaders(testRequest, traceId);
+
+    expect(resultRequest.on).to.exist; // eslint-disable-line no-unused-expressions
+    expect(resultRequest.on).to.be.a('function');
+  });
+
   it('should add trace/span and ignore parent span/sampled headers if they do not exist', () => {
     const traceId = new TraceId({
       traceId: new Some('48485a3953bb6124'),

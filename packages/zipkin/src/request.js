@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 const HttpHeaders = require('./httpHeaders');
 
 function appendZipkinHeaders(req, traceId) {
@@ -16,8 +17,9 @@ function appendZipkinHeaders(req, traceId) {
 }
 
 function addZipkinHeaders(req, traceId) {
-  const headers = appendZipkinHeaders(req, traceId);
-  return Object.assign({}, req, {headers});
+  req.headers = appendZipkinHeaders(req, traceId);
+
+  return req;
 }
 
 module.exports = {
