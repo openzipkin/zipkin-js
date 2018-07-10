@@ -1,8 +1,9 @@
-const Header = require('../httpHeaders');
-const {Some, None} = require('../option');
-const TraceId = require('../tracer/TraceId');
 const Annotation = require('../annotation');
+const Header = require('../httpHeaders');
+const InetAddress = require('../InetAddress');
+const TraceId = require('../tracer/TraceId');
 const parseRequestUrl = require('../parseUrl');
+const {Some, None} = require('../option');
 
 function stringToBoolean(str) {
   return str === '1' || str === 'true';
@@ -28,10 +29,12 @@ class HttpServerInstrumentation {
   constructor({
     tracer = requiredArg('tracer'),
     serviceName = tracer.localEndpoint.serviceName,
-    port = requiredArg('port')
+    host,
+    port = requiredArg('port'),
   }) {
     this.tracer = tracer;
     this.serviceName = serviceName;
+    this.host = host && new InetAddress(host);
     this.port = port;
   }
 
@@ -78,7 +81,7 @@ class HttpServerInstrumentation {
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.path', path);
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
-    this.tracer.recordAnnotation(new Annotation.LocalAddr({port: this.port}));
+    this.tracer.recordAnnotation(new Annotation.LocalAddr({host: this.host, port: this.port}));
 
     return id;
   }

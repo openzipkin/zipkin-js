@@ -248,4 +248,51 @@ describe('Http Server Instrumentation', () => {
       });
     });
   });
+
+  it('should allow the host to be overridden', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+    const instrumentation = new HttpServer({
+      tracer,
+      serviceName: 'service-a',
+      host: '1.1.1.1',
+      port: 80
+    });
+
+    ctxImpl.scoped(() => {
+      const id = instrumentation.recordRequest('POST', '/test-url', () => None);
+      instrumentation.recordResponse(id, 202);
+    });
+
+    const localAddr = record.args
+                              .map(args => args[0].annotation)
+                              .find(annotation => annotation.annotationType === 'LocalAddr');
+
+    expect(localAddr.host.addr).to.equal('1.1.1.1');
+  });
+
+  it('should work if the host option is not defined', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+    const instrumentation = new HttpServer({
+      tracer,
+      serviceName: 'service-a',
+      port: 80
+    });
+
+    ctxImpl.scoped(() => {
+      const id = instrumentation.recordRequest('POST', '/test-url', () => None);
+      instrumentation.recordResponse(id, 202);
+    });
+
+    const localAddr = record.args
+                              .map(args => args[0].annotation)
+                              .find(annotation => annotation.annotationType === 'LocalAddr');
+
+    expect(localAddr.host.addr).not.to.equal(undefined);
+  });
 });
