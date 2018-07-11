@@ -63,7 +63,7 @@ class HttpServerInstrumentation {
           spanId: new Some(currentId.spanId),
           sampled: readHeader(Header.Sampled) === None ?
               currentId.sampled : readHeader(Header.Sampled).map(stringToBoolean),
-          flags: readHeader(Header.Flags) === None ? currentId.flags : readHeader(Header.Flags),
+          flags: readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0),
         });
         return new Some(idWithFlags);
       } else {
