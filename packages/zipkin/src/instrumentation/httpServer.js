@@ -83,6 +83,9 @@ class HttpServerInstrumentation {
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
     this.tracer.recordAnnotation(new Annotation.LocalAddr({host: this.host, port: this.port}));
 
+    if (id.flags !== 0 && id.flags != null) {
+      this.tracer.recordBinary('span.debug', id.flags.toString());
+    }
     return id;
   }
 
