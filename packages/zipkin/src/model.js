@@ -20,7 +20,7 @@ Endpoint.prototype.isEmpty = function isEmpty() {
 
 function Annotation(timestamp, value) {
   this.timestamp = timestamp;
-  this.value = value;
+  this.value = value.toString();
 }
 Annotation.prototype.toString = function toString() {
   return `Annotation(value="${this.value}")`;
@@ -78,7 +78,7 @@ Span.prototype.addAnnotation = function addAnnotation(timestamp, value) {
   this.annotations.push(new Annotation(timestamp, value));
 };
 Span.prototype.putTag = function putTag(key, value) {
-  this.tags[key] = value;
+  this.tags[key] = value.toString();
 };
 Span.prototype.setDebug = function setDebug(debug) {
   this.debug = debug;

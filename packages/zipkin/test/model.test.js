@@ -56,4 +56,26 @@ describe('Span setters', () => {
 
     expect(span.duration).to.equal(1);
   });
+
+  it('should convert annotation values to strings', () => {
+    const span = new Span(new TraceId({
+      traceId: new Some('a'),
+      spanId: 'b',
+    }));
+    span.addAnnotation(101239, 10);
+
+    expect(span.annotations[0].value).to.equal('10');
+  });
+
+  it('should convert tag values to strings', () => {
+    const span = new Span(new TraceId({
+      traceId: new Some('a'),
+      spanId: 'b',
+    }));
+    span.putTag('a', 10);
+    span.putTag('isThere', true);
+
+    expect(span.tags.a).to.equal('10');
+    expect(span.tags.isThere).to.equal('true');
+  });
 });
