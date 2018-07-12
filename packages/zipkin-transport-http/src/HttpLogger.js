@@ -60,7 +60,7 @@ class HttpLogger extends EventEmitter {
         headers: self.headers,
         timeout: self.timeout,
       }).then((response) => {
-        if (response.status !== 202) {
+        if (response.status !== 202 && response.status !== 200) {
           const err = 'Unexpected response while sending Zipkin data, status:' +
             `${response.status}, body: ${postBody}`;
 
