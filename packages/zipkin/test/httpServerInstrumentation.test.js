@@ -119,7 +119,6 @@ describe('Http Server Instrumentation', () => {
   });
 
   const samplingFlagCases = [
-        {headers: {}, hasAnnotations: null},
         {headers: {'X-B3-Flags': '0'}, hasAnnotations: null},
         {headers: {'X-B3-Flags': '1'}, hasAnnotations: true},
         {headers: {'X-B3-Sampled': '0'}, hasAnnotations: false},
