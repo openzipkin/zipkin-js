@@ -113,4 +113,38 @@ describe('HTTP transport - integration test', () => {
       });
     });
   });
+
+  it('should accept a 200 response from the server', function(done) {
+    const self = this;
+    const app = express();
+    app.use(bodyParser.json());
+    app.post('/api/v1/spans', (req, res) => {
+      res.status(200).json({});
+    });
+    this.server = app.listen(0, () => {
+      this.port = this.server.address().port;
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:${this.port}/api/v1/spans`,
+        headers: {Authorization: 'Token'},
+        jsonEncoder: JSON_V2
+      });
+
+      httpLogger.on('success', () => {
+        self.server.close(done);
+      });
+
+      const ctxImpl = new ExplicitContext();
+      const recorder = new BatchRecorder({logger: httpLogger});
+      const tracer = new Tracer({recorder, ctxImpl});
+
+      ctxImpl.scoped(() => {
+        tracer.recordAnnotation(new Annotation.ServerRecv());
+        tracer.recordServiceName('my-service');
+        tracer.recordRpc('GET');
+        tracer.recordBinary('http.url', 'http://example.com');
+        tracer.recordBinary('http.response_code', '200');
+        tracer.recordAnnotation(new Annotation.ServerSend());
+      });
+    });
+  });
 });

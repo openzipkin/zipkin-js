@@ -66,6 +66,8 @@ class HttpLogger extends EventEmitter {
 
           if (self.errorListenerSet) this.emit('error', new Error(err));
           else console.error(err);
+        } else {
+          this.emit('success', response);
         }
       }).catch((error) => {
         const err = `Error sending Zipkin data ${error}`;
