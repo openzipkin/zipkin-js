@@ -16,11 +16,13 @@ const normalizeParameter = function(param) {
 };
 
 export default class Request {
-  constructor(tracer) {
+  constructor(tracer, serviceName, remoteServiceName) {
     this.tracer = tracer;
     this.instrumentation =
       new Instrumentation.HttpClient({
-        tracer
+        tracer,
+        serviceName,
+        remoteServiceName,
       });
 
     /**
@@ -96,8 +98,7 @@ export default class Request {
     if (_.isFunction(cb)) {
       return instance;
     }
-    instance.catch(defer.reject);
-    instance.then(defer.resolve);
+    instance.then(defer.resolve, defer.reject);
 
     return defer.promise;
   }
