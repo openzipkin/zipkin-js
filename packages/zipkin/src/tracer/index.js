@@ -151,15 +151,20 @@ class Tracer {
   }
 
   recordAnnotation(annotation) {
+    let shouldRecord = this.id.flags === 1;
+
     this.id.sampled.ifPresent(sampled => {
       // sampled present is different than sampled == true
-      if (!sampled) return;
+      shouldRecord = sampled;
+    });
+
+    if (shouldRecord) {
       this.recorder.record(new Record({
         traceId: this.id,
         timestamp: now(this._startTimestamp, this._startTick),
         annotation
       }));
-    });
+    }
   }
 
   recordMessage(message) {

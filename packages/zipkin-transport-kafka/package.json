@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-kafka",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Transports Zipkin trace data via Kafka to the collector",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -15,12 +15,12 @@
   "dependencies": {
     "@types/kafka-node": "^2.0.3",
     "kafka-node": "^2.2.0",
-    "zipkin-encoder-thrift": "^0.12.0"
+    "zipkin-encoder-thrift": "^0.13.0"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
     "kafka-please": "^1.0.1",
     "mocha": "^3.2.0",
-    "zipkin": "^0.12.0"
+    "zipkin": "^0.13.0"
   }
 }

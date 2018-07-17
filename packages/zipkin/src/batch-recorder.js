@@ -99,6 +99,27 @@ class BatchRecorder {
           span.delegate.setShared(id.parentId !== id.spanId);
           span.delegate.setKind('CLIENT');
           break;
+        case 'ProducerStart':
+          span.delegate.setKind('PRODUCER');
+          break;
+        case 'ProducerStop':
+          span.finish();
+          span.delegate.setKind('PRODUCER');
+          break;
+        case 'ConsumerStart':
+          span.delegate.setKind('CONSUMER');
+          break;
+        case 'ConsumerStop':
+          span.finish();
+          span.delegate.setKind('CONSUMER');
+          break;
+        case 'MessageAddr':
+          span.delegate.setRemoteEndpoint(new Endpoint({
+            serviceName: rec.annotation.serviceName,
+            ipv4: rec.annotation.host && rec.annotation.host.ipv4(),
+            port: rec.annotation.port
+          }));
+          break;
         case 'LocalOperationStart':
           span.delegate.setName(rec.annotation.name);
           break;

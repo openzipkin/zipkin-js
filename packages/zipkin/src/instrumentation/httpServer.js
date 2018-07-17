@@ -1,7 +1,9 @@
-const Header = require('../httpHeaders');
-const {Some, None} = require('../option');
-const TraceId = require('../tracer/TraceId');
 const Annotation = require('../annotation');
+const Header = require('../httpHeaders');
+const InetAddress = require('../InetAddress');
+const TraceId = require('../tracer/TraceId');
+const parseRequestUrl = require('../parseUrl');
+const {Some, None} = require('../option');
 
 function stringToBoolean(str) {
   return str === '1' || str === 'true';
@@ -27,10 +29,12 @@ class HttpServerInstrumentation {
   constructor({
     tracer = requiredArg('tracer'),
     serviceName = tracer.localEndpoint.serviceName,
-    port = requiredArg('port')
+    host,
+    port = requiredArg('port'),
   }) {
     this.tracer = tracer;
     this.serviceName = serviceName;
+    this.host = host && new InetAddress(host);
     this.port = port;
   }
 
@@ -51,14 +55,15 @@ class HttpServerInstrumentation {
         });
       });
     } else {
-      if (readHeader(Header.Flags) !== None) {
+      if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
         const currentId = this.tracer.id;
         const idWithFlags = new TraceId({
-          traceId: currentId.traceId,
-          parentId: currentId.parentId,
-          spanId: currentId.spanId,
-          sampled: currentId.sampled,
-          flags: readHeader(Header.Flags)
+          traceId: new Some(currentId.traceId),
+          parentId: None,
+          spanId: new Some(currentId.spanId),
+          sampled: readHeader(Header.Sampled) === None ?
+              currentId.sampled : readHeader(Header.Sampled).map(stringToBoolean),
+          flags: readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0),
         });
         return new Some(idWithFlags);
       } else {
@@ -70,16 +75,14 @@ class HttpServerInstrumentation {
   recordRequest(method, requestUrl, readHeader) {
     this._createIdFromHeaders(readHeader).ifPresent(id => this.tracer.setId(id));
     const id = this.tracer.id;
+    const {path} = parseRequestUrl(requestUrl);
 
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
-    this.tracer.recordBinary('http.url', requestUrl);
+    this.tracer.recordBinary('http.path', path);
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
-    this.tracer.recordAnnotation(new Annotation.LocalAddr({port: this.port}));
+    this.tracer.recordAnnotation(new Annotation.LocalAddr({host: this.host, port: this.port}));
 
-    if (id.flags !== 0 && id.flags != null) {
-      this.tracer.recordBinary(Header.Flags, id.flags.toString());
-    }
     return id;
   }
 

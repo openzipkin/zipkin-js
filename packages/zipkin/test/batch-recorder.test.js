@@ -241,4 +241,36 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.remoteEndpoint.port).to.equal(7071);
     });
   });
+
+  it('should capture MessageAddr event', () => {
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.setId(new TraceId({
+        traceId: None,
+        parentId: new Some('a'),
+        spanId: 'c',
+        sampled: new Some(true)
+      }));
+      trace.recordServiceName('producer');
+      trace.recordRpc('send-msg');
+      trace.recordAnnotation(new Annotation.ProducerStart());
+      trace.recordAnnotation(new Annotation.MessageAddr({
+        serviceName: 'mq',
+        host: new InetAddress('127.0.0.2'),
+        port: 7072
+      }));
+      trace.recordAnnotation(new Annotation.ProducerStop());
+
+      const loggedSpan = logSpan.getCall(0).args[0];
+      expect(loggedSpan.remoteEndpoint.serviceName).to.equal('mq');
+      expect(loggedSpan.remoteEndpoint.ipv4).to.equal('127.0.0.2');
+      expect(loggedSpan.remoteEndpoint.port).to.equal(7072);
+    });
+  });
 });
