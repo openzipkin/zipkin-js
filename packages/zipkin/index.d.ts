@@ -36,6 +36,7 @@ declare namespace zipkin {
     scoped<V>(callback: () => V): V;
     local<V>(name: string, callback: () => V): V;
     createRootId(): TraceId;
+    createIdFromSamplingFlags(isSampled: option.IOption, isDebug: number): TraceId
     createChildId(): TraceId;
     letId<V>(traceId: TraceId, callback: () => V): V;
     setId(traceId: TraceId): void;
