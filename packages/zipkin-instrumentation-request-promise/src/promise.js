@@ -1,3 +1,24 @@
+/**
+
+ IMPORTANT:
+ ---------
+ The reason `request/request-promise` module breaks the tracing is due to
+ the promise losing or not restoring the original execution context.
+ You can't override the default Node promise callback execution behavior,
+ I won't get into the explanation it's a long story. So I created a promise
+ capable to restore the original context before callback execution.
+
+ I wasn't comfortable writing a promise myself from scratch so I found this library
+ https://github.com/then/promise/blob/master/src/core.js, then I redesign to create
+ this promise.js (I didn't violate the code license). The diff between these files will
+ be the code I added.
+
+ SIDE NOTE:
+ ---------
+ The other instrumented libraries like `zipkin-instrumention-redis` using the default promise may have the same context restoration issue.
+
+ */
+
 /* eslint-disable no-underscore-dangle, no-use-before-define, no-param-reassign*/
 import asap from 'asap/raw';
 
