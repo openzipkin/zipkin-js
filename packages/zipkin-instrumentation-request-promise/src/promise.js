@@ -15,7 +15,8 @@
 
  SIDE NOTE:
  ---------
- The other instrumented libraries like `zipkin-instrumention-redis` using the default promise may have the same context restoration issue.
+ The other instrumented libraries like `zipkin-instrumention-redis` using the default
+ promise may have the same context restoration issue.
 
  */
 
