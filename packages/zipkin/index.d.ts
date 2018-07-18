@@ -269,7 +269,7 @@ declare namespace zipkin {
   }
 
   class ConsoleRecorder implements Recorder {
-    constructor(args?: { logger?: Logger });
+    constructor(logger?: (message: string) => void);
     record: (rec: Record) => void;
   }
 
