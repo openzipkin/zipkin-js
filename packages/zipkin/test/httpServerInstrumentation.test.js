@@ -170,6 +170,9 @@ describe('Http Server Instrumentation', () => {
       const annotations = record.args.map(args => args[0]);
 
       if (hasAnnotations === true) {
+        annotations.forEach(ann => expect(ann.traceId.traceId).to.not.be.empty);
+        annotations.forEach(ann => expect(ann.traceId.spanId).to.not.be.empty);
+
         expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
         expect(annotations[0].annotation.serviceName).to.equal('service-a');
 
@@ -200,7 +203,7 @@ describe('Http Server Instrumentation', () => {
     });
   });
 
-  it('should properly report the URL with a query string', () => {
+  it('should properly report the path excluding the query string', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();

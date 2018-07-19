@@ -56,16 +56,10 @@ class HttpServerInstrumentation {
       });
     } else {
       if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
-        const currentId = this.tracer.id;
-        const idWithFlags = new TraceId({
-          traceId: new Some(currentId.traceId),
-          parentId: None,
-          spanId: new Some(currentId.spanId),
-          sampled: readHeader(Header.Sampled) === None ?
-              currentId.sampled : readHeader(Header.Sampled).map(stringToBoolean),
-          flags: readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0),
-        });
-        return new Some(idWithFlags);
+        const sampled = readHeader(Header.Sampled) === None ?
+              None : readHeader(Header.Sampled).map(stringToBoolean);
+        const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
+        return new Some(this.tracer.createRootId(sampled, flags === 1));
       } else {
         return new Some(this.tracer.createRootId());
       }
