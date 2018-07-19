@@ -51,7 +51,7 @@ class Tracer {
     return this._ctxImpl.letContext(id, callback);
   }
 
-  createRootId() {
+  createRootId(isSampled = None, isDebug = false) {
     const rootSpanId = randomTraceId();
     const traceId = this.traceId128Bit
       ? new Some(randomTraceId() + rootSpanId)
@@ -60,29 +60,14 @@ class Tracer {
       traceId,
       parentId: None,
       spanId: rootSpanId,
-      sampled: None,
-      flags: 0
-    });
-    id._sampled = this.sampler.shouldSample(id);
-    return id;
-  }
-
-  createIdFromSamplingFlags(isSampled, isDebug) {
-    const rootSpanId = randomTraceId();
-    const traceId = this.traceId128Bit
-            ? new Some(randomTraceId() + rootSpanId)
-            : None;
-    const id = new TraceId({
-      traceId,
-      parentId: None,
-      spanId: rootSpanId,
       sampled: isSampled,
-      flags: isDebug
+      flags: isDebug ? 1 : 0
     });
 
     if (isSampled === None) {
       id._sampled = this.sampler.shouldSample(id);
     }
+
     return id;
   }
 
