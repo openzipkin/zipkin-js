@@ -56,4 +56,36 @@ describe('Span setters', () => {
 
     expect(span.duration).to.equal(1);
   });
+
+  const annotationTypesCases = [[10, '10'], [true, 'true'], [{}], [[]]];
+
+  annotationTypesCases.forEach(([annotationValue, expectedValue]) => {
+    it(`should convert ${typeof annotationValue} annotation values to strings`, () => {
+      const span = new Span(new TraceId({
+        traceId: new Some('a'),
+        spanId: 'b',
+      }));
+      span.addAnnotation(101239, annotationValue);
+
+      if (expectedValue !== undefined) {
+        expect(span.annotations[0].value).to.equal(expectedValue);
+      }
+    });
+  });
+
+  const tagTypesCases = [[10, '10'], [true, 'true'], [{}], [[]]];
+
+  tagTypesCases.forEach(([tagValue, expectedValue]) => {
+    it(`should convert ${typeof tagValue} tag values to strings`, () => {
+      const span = new Span(new TraceId({
+        traceId: new Some('a'),
+        spanId: 'b',
+      }));
+      span.putTag('c', tagValue);
+
+      if (expectedValue !== undefined) {
+        expect(span.tags.c).to.equal(expectedValue);
+      }
+    });
+  });
 });
