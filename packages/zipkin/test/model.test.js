@@ -57,25 +57,35 @@ describe('Span setters', () => {
     expect(span.duration).to.equal(1);
   });
 
-  it('should convert annotation values to strings', () => {
-    const span = new Span(new TraceId({
-      traceId: new Some('a'),
-      spanId: 'b',
-    }));
-    span.addAnnotation(101239, 10);
+  const annotationTypesCases = [[10, '10'], [true, 'true'], [{}], [[]]];
 
-    expect(span.annotations[0].value).to.equal('10');
+  annotationTypesCases.forEach(([annotationValue, expectedValue]) => {
+    it(`should convert ${typeof annotationValue} annotation values to strings`, () => {
+      const span = new Span(new TraceId({
+        traceId: new Some('a'),
+        spanId: 'b',
+      }));
+      span.addAnnotation(101239, annotationValue);
+
+      if (expectedValue !== undefined) {
+        expect(span.annotations[0].value).to.equal(expectedValue);
+      }
+    });
   });
 
-  it('should convert tag values to strings', () => {
-    const span = new Span(new TraceId({
-      traceId: new Some('a'),
-      spanId: 'b',
-    }));
-    span.putTag('a', 10);
-    span.putTag('isThere', true);
+  const tagTypesCases = [[10, '10'], [true, 'true'], [{}], [[]]];
 
-    expect(span.tags.a).to.equal('10');
-    expect(span.tags.isThere).to.equal('true');
+  tagTypesCases.forEach(([tagValue, expectedValue]) => {
+    it(`should convert ${typeof tagValue} tag values to strings`, () => {
+      const span = new Span(new TraceId({
+        traceId: new Some('a'),
+        spanId: 'b',
+      }));
+      span.putTag('c', tagValue);
+
+      if (expectedValue !== undefined) {
+        expect(span.tags.c).to.equal(expectedValue);
+      }
+    });
   });
 });
