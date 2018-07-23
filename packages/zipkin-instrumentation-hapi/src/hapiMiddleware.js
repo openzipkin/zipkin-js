@@ -14,11 +14,10 @@ function headerOption(headers, header) {
   }
 }
 
-exports.register = (server, {tracer, serviceName, port = 0}, next) => {
+exports.register = (server, {tracer, serviceName, port = 0}) => {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
   if (tracer == null) {
-    next(new Error('No tracer specified'));
-    return;
+    throw new Error('No tracer specified');
   }
 
   server.ext('onRequest', (request, reply) => {
@@ -33,9 +32,8 @@ exports.register = (server, {tracer, serviceName, port = 0}, next) => {
       plugins.zipkin = {
         traceId: id
       };
-
-      return reply.continue();
     });
+    return reply.continue;
   });
 
   server.ext('onPreResponse', (request, reply) => {
@@ -46,10 +44,9 @@ exports.register = (server, {tracer, serviceName, port = 0}, next) => {
       instrumentation.recordResponse(request.plugins.zipkin.traceId, statusCode);
     });
 
-    return reply.continue();
+    return reply.continue;
   });
-
-  next();
 };
 
-exports.register.attributes = {pkg};
+exports.name = 'zipkin-instrumentation-hapi';
+exports.pkg = pkg;
