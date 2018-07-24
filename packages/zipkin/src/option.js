@@ -97,6 +97,7 @@ function fromNullable(nullable) {
 
 module.exports.Some = Some;
 module.exports.None = None;
+module.exports.isOptional = isOptional;
 module.exports.verifyIsOptional = verifyIsOptional;
 module.exports.verifyIsNotOptional = verifyIsNotOptional;
 module.exports.fromNullable = fromNullable;
