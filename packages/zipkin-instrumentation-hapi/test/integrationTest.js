@@ -42,11 +42,11 @@ describe('hapi middleware - integration test', () => {
           expect(annotations[0].annotation.serviceName).to.equal('service-a');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal("POST");
+          expect(annotations[1].annotation.name).to.equal('POST');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal("/foo");
+          expect(annotations[2].annotation.value).to.equal('/foo');
 
           expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
 
@@ -104,9 +104,7 @@ describe('hapi middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const server = new Hapi.Server();
-      const method = 'GET';
       const path = '/foo';
-      const url = `${path}?abc=123`;
       server.route({
         method: 'GET',
         path: '/foo',
