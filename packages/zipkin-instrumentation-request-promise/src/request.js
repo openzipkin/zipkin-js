@@ -15,7 +15,11 @@ const normalizeParameter = function(param) {
   return options;
 };
 
-export default class Request {
+/**
+ * Request class
+ * @type {Request}
+ */
+const Request = class {
   constructor(tracer, remoteServiceName) {
     this.tracer = tracer;
     this.instrumentation =
@@ -101,7 +105,7 @@ export default class Request {
 
     return defer.promise;
   }
-}
+};
 
 /**
  * A wrapper function to confirm to request library interface
@@ -114,4 +118,5 @@ const wrapRequest = (tracer, remoteServiceName) => function(params, callback) {
   return instance.send(params, callback);
 };
 
-export {wrapRequest};
+export {wrapRequest, Request};
+export default Request;
