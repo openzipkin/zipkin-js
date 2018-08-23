@@ -35,14 +35,14 @@ declare namespace zipkin {
 
     scoped<V>(callback: () => V): V;
     local<V>(name: string, callback: () => V): V;
-    createRootId(): TraceId;
+    createRootId(isSampled?: option.IOption<boolean>, isDebug?: boolean): TraceId;
     createChildId(): TraceId;
     letId<V>(traceId: TraceId, callback: () => V): V;
     setId(traceId: TraceId): void;
     recordAnnotation(annotation: IAnnotation): void;
-    recordMessage(message: any): void;
-    recordServiceName(serviceName: any): void;
-    recordRpc(name: any): void;
+    recordMessage(message: string): void;
+    recordServiceName(serviceName: string): void;
+    recordRpc(name: string): void;
     recordClientAddr(inetAddress: InetAddress): void;
     recordServerAddr(inetAddress: InetAddress): void;
     recordLocalAddr(inetAddress: InetAddress): void;
@@ -51,12 +51,6 @@ declare namespace zipkin {
   }
 
   class TraceId {
-    _traceId:  option.IOption<string>;
-    _parentId: option.IOption<string>;
-    _spanId:   string;
-    _sampled:  option.IOption<boolean>;
-    _flags:    number;
-
     readonly traceId: string;
     readonly parentId: string;
     readonly spanId: string;
@@ -69,7 +63,7 @@ declare namespace zipkin {
       traceId?:  option.IOption<string>,
       parentId?: option.IOption<string>,
       spanId?:   string,
-      sampled?:  option.IOption<string>,
+      sampled?:  option.IOption<boolean>,
       flags?:    number
     });
     isDebug(): boolean;
@@ -77,6 +71,7 @@ declare namespace zipkin {
   }
 
   const createNoopTracer: () => void;
+  const randomTraceId: () => string;
 
   namespace option {
     interface IOption<T> {
@@ -115,6 +110,10 @@ declare namespace zipkin {
       equals: (other: IOption<T>) => boolean;
       toString: () => string;
     }
+
+    function isOptional(data: any): boolean;
+    function verifyIsOptional(data: any): void; // Throw error is not a valid option
+    function fromNullable<V>(nullable: V): IOption<V>;
   }
 
   namespace model {
@@ -187,6 +186,14 @@ declare namespace zipkin {
       readonly annotationType: string;
     }
     class ServerRecv implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class LocalOperationStart implements IAnnotation {
+      constructor(name: string);
+      readonly annotationType: string;
+      name: string;
+    }
+    class LocalOperationStop implements IAnnotation {
       readonly annotationType: string;
     }
 

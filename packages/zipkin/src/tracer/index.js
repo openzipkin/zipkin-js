@@ -51,7 +51,7 @@ class Tracer {
     return this._ctxImpl.letContext(id, callback);
   }
 
-  createRootId() {
+  createRootId(isSampled = None, isDebug = false) {
     const rootSpanId = randomTraceId();
     const traceId = this.traceId128Bit
       ? new Some(randomTraceId() + rootSpanId)
@@ -60,10 +60,14 @@ class Tracer {
       traceId,
       parentId: None,
       spanId: rootSpanId,
-      sampled: None,
-      flags: 0
+      sampled: isSampled,
+      flags: isDebug ? 1 : 0
     });
-    id._sampled = this.sampler.shouldSample(id);
+
+    if (isSampled === None) {
+      id._sampled = this.sampler.shouldSample(id);
+    }
+
     return id;
   }
 
@@ -151,20 +155,15 @@ class Tracer {
   }
 
   recordAnnotation(annotation) {
-    let shouldRecord = this.id.flags === 1;
-
     this.id.sampled.ifPresent(sampled => {
-      // sampled present is different than sampled == true
-      shouldRecord = sampled;
-    });
+      if (!sampled) return;
 
-    if (shouldRecord) {
       this.recorder.record(new Record({
         traceId: this.id,
         timestamp: now(this._startTimestamp, this._startTick),
         annotation
       }));
-    }
+    });
   }
 
   recordMessage(message) {

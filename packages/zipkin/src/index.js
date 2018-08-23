@@ -3,6 +3,7 @@ const option = require('./option');
 const Annotation = require('./annotation');
 const Tracer = require('./tracer');
 const createNoopTracer = require('./tracer/noop');
+const randomTraceId = require('./tracer/randomTraceId');
 const TraceId = require('./tracer/TraceId');
 const sampler = require('./tracer/sampler');
 
@@ -24,6 +25,7 @@ const parseRequestUrl = require('./parseUrl');
 module.exports = {
   Tracer,
   createNoopTracer,
+  randomTraceId,
   TraceId,
   option,
   Annotation,

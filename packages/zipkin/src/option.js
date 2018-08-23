@@ -81,6 +81,12 @@ function verifyIsOptional(data) {
   }
 }
 
+function verifyIsNotOptional(data) {
+  if (data != null && isOptional(data)) {
+    throw new Error(`Error: data (${data}) is an Option!`);
+  }
+}
+
 function fromNullable(nullable) {
   if (nullable != null) {
     return new Some(nullable);
@@ -91,5 +97,7 @@ function fromNullable(nullable) {
 
 module.exports.Some = Some;
 module.exports.None = None;
+module.exports.isOptional = isOptional;
 module.exports.verifyIsOptional = verifyIsOptional;
+module.exports.verifyIsNotOptional = verifyIsNotOptional;
 module.exports.fromNullable = fromNullable;
