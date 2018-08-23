@@ -108,7 +108,7 @@ const Request = class {
 };
 
 /**
- * A wrapper function to confirm to request library interface
+ * A wrapper function to conform to zipkin-instrumentation-request interface
  * @param tracer
  * @param serviceName
  * @returns Class
