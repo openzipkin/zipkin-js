@@ -4,10 +4,9 @@ Adds Zipkin tracing to the [request](https://www.npmjs.com/package/request) and 
 
 ## Usage
 
-```
-javascript
+```javascript
 const {Tracer, ExplicitContext, ConsoleRecorder} = require('zipkin');
-const ZipkinRequest = require('zipkin-instrumentation-request-promise');
+const ZipkinRequest = require('zipkin-instrumentation-request-promise').default;
 
 const ctxImpl = new ExplicitContext();
 const recorder = new ConsoleRecorder();

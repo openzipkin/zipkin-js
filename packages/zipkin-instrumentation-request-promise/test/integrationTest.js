@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import Request from '../src/request';
 
 describe('request instrumentation - integration test', () => {
-  const serviceName = 'weather-app';
+  const localServiceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
   let api;
@@ -28,7 +28,7 @@ describe('request instrumentation - integration test', () => {
     record = sinon.spy();
     recorder = {record};
     ctxImpl = new CLSContext(`zipkin-test-${uuid()}`);
-    tracer = new Tracer({recorder, ctxImpl});
+    tracer = new Tracer({recorder, ctxImpl, localServiceName});
   });
 
   it('should add headers to requests', done => {
@@ -36,7 +36,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = new Request(tracer, serviceName, remoteServiceName);
+        const zipkinRequest = new Request(tracer, remoteServiceName);
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest.get(url, () => {
@@ -53,8 +53,8 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
@@ -75,7 +75,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = new Request(tracer, serviceName, remoteServiceName);
+        const zipkinRequest = new Request(tracer, remoteServiceName);
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest.get(url).then(() => {
@@ -92,8 +92,8 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
@@ -114,7 +114,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = new Request(tracer, serviceName, remoteServiceName);
+        const zipkinRequest = new Request(tracer, remoteServiceName);
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest.get({url}, () => {
@@ -131,8 +131,8 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
@@ -153,7 +153,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = new Request(tracer, serviceName, remoteServiceName);
+        const zipkinRequest = new Request(tracer, remoteServiceName);
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest.get({url}).then(() => {
@@ -170,8 +170,8 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
@@ -193,7 +193,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = new Request(tracer, serviceName, remoteServiceName);
+        const zipkinRequest = new Request(tracer, remoteServiceName);
         const urlPath = '/doesNotExist';
         const url = `http://${apiHost}:${apiPort}${urlPath}`;
         zipkinRequest.get({url, timeout: 100}).catch(() => {
@@ -210,8 +210,8 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 
@@ -235,7 +235,7 @@ describe('request instrumentation - integration test', () => {
   it('should report when service does not exist', done => {
     tracer.scoped(() => {
       api.listen(0, () => {
-        const zipkinRequest = new Request(tracer, serviceName, remoteServiceName);
+        const zipkinRequest = new Request(tracer, remoteServiceName);
         const host = 'bad.invalid.url';
         const url = `http://${host}`;
         zipkinRequest.get({url, timeout: 100}).catch(() => {
@@ -252,8 +252,8 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[1].annotation.name).to.equal('GET');
 
           expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.url');
-          expect(annotations[2].annotation.value).to.equal(url);
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal('/');
 
           expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
 

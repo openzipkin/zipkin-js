@@ -16,17 +16,16 @@ const normalizeParameter = function(param) {
 };
 
 export default class Request {
-  constructor(tracer, serviceName, remoteServiceName) {
+  constructor(tracer, remoteServiceName) {
     this.tracer = tracer;
     this.instrumentation =
       new Instrumentation.HttpClient({
         tracer,
-        serviceName,
         remoteServiceName,
       });
 
     /**
-     * This section is very important, it guarantee correct trace duration
+     * This section is very important, it guarantees correct trace duration
      */
     this.httpRequest = request.defaults((options, callback) => tracer.scoped(() => {
       const method = options.method || 'GET';
@@ -103,3 +102,16 @@ export default class Request {
     return defer.promise;
   }
 }
+
+/**
+ * A wrapper function to confirm to request library interface
+ * @param tracer
+ * @param serviceName
+ * @returns Class
+ */
+const wrapRequest = (tracer, remoteServiceName) => function(params, callback) {
+  const instance = new Request(tracer, remoteServiceName);
+  return instance.send(params, callback);
+};
+
+export {wrapRequest};
