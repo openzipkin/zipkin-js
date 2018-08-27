@@ -25,3 +25,7 @@ This package is not suitable if your code inside the context uses promises. The 
 
 ## A note on the workings of CLS context
 The package will create a namespace called 'zipkin' by default, if it does not exist yet. In this namespace the code sets the context with the key 'zipkin'. This does not mean that the context is overwritten at every request. The namespace is tied to the call-chain. Data stored within that namespace is unique to that request and namespace. For reference see: [here](https://speakerdeck.com/fredkschott/conquering-asynchronous-context-with-cls?slide=27).
+
+## Troubleshooting
+
+If you are using the `Express` framework with `CLSContext`, the `body-parser` middleware may interfere and lose the context. To prevent that, make sure that the `body-parser` middleware is registered before `zipkin` in the middleware chain. If you are not explicitly registering `body-parser`, please do so by adding `app.use(bodyParser.json());` above the Zipkin middleware registration line.
