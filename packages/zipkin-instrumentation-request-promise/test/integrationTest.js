@@ -12,8 +12,20 @@ describe('request instrumentation - integration test', () => {
   let api;
   before(() => {
     api = express();
-    api.use('/weather', (req, res) => {
+    api.get('/weather', (req, res) => {
       res.status(202).json({
+        traceId: req.header('X-B3-TraceId'),
+        spanId: req.header('X-B3-SpanId')
+      });
+    });
+    api.get('/weather/securedTown', (req, res) => {
+      res.status(400).json({
+        traceId: req.header('X-B3-TraceId'),
+        spanId: req.header('X-B3-SpanId')
+      });
+    });
+    api.get('/weather/bagCity', (req, res) => {
+      res.status(500).json({
         traceId: req.header('X-B3-TraceId'),
         spanId: req.header('X-B3-SpanId')
       });
@@ -232,13 +244,14 @@ describe('request instrumentation - integration test', () => {
   });
 
 
-  it('should report when service does not exist', done => {
+  it('should report when service does not exist', function(done) {
+    this.timeout(300000); // Wait long than request timeout
     tracer.scoped(() => {
       api.listen(0, () => {
         const zipkinRequest = new Request(tracer, remoteServiceName);
         const host = 'bad.invalid.url';
         const url = `http://${host}`;
-        zipkinRequest.get({url, timeout: 100}).catch(() => {
+        zipkinRequest.get({url, timeout: 200}).catch(() => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
@@ -263,6 +276,90 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.key).to.equal('error');
           expect(annotations[5].annotation.value)
             .to.contain('Error: getaddrinfo ENOTFOUND bad.invalid.url bad.invalid.url:80');
+
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          done();
+        });
+      });
+    });
+  });
+
+  it('should report when service returns 400', done => {
+    tracer.scoped(() => {
+      const apiServer = api.listen(0, () => {
+        const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
+        const zipkinRequest = new Request(tracer, remoteServiceName);
+        const urlPath = '/weather/securedTown';
+        const url = `http://${apiHost}:${apiPort}${urlPath}`;
+        zipkinRequest.get({url, timeout: 100}).catch(() => {
+          const annotations = record.args.map(args => args[0]);
+          const initialTraceId = annotations[0].traceId.traceId;
+          annotations.forEach(ann => expect(ann.traceId.traceId)
+            .to.equal(initialTraceId).and
+            .to.have.lengthOf(16));
+
+          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+
+          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
+          expect(annotations[1].annotation.name).to.equal('GET');
+
+          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
+
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('400');
+
+          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          done();
+        });
+      });
+    });
+  });
+
+  it('should report when service returns 500', done => {
+    tracer.scoped(() => {
+      const apiServer = api.listen(0, () => {
+        const apiPort = apiServer.address().port;
+        const apiHost = '127.0.0.1';
+        const zipkinRequest = new Request(tracer, remoteServiceName);
+        const urlPath = '/weather/bagCity';
+        const url = `http://${apiHost}:${apiPort}${urlPath}`;
+        zipkinRequest.get({url, timeout: 100}).catch(() => {
+          const annotations = record.args.map(args => args[0]);
+          const initialTraceId = annotations[0].traceId.traceId;
+          annotations.forEach(ann => expect(ann.traceId.traceId)
+            .to.equal(initialTraceId).and
+            .to.have.lengthOf(16));
+
+          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+
+          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
+          expect(annotations[1].annotation.name).to.equal('GET');
+
+          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(urlPath);
+
+          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
+
+          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
+
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('500');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
