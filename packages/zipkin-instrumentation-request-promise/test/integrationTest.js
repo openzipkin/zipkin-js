@@ -245,11 +245,11 @@ describe('request instrumentation - integration test', () => {
 
 
   it('should report when service does not exist', function(done) {
-    this.timeout(300000); // Wait long than request timeout
+    this.timeout(1000); // Wait long than request timeout
     tracer.scoped(() => {
       api.listen(0, () => {
         const zipkinRequest = new Request(tracer, remoteServiceName);
-        const host = 'bad.invalid.url';
+        const host = 'localhost:12345';
         const url = `http://${host}`;
         zipkinRequest.get({url, timeout: 200}).catch(() => {
           const annotations = record.args.map(args => args[0]);
@@ -275,7 +275,7 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[5].annotation.key).to.equal('error');
           expect(annotations[5].annotation.value)
-            .to.contain('Error: getaddrinfo ENOTFOUND bad.invalid.url bad.invalid.url:80');
+            .to.contain('Error: connect ECONNREFUSED 127.0.0.1:12345');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
