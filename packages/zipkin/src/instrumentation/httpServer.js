@@ -85,6 +85,8 @@ class HttpServerInstrumentation {
     this.tracer.recordBinary('http.status_code', statusCode.toString());
     if (error) {
       this.tracer.recordBinary('error', error.toString());
+    } else if (statusCode < 200 || statusCode > 399) {
+      this.tracer.recordBinary('error', statusCode.toString());
     }
     this.tracer.recordAnnotation(new Annotation.ServerSend());
   }

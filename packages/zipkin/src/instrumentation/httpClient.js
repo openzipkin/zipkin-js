@@ -39,6 +39,9 @@ class HttpClientInstrumentation {
   recordResponse(traceId, statusCode) {
     this.tracer.setId(traceId);
     this.tracer.recordBinary('http.status_code', statusCode.toString());
+    if (statusCode < 200 || statusCode > 399) {
+      this.tracer.recordBinary('error', statusCode.toString());
+    }
     this.tracer.recordAnnotation(new Annotation.ClientRecv());
   }
 
