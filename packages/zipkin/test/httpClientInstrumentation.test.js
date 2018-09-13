@@ -75,4 +75,32 @@ describe('Http Client Instrumentation', () => {
     expect(annotations[5].annotation.key).to.equal('error');
     expect(annotations[5].annotation.value).to.equal('Error: nasty error');
   });
+
+  [400, 500].forEach((statusCode) => {
+    it('should record an error on status code >399', () => {
+      const record = sinon.spy();
+      const recorder = {record};
+      const ctxImpl = new ExplicitContext();
+      const tracer = new Tracer({ctxImpl, recorder});
+      const instrumentation = new HttpClient({
+        tracer,
+        serviceName: 'weather-app',
+        remoteServiceName: 'weather-forecast-service'});
+
+      const url = 'http://127.0.0.1:80/weather?index=10&count=300';
+      tracer.scoped(() => {
+        instrumentation.recordRequest({}, url, 'GET');
+        instrumentation.recordResponse(tracer.id, statusCode);
+      });
+      const annotations = record.args.map(args => args[0]);
+      const initialTraceId = annotations[0].traceId.traceId;
+      annotations.forEach(ann => expect(ann.traceId.traceId)
+        .to.equal(initialTraceId).and
+        .to.have.lengthOf(16));
+
+      expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[6].annotation.key).to.equal('error');
+      expect(annotations[6].annotation.value).to.equal(statusCode.toString());
+    });
+  });
 });
