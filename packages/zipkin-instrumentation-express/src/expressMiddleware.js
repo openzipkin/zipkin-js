@@ -32,9 +32,7 @@ module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
 
       res.on('finish', () => {
         tracer.scoped(() => {
-          const error = res.statusCode >= 400 ? res.statusCode : null;
-
-          instrumentation.recordResponse(id, res.statusCode, error);
+          instrumentation.recordResponse(id, res.statusCode);
         });
       });
 
