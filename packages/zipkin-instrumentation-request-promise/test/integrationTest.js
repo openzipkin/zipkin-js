@@ -233,7 +233,6 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.key).to.equal('http.status_code');
           expect(annotations[5].annotation.value).to.equal('404');
 
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[6].annotation.key).to.equal('error');
           expect(annotations[6].annotation.value).to.equal('404');
 
@@ -323,9 +322,12 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.key).to.equal('http.status_code');
           expect(annotations[5].annotation.value).to.equal('400');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.key).to.equal('error');
+          expect(annotations[6].annotation.value).to.equal('400');
 
-          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+
+          expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
           done();
         });
       });
@@ -365,9 +367,12 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.key).to.equal('http.status_code');
           expect(annotations[5].annotation.value).to.equal('500');
 
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+          expect(annotations[6].annotation.key).to.equal('error');
+          expect(annotations[6].annotation.value).to.equal('500');
 
-          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+          expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
+
+          expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
           done();
         });
       });
