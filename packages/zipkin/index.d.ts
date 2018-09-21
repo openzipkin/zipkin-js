@@ -287,8 +287,17 @@ declare namespace zipkin {
     letContext<V>(ctx: TraceId, callback: () => V): V;
   }
 
+  interface RequestZipkinHeaders<H> {
+    headers: H & {
+      TraceId: string;
+      SpanId: string;
+      ParentSpanId?: string;
+      Sampled?: '1' | '0';
+    };
+  }
+
   namespace Request {
-    function addZipkinHeaders(req: {headers: any}, traceId: TraceId): void;
+    function addZipkinHeaders<T, H>(req: T & { headers: any }, traceId: TraceId): T & RequestZipkinHeaders<H>;
   }
 
   /** The Logger (or transport) is what the Recorder uses to send spans to Zipkin.
