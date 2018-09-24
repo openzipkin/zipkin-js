@@ -1,5 +1,5 @@
-import {Tracer} from "zipkin"
-import {CoreOptions, Request, RequestAPI} from "request"
+import {CoreOptions, Request, RequestAPI} from 'request';
+import {Tracer} from 'zipkin';
 
 /**
  * Wraps the request (or request-promise) api with HttpClient instrumentation
@@ -22,4 +22,4 @@ declare function wrapRequest<TRequest extends Request, TOptions extends CoreOpti
   options: {tracer: Tracer, remoteServiceName?: string}
 ): RequestAPI<TRequest, TOptions, TUriUrlOptions>;
 
-export = wrapRequest
+export = wrapRequest;

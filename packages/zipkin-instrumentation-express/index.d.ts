@@ -1,5 +1,5 @@
-import {Tracer} from "zipkin"
-import {Handler} from "express"
+import {Handler} from 'express';
+import {Tracer} from 'zipkin';
 
 /**
  * When a request comes in, creates ServerRecv annotation and then passes
@@ -19,4 +19,4 @@ export declare function expressMiddleware(
 export declare function wrapExpressHttpProxy(
   proxy: (host: string, options?: any) => Handler,
   options: {tracer: Tracer, remoteServiceName?: string}
-): (host: string, options?: any) => Handler
+): (host: string, options?: any) => Handler;
