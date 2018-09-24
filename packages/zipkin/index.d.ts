@@ -17,12 +17,12 @@ declare namespace zipkin {
   namespace sampler {
     class Sampler {
       constructor(evaluator: (traceId: TraceId) => boolean);
-      shouldSample(traceId: TraceId): option.IOption<boolean>
+      shouldSample(traceId: TraceId): option.IOption<boolean>;
     }
 
     class CountingSampler implements Sampler {
       constructor(sampleRate?: number);
-      shouldSample(traceId: TraceId): option.IOption<boolean>
+      shouldSample(traceId: TraceId): option.IOption<boolean>;
     }
 
     const neverSample: (traceId: TraceId) => boolean;
@@ -60,13 +60,13 @@ declare namespace zipkin {
     isDebug(): boolean;
 
     constructor(args?: {
-      traceId?:  option.IOption<string>,
+      traceId?: option.IOption<string>,
       parentId?: option.IOption<string>,
-      spanId?:   string,
-      sampled?:  option.IOption<boolean>,
-      flags?:    number
+      spanId?: string,
+      sampled?: option.IOption<boolean>,
+      flags?: number
     });
-    isDebug(): boolean;
+
     toString(): string;
   }
 
@@ -75,32 +75,32 @@ declare namespace zipkin {
 
   namespace option {
     interface IOption<T> {
-      type: "Some" | "None";
+      type: 'Some' | 'None';
       present: boolean;
 
-      map: <V>(fn: (value: T) => V) => IOption<V>;
-      ifPresent: <V>(fn: (value: T) => V) => IOption<V>;
-      flatMap: <V>(fn: (value: T) => V) => IOption<V>;
-      getOrElse: <V>(fnOrValue: (() => V) | V) => T;
-      equals: (other: IOption<T>) => boolean;
-      toString: () => string;
+      map<V>(fn: (value: T) => V): IOption<V>;
+      ifPresent<V>(fn: (value: T) => V): IOption<V>;
+      flatMap<V>(fn: (value: T) => V): IOption<V>;
+      getOrElse<V>(fnOrValue: (() => V) | V): T;
+      equals(other: IOption<T>): boolean;
+      toString(): string;
     }
 
     interface INone extends IOption<any> {
-      type: "None";
+      type: 'None';
       present: false;
 
-      map: <V>(fn: (value: any) => V) => INone;
-      flatMap: <V>(fn: (value: any) => V) => INone;
-      equals: (other: IOption<any>) => boolean;
-      toString: () => string;
+      map<V>(fn: (value: any) => V): INone;
+      flatMap<V>(fn: (value: any) => V): INone;
+      equals(other: IOption<any>): boolean;
+      toString(): string;
     }
 
     const None: INone;
 
     class Some<T> implements IOption<T> {
       constructor(value: T);
-      type: "Some" | "None";
+      type: 'Some' | 'None';
       present: true;
 
       map: <V>(fn: (value: T) => V) => IOption<V>;
@@ -133,19 +133,19 @@ declare namespace zipkin {
     }
 
     class Span {
-      readonly traceId:        string;
-      readonly parentId?:      string;
-      readonly id:             string;
-      readonly name?:           string;
-      readonly kind?:           string;
-      readonly timestamp?:      number;
-      readonly duration?:       number;
-      readonly localEndpoint?:  Endpoint;
+      readonly traceId: string;
+      readonly parentId?: string;
+      readonly id: string;
+      readonly name?: string;
+      readonly kind?: string;
+      readonly timestamp?: number;
+      readonly duration?: number;
+      readonly localEndpoint?: Endpoint;
       readonly remoteEndpoint?: Endpoint;
-      readonly annotations:    Annotation[];
-      readonly tags:           { [ key: string ]: string };
-      readonly debug:          boolean;
-      readonly shared:         boolean;
+      readonly annotations: Annotation[];
+      readonly tags: { [ key: string ]: string };
+      readonly debug: boolean;
+      readonly shared: boolean;
 
       constructor(traceId: TraceId)
       setName(name: string): void;
@@ -163,7 +163,7 @@ declare namespace zipkin {
 
   /** Used by the HttpLogger transport to convert spans to JSON */
   interface JsonEncoder {
-    encode: (span: model.Span) => string;
+    encode(span: model.Span): string;
   }
 
   namespace jsonEncoder {
@@ -172,7 +172,7 @@ declare namespace zipkin {
   }
 
   interface IAnnotation {
-    readonly annotationType: string
+    readonly annotationType: string;
   }
 
   namespace Annotation {
@@ -223,7 +223,7 @@ declare namespace zipkin {
     class ServerAddr implements IAnnotation {
       constructor(args: { serviceName: string, host?: InetAddress, port?: number });
       readonly annotationType: string;
-      serviceName: string
+      serviceName: string;
       host: InetAddress;
       port: number;
     }
@@ -262,12 +262,12 @@ declare namespace zipkin {
   interface Record {
     traceId: TraceId;
     timestamp: number;
-    annotation: IAnnotation
+    annotation: IAnnotation;
   }
 
   /** The Tracer sends each annotation to a Recorder implementation */
   interface Recorder {
-    record: (rec: Record) => void;
+    record(rec: Record): void;
   }
 
   class BatchRecorder implements Recorder {
