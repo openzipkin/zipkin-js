@@ -289,10 +289,10 @@ declare namespace zipkin {
 
   type RequestZipkinHeaders<T = any, H = any> = T & {
     headers: H & {
-      ["X-B3-TraceId"]: string;
-      ["X-B3-SpanId"]: string;
-      ["X-B3-ParentSpanId"]?: string;
-      ["X-B3-Sampled"]?: '1' | '0';
+      ['X-B3-TraceId']: string;
+      ['X-B3-SpanId']: string;
+      ['X-B3-ParentSpanId']?: string;
+      ['X-B3-Sampled']?: '1' | '0';
     };
   };
 
