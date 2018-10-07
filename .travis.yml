@@ -1,11 +1,32 @@
 language: node_js
-node_js:
-  - 8
-  - 6
-  - 4
+
+matrix:
+  include:
+    - node_js: 4
+      env:
+        - CXX=clang-3.6
+        - KAFKA_PLEASE_LOG=verbose
+        - INSTALL_FLAGS="--ignore-engines"
+
+    - node_js: 6
+      env:
+        - CXX=clang-3.6
+        - KAFKA_PLEASE_LOG=verbose
+        - INSTALL_FLAGS=""
+
+    - node_js: 8
+      env:
+        - CXX=clang-3.6
+        - KAFKA_PLEASE_LOG=verbose
+        - INSTALL_FLAGS=""
+
 before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 0.27.5
   - export PATH="$HOME/.yarn/bin:$PATH"
+
+install:
+  - yarn install ${INSTALL_FLAGS};
+
 script:
   - yarn lint
   - yarn test
@@ -16,8 +37,7 @@ services:
   - postgresql
 
 compiler: clang-3.6
-env:
-  - CXX=clang-3.6 KAFKA_PLEASE_LOG=verbose
+
 addons:
   apt:
     sources:
