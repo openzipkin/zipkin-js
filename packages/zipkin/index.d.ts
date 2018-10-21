@@ -239,7 +239,7 @@ declare namespace zipkin {
       constructor(key: string, value: boolean | string | number);
       readonly annotationType: string;
       key: string;
-      value: string;
+      value: boolean | string | number;
     }
   }
 
@@ -320,7 +320,7 @@ declare namespace zipkin {
     }
 
     class HttpClient {
-      constructor(args: { tracer: Tracer, remoteServiceName?: string });
+      constructor(args: { tracer: Tracer, serviceName: string, remoteServiceName?: string });
 
       recordRequest<T>(
         request: T,
