@@ -3,7 +3,7 @@ import {expect} from 'chai';
 
 describe('Annotation types', () => {
     describe('[ClientSend, ClientRecv, ServerSend, ServerRecv, LocalOperationStop]', () => {
-        it(`should return correct type`, () => {
+        it('should return correct type', () => {
             const clientSend: Annotation.ClientSend = new Annotation.ClientSend();
             const clientRecv: Annotation.ClientRecv = new Annotation.ClientRecv();
             const serverSend: Annotation.ServerSend = new Annotation.ServerSend();
@@ -18,7 +18,7 @@ describe('Annotation types', () => {
         });
     });
     describe('[LocalOperationStart, Message, ServiceName, Rpc]', () => {
-        it(`should return correct type`, () => {
+        it('should return correct type', () => {
             const localOperationStart: Annotation.LocalOperationStart = new Annotation.LocalOperationStart('name');
             const message: Annotation.Message = new Annotation.Message('name');
             const serviceName: Annotation.ServiceName = new Annotation.ServiceName('name');
@@ -31,7 +31,7 @@ describe('Annotation types', () => {
         });
     });
     describe('[ClientAddr, ServerAddr, LocalAddr]', () => {
-        it(`should return correct type`, () => {
+        it('should return correct type', () => {
             const clientAddr: Annotation.ClientAddr = new Annotation.ClientAddr({
                 host: InetAddress.getLocalAddress(),
                 port: 8000
@@ -52,19 +52,7 @@ describe('Annotation types', () => {
         });
     });
     describe('BinaryAnnotation', () => {
-        it(`should return boolean value`, () => {
-            const binaryAnnotation: Annotation.BinaryAnnotation = new Annotation.BinaryAnnotation('binary-annotation', true);
-
-            expect(binaryAnnotation.value).to.equal(true);
-        });
-
-        it(`should return number value`, () => {
-            const binaryAnnotation: Annotation.BinaryAnnotation = new Annotation.BinaryAnnotation('binary-annotation', 100);
-
-            expect(binaryAnnotation.value).to.equal(100);
-        });
-
-        it(`should return string value`, () => {
+        it('should return correct type', () => {
             const binaryAnnotation: Annotation.BinaryAnnotation = new Annotation.BinaryAnnotation('binary-annotation', 'some-value');
 
             expect(binaryAnnotation.value).to.equal('some-value');

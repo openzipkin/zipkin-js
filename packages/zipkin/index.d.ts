@@ -236,10 +236,10 @@ declare namespace zipkin {
     }
 
     class BinaryAnnotation implements IAnnotation {
-      constructor(key: string, value: boolean | string | number);
+      constructor(key: string, value: string);
       readonly annotationType: string;
       key: string;
-      value: boolean | string | number;
+      value: string;
     }
   }
 
