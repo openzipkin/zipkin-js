@@ -236,7 +236,7 @@ declare namespace zipkin {
     }
 
     class BinaryAnnotation implements IAnnotation {
-      constructor(key: string, value: boolean | string | number);
+      constructor(key: string, value: string);
       readonly annotationType: string;
       key: string;
       value: string;
@@ -293,6 +293,7 @@ declare namespace zipkin {
       ['X-B3-SpanId']: string;
       ['X-B3-ParentSpanId']?: string;
       ['X-B3-Sampled']?: '1' | '0';
+      ['X-B3-Flags']?: '1' | '0';
     };
   };
 
@@ -320,7 +321,7 @@ declare namespace zipkin {
     }
 
     class HttpClient {
-      constructor(args: { tracer: Tracer, remoteServiceName?: string });
+      constructor(args: { tracer: Tracer, serviceName: string, remoteServiceName?: string });
 
       recordRequest<T>(
         request: T,
