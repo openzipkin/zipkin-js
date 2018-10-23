@@ -1,36 +1,36 @@
-var os = require('os')
+const os = require('os');
 
-function pickInterface (interfaces, family) {
+function pickInterface(interfaces, family) {
   /*eslint-disable */
-  for (var i in interfaces) {
+  for (const i in interfaces) {
     /*eslint-enable */
-    for (var j = interfaces[i].length - 1; j >= 0; j--) {
-      var face = interfaces[i][j]
-      var reachable = family === 'IPv4' || face.scopeid === 0
-      if (!face.internal && face.family === family && reachable) return face.address
+    for (let j = interfaces[i].length - 1; j >= 0; j--) {
+      const face = interfaces[i][j];
+      const reachable = family === 'IPv4' || face.scopeid === 0;
+      if (!face.internal && face.family === family && reachable) return face.address;
     }
   }
   return family === 'IPv4' ? '127.0.0.1' : '::1'
 }
 
 function reduceInterfaces (interfaces, iface) {
-  var ifaces = {}
-  for (var i in interfaces) {
-    if (i === iface) ifaces[i] = interfaces[i]
+  const ifaces = {};
+  for (const i in interfaces) {
+    if (i === iface) ifaces[i] = interfaces[i];
   }
-  return ifaces
+  return ifaces;
 }
 
 function ipv4 (iface) {
-  var interfaces = os.networkInterfaces()
-  if (iface) interfaces = reduceInterfaces(interfaces, iface)
-  return pickInterface(interfaces, 'IPv4')
+  let interfaces = os.networkInterfaces();
+  if (iface) interfaces = reduceInterfaces(interfaces, iface);
+  return pickInterface(interfaces, 'IPv4');
 }
 
 function ipv6 (iface) {
-  var interfaces = os.networkInterfaces()
-  if (iface) interfaces = reduceInterfaces(interfaces, iface)
-  return pickInterface(interfaces, 'IPv6')
+  let interfaces = os.networkInterfaces();
+  if (iface) interfaces = reduceInterfaces(interfaces, iface);
+  return pickInterface(interfaces, 'IPv6');
 }
 
 ipv4.ipv4 = ipv4
