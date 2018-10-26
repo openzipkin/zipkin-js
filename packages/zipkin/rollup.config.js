@@ -24,8 +24,6 @@ module.exports = [
       builtins(),
       resolve(),
       babel({
-        plugins: ['external-helpers'],
-        externalHelpers: true,
         babelrc: false,
         presets: [
           ['es2015', {
