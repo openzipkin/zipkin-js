@@ -3,7 +3,7 @@
   "version": "0.14.2",
   "description": "The core tracer for zipkin.js",
   "main": "lib/index.js",
-  "ndoe": "build/cjs/zipkin.cjs.js",
+  "node": "build/cjs/zipkin.cjs.js",
   "module": "build/esm/zipkin.esm.js",
   "browser": "build/umd/zipkin.umd.js",
   "types": "index.d.ts",

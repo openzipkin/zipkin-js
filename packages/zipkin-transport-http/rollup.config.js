@@ -14,10 +14,6 @@ module.exports = [
       file: pkg.browser,
       format: 'umd',
       exports: 'named',
-      globals: {
-        url: 'url',
-        os: 'os'
-      }
     },
     plugins: [
       globals(),
@@ -37,7 +33,6 @@ module.exports = [
       }),
       commonjs()
     ],
-    external: ['url', 'os']
   },
 	{
 		input: 'src/index.js',
