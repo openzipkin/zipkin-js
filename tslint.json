@@ -34,11 +34,5 @@
     "no-empty": false,
     "unified-signatures": true,
     "no-unused-expression": false
-  },
-  "exclude":[
-    "node_modules",
-    "**/*.umd.js",
-    "**/*.cjs.js",
-    "**/*.esm.js",
-  ]
+  }
 }
