@@ -3,6 +3,9 @@
   "version": "0.14.2",
   "description": "The core tracer for zipkin.js",
   "main": "lib/index.js",
+  "ndoe": "build/cjs/zipkin.cjs.js",
+  "module": "build/esm/zipkin.esm.js",
+  "browser": "build/umd/zipkin.umd.js",
   "types": "index.d.ts",
   "scripts": {
     "build": "babel src -d lib",
@@ -14,8 +17,7 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "base64-js": "^1.1.2",
-    "is-promise": "^2.1.0",
-    "network-address": "^1.1.0"
+    "is-promise": "^2.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
