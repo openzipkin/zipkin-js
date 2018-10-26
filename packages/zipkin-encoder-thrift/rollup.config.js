@@ -8,7 +8,7 @@ import pkg from './package.json'
 
 module.exports = [
   {
-    input: 'src/CLSContext.js',
+    input: 'src/index.js',
     output: {
       name: 'zipkin',
       file: pkg.browser,
@@ -35,10 +35,10 @@ module.exports = [
     ],
   },
 	{
-		input: 'src/CLSContext.js',
+		input: 'src/index.js',
 		output: [
 			{ file: pkg.node, format: 'cjs' },
 			{ file: pkg.module, format: 'esm' }
-    ]
+    ],
 	}
 ]

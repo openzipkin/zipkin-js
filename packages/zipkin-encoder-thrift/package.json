@@ -3,6 +3,9 @@
   "version": "0.14.2",
   "description": "Encode a zipkin span to thrift",
   "main": "lib/index.js",
+  "node": "build/cjs/zipkin.cjs.js",
+  "module": "build/esm/zipkin.esm.js",
+  "browser": "build/umd/zipkin.umd.js",
   "scripts": {
     "build": "babel src -d lib",
     "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",

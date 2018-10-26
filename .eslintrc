@@ -18,5 +18,11 @@
   "env": {
     "node": true,
     "jasmine": true
-  }
+  },
+  "excludedFiles": [
+    "*.cjs.js",
+    "*.umd.js",
+    "*.esm.js",
+    "rollup.config.js"
+  ]
 }

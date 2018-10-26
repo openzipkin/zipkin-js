@@ -39,7 +39,6 @@ module.exports = [
 		output: [
 			{ file: pkg.node, format: 'cjs' },
 			{ file: pkg.module, format: 'esm' }
-    ],
-    external: ['url', 'os']
+    ]
 	}
 ]
