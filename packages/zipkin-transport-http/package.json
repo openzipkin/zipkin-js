@@ -8,7 +8,9 @@
   "browser": "build/umd/zipkin.umd.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src -d lib",
+    "build:babel": "babel src -d lib",
+    "build:rollup": "rollup -c",
+    "build": "npm run build:babel && npm run build:rollup",
     "test": "mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },

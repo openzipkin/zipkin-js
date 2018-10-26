@@ -38,7 +38,7 @@ module.exports = [
 		input: 'src/index.js',
 		output: [
 			{ file: pkg.node, format: 'cjs' },
-			{ file: pkg.module, format: 'es' }
+			{ file: pkg.module, format: 'esm' }
     ],
     external: ['url', 'os']
 	}

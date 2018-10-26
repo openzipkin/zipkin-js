@@ -3,8 +3,13 @@
   "version": "0.14.2",
   "description": "A Context API implementation that uses continuation-local-storage under the hood",
   "main": "lib/CLSContext.js",
+  "node": "build/cjs/zipkin.cjs.js",
+  "module": "build/esm/zipkin.esm.js",
+  "browser": "build/umd/zipkin.umd.js",
   "scripts": {
-    "build": "babel src -d lib",
+    "build:babel": "babel src -d lib",
+    "build:rollup": "rollup -c",
+    "build": "npm run build:babel && npm run build:rollup",
     "test": "mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },

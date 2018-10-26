@@ -8,16 +8,12 @@ import pkg from './package.json'
 
 module.exports = [
   {
-    input: 'src/index.js',
+    input: 'src/CLSContext.js',
     output: {
       name: 'zipkin',
       file: pkg.browser,
       format: 'umd',
       exports: 'named',
-      globals: {
-        url: 'url',
-        os: 'os'
-      }
     },
     plugins: [
       globals(),
@@ -37,10 +33,9 @@ module.exports = [
       }),
       commonjs()
     ],
-    external: ['url', 'os']
   },
 	{
-		input: 'src/index.js',
+		input: 'src/CLSContext.js',
 		output: [
 			{ file: pkg.node, format: 'cjs' },
 			{ file: pkg.module, format: 'esm' }
