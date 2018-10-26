@@ -4,7 +4,7 @@ const globalFetch =
   (typeof global !== 'undefined' && global.fetch);
 
 // eslint-disable-next-line global-require
-const fetch = globalFetch || require.call(null, 'node-fetch');
+const fetch = globalFetch || require('node-fetch');
 
 const {
   jsonEncoder: {JSON_V1}
