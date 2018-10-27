@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-request-promise",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "description": "Instrumentation for request-promise with Zipkin.js",
   "main": "lib/request.js",
   "scripts": {
@@ -34,6 +34,6 @@
     "asap": "^2.0.6",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
-    "zipkin": "^0.14.2"
+    "zipkin": "^0.14.3"
   }
 }
