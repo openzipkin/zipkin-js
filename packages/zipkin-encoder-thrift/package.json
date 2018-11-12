@@ -23,7 +23,8 @@
     "thrift": "^0.11.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
     "mocha": "^4.0.1",
     "zipkin": "^0.14.2"
   }

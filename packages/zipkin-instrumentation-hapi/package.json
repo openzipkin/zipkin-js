@@ -16,7 +16,8 @@
   },
   "devDependencies": {
     "@types/hapi": "^16.1.12",
-    "babel-cli": "^6.23.0",
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
     "hapi": "^15.1.1",
     "mocha": "^3.2.0",
     "zipkin": "^0.14.2"
