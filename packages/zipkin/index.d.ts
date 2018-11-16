@@ -74,42 +74,28 @@ declare namespace zipkin {
   const randomTraceId: () => string;
 
   namespace option {
-    interface IOption<T> {
-      type: 'Some' | 'None';
-      present: boolean;
-
+    abstract class IOptionMethods<T> {
       map<V>(fn: (value: T) => V): IOption<V>;
-      ifPresent<V>(fn: (value: T) => V): IOption<V>;
-      flatMap<V>(fn: (value: T) => V): IOption<V>;
-      getOrElse<V>(fnOrValue: (() => V) | V): T;
+      ifPresent<V>(fn: (value: T) => V): void;
+      flatMap<V>(fn: (value: T) => IOption<V>): IOption<V>;
+      getOrElse(fnOrValue: (() => T) | T): T;
       equals(other: IOption<T>): boolean;
       toString(): string;
     }
 
-    interface INone extends IOption<any> {
-      type: 'None';
-      present: false;
-
-      map<V>(fn: (value: any) => V): INone;
-      flatMap<V>(fn: (value: any) => V): INone;
-      equals(other: IOption<any>): boolean;
-      toString(): string;
+    class Some<T> extends IOptionMethods<T> {
+      readonly type: 'Some';
+      readonly present: true;
     }
+
+    interface INone extends IOptionMethods<any> {
+      readonly type: 'None';
+      readonly present: false;
+    }
+
+    type IOption<T> = Some<T> | INone;
 
     const None: INone;
-
-    class Some<T> implements IOption<T> {
-      constructor(value: T);
-      type: 'Some' | 'None';
-      present: true;
-
-      map: <V>(fn: (value: T) => V) => IOption<V>;
-      ifPresent: <V>(fn: (value: T) => V) => IOption<V>;
-      flatMap: <V>(fn: (value: T) => V) => IOption<V>;
-      getOrElse: () => T;
-      equals: (other: IOption<T>) => boolean;
-      toString: () => string;
-    }
 
     function isOptional(data: any): boolean;
     function verifyIsOptional(data: any): void; // Throw error is not a valid option
