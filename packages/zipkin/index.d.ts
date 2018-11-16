@@ -74,7 +74,7 @@ declare namespace zipkin {
   const randomTraceId: () => string;
 
   namespace option {
-    abstract class IOptionMethods<T> {
+    abstract class Option<T> {
       map<V>(fn: (value: T) => V): IOption<V>;
       ifPresent<V>(fn: (value: T) => V): void;
       flatMap<V>(fn: (value: T) => IOption<V>): IOption<V>;
@@ -83,12 +83,12 @@ declare namespace zipkin {
       toString(): string;
     }
 
-    class Some<T> extends IOptionMethods<T> {
+    class Some<T> extends Option<T> {
       readonly type: 'Some';
       readonly present: true;
     }
 
-    interface INone extends IOptionMethods<any> {
+    interface INone extends Option<any> {
       readonly type: 'None';
       readonly present: false;
     }
