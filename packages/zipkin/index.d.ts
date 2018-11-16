@@ -76,7 +76,7 @@ declare namespace zipkin {
   namespace option {
     abstract class Option<T> {
       map<V>(fn: (value: T) => V): IOption<V>;
-      ifPresent(fn: (value: T) => void): void;
+      ifPresent(fn: (value: T) => any): void;
       flatMap<V>(fn: (value: T) => IOption<V>): IOption<V>;
       getOrElse(fnOrValue: (() => T) | T): T;
       equals(other: IOption<T>): boolean;
@@ -84,19 +84,19 @@ declare namespace zipkin {
     }
 
     class Some<T> extends Option<T> {
-      constructor(public readonly value: T)
+      constructor(value: T);
       readonly type: 'Some';
       readonly present: true;
     }
 
-    interface INone extends Option<any> {
+    interface INone<T> extends Option<T> {
       readonly type: 'None';
       readonly present: false;
-    }
+   }
 
-    type IOption<T> = Some<T> | INone;
+    type IOption<T> = Some<T> | INone<T>;
 
-    const None: INone;
+    const None: INone<never>;
 
     function isOptional(data: any): boolean;
     function verifyIsOptional(data: any): void; // Throw error is not a valid option
