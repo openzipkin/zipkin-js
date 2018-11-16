@@ -84,6 +84,7 @@ declare namespace zipkin {
     }
 
     class Some<T> extends Option<T> {
+      constructor(public readonly value: T)
       readonly type: 'Some';
       readonly present: true;
     }
