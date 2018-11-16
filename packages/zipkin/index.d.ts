@@ -76,7 +76,7 @@ declare namespace zipkin {
   namespace option {
     abstract class Option<T> {
       map<V>(fn: (value: T) => V): IOption<V>;
-      ifPresent<V>(fn: (value: T) => V): void;
+      ifPresent(fn: (value: T) => void): void;
       flatMap<V>(fn: (value: T) => IOption<V>): IOption<V>;
       getOrElse(fnOrValue: (() => T) | T): T;
       equals(other: IOption<T>): boolean;
