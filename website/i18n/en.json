@@ -3,23 +3,21 @@
   "localized-strings": {
     "next": "Next",
     "previous": "Previous",
-    "tagline": "A website for testing",
+    "tagline": "JavaScript library for Zipkin",
     "docs": {
-      "doc1": {
-        "title": "Latin-ish",
-        "sidebar_label": "Example Page"
-      },
-      "doc2": {
-        "title": "document number 2"
-      },
-      "doc3": {
-        "title": "This is document number 3"
-      },
-      "doc4": {
+      "api/zipkin-api": {
         "title": "Other Document"
       },
-      "doc5": {
-        "title": "Fifth Document"
+      "getting-started": {
+        "title": "Getting Started"
+      },
+      "packages/zipkin-context-cls": {
+        "title": "Zipkin Context CLS",
+        "sidebar_label": "Zipkin Context CLS"
+      },
+      "packages/zipkin": {
+        "title": "Zipkin",
+        "sidebar_label": "Zipkin"
       }
     },
     "links": {
@@ -29,9 +27,9 @@
       "Blog": "Blog"
     },
     "categories": {
-      "Docusaurus": "Docusaurus",
-      "First Category": "First Category",
-      "Second Category": "Second Category"
+      "Getting Started": "Getting Started",
+      "Packages": "Packages",
+      "First Category": "First Category"
     }
   },
   "pages-strings": {

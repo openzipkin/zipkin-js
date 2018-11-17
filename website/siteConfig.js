@@ -21,8 +21,8 @@ const users = [
 ];
 
 const siteConfig = {
-  title: 'ZipkinJS', // Title for your website.
-  tagline: 'Server and Client side library for e2e tracing',
+  title: 'Zipkin JS', // Title for your website.
+  tagline: 'JavaScript library for Zipkin',
   url: 'https://your-docusaurus-test-site.com', // Your website URL
   baseUrl: '/', // Base URL for your project */
   // For github.io type URLs, you would set the url and baseUrl like:
@@ -38,8 +38,8 @@ const siteConfig = {
 
   // For no header links in the top nav bar -> headerLinks: [],
   headerLinks: [
-    {doc: 'doc1', label: 'Docs'},
-    {doc: 'doc4', label: 'API'},
+    {doc: 'getting-started', label: 'Docs'},
+    {doc: 'api/zipkin-api', label: 'API'},
     {page: 'help', label: 'Help'},
     {blog: true, label: 'Blog'},
   ],
