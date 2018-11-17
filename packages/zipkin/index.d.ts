@@ -124,7 +124,7 @@ declare namespace zipkin {
       setIpv4(ipv4: string): void;
       setPort(port: number): void;
 
-      isEmpty(): void;
+      isEmpty(): boolean;
     }
 
     interface Annotation {
