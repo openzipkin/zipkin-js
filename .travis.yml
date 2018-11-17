@@ -6,13 +6,11 @@ matrix:
       env:
         - CXX=clang-3.6
         - KAFKA_PLEASE_LOG=verbose
-        - CHECK_TYPES="true"
 
     - node_js: 8
       env:
         - CXX=clang-3.6
         - KAFKA_PLEASE_LOG=verbose
-        - CHECK_TYPES="true"
 
 before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 0.27.5
@@ -20,12 +18,10 @@ before_install:
 
 install:
   - yarn install;
-  - if [[ ${CHECK_TYPES} == "true" ]]; then yarn test-types-install; fi
 
 script:
   - yarn lint
   - yarn test
-  - if [[ ${CHECK_TYPES} = "true" ]]; then yarn test-types; fi
 
 services:
   - memcached
