@@ -16,12 +16,12 @@
     "@types/request": "^2.0.8"
   },
   "devDependencies": {
-    "@types/request": "^2.0.8",
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
+    "@types/request": "^2.0.8",
     "express": "^4.13.4",
     "mocha": "^3.2.0",
-    "request": "^2.81.0",
+    "request": "^2.88.0",
     "zipkin": "^0.14.3"
   }
 }
