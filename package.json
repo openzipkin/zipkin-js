@@ -16,7 +16,7 @@
     "lint": "npm-run-all --parallel lint:*",
     "test:es": "npm run lerna-test",
     "test:ts": "tsr packages/zipkin/test-types/*.test.ts --noAnnotate --libDeclarations && mocha --opts test/mocha-types.opts",
-    "test": "npm run test:ts",
+    "test": "npm run test:es && npm run test:ts",
     "lerna-test": "lerna run test",
     "lerna-clean": "lerna clean",
     "lerna-build": "lerna run build",
