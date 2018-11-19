@@ -31,6 +31,8 @@
     "@babel/polyfill": "7.0.0",
     "@babel/preset-es2015": "7.0.0-beta.53",
     "@babel/register": "7.0.0",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
     "buster": "^0.7.18",
     "chai": "^3.5.0",
     "co": "^4.6.0",
