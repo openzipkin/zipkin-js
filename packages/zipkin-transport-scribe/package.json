@@ -18,9 +18,10 @@
     "zipkin-encoder-thrift": "^0.14.3"
   },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
     "mocha": "^3.2.0",
-    "thrift": "^0.10.0",
+    "thrift": "^0.11.0",
     "zipkin": "^0.14.3"
   }
 }
