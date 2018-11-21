@@ -38,7 +38,7 @@ InetAddress.getLocalAddress = function getLocalAddress() {
   }
 
   // eslint-disable-next-line global-require
-  const networkAddress = require('./network');
+  const networkAddress = require('./network.ts');
   return new InetAddress(networkAddress.ipv4());
 };
 

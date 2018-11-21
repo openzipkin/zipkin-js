@@ -1,5 +1,5 @@
-const {now, hrtime} = require('./time');
-const {Span, Endpoint} = require('./model');
+const {now, hrtime} = require('./time.ts');
+const {Span, Endpoint} = require('./model.ts');
 
 function PartialSpan(traceId) {
   this.traceId = traceId;

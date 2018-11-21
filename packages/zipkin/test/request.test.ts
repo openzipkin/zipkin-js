@@ -1,7 +1,7 @@
-const Request = require('../src/request.js');
-const HttpHeaders = require('../src/httpHeaders');
-const {Some} = require('../src/option');
-const TraceId = require('../src/tracer/TraceId');
+const Request = require('../src/request.ts');
+const HttpHeaders = require('../src/httpHeaders.ts');
+const {Some} = require('../src/option.ts');
+const TraceId = require('../src/tracer/TraceId.ts');
 
 describe('Request', () => {
   it('should add trace/span and ignore parent span/sampled headers if they do not exist', () => {

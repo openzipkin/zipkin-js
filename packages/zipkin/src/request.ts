@@ -1,4 +1,4 @@
-const HttpHeaders = require('./httpHeaders');
+const HttpHeaders = require('./httpHeaders.ts');
 
 function appendZipkinHeaders(req, traceId) {
   const headers = req.headers || {};

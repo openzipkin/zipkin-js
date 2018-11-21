@@ -1,5 +1,5 @@
-const HttpServer = require('./httpServer');
-const HttpClient = require('./httpClient');
+const HttpServer = require('./httpServer.ts');
+const HttpClient = require('./httpClient.ts');
 
 module.exports = {
   HttpServer,

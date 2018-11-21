@@ -1,4 +1,4 @@
-const InetAddress = require('./InetAddress');
+const InetAddress = require('./InetAddress.ts');
 
 class SimpleAnnotation {
   toString() {

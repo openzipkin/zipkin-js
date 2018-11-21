@@ -1,4 +1,4 @@
-const {Some} = require('../option');
+const {Some} = require('../option.ts');
 // Determines whether or not a traceId should be sampled.
 // If no sample decision is already made (by a debug flag, or
 // the "sampled" property is set), it will use evaluator,
