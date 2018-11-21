@@ -1,5 +1,5 @@
-import { Tracer, ExplicitContext } from 'zipkin';
 import { expect } from 'chai';
+import { ExplicitContext, Tracer } from 'zipkin';
 
 describe('Tracer', () => {
   it('should have correct type', () => {

@@ -1,5 +1,5 @@
-import { sampler } from 'zipkin';
 import { expect } from 'chai';
+import { sampler } from 'zipkin';
 
 describe('Sampler', () => {
   it('should have correct type', () => {

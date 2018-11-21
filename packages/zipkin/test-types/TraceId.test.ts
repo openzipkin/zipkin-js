@@ -1,5 +1,5 @@
-import { TraceId, option } from 'zipkin';
 import { expect } from 'chai';
+import { option, TraceId } from 'zipkin';
 
 describe('TraceId', () => {
   it('should have correct type', () => {

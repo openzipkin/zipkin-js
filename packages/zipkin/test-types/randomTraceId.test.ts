@@ -1,5 +1,5 @@
-import { randomTraceId } from 'zipkin';
 import { expect } from 'chai';
+import { randomTraceId } from 'zipkin';
 
 describe('RandomTraceId', () => {
   it('should return string', () => {

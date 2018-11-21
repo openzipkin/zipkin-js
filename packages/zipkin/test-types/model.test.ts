@@ -1,5 +1,5 @@
-import {model, option, TraceId} from 'zipkin';
 import {expect} from 'chai';
+import {model, option, TraceId} from 'zipkin';
 
 describe('Model', () => {
     describe('Endpoint', () => {
@@ -7,7 +7,7 @@ describe('Model', () => {
             const endpoint: model.Endpoint = new model.Endpoint({
                 serviceName: 'Unknown',
                 ipv4: '10.0.0.1',
-                port: 8000,
+                port: 8000
             });
 
             expect(endpoint.setIpv4).to.be.a('function');
@@ -17,7 +17,7 @@ describe('Model', () => {
         it('should have correct type', () => {
             const span: model.Span = new model.Span(new TraceId({
                 traceId: new option.Some('a'),
-                spanId: 'b',
+                spanId: 'b'
             }));
 
             expect(span.traceId).to.be.a('string');

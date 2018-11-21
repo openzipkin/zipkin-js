@@ -1,5 +1,5 @@
-import { jsonEncoder, JsonEncoder, model, TraceId, option } from 'zipkin';
 import { expect } from 'chai';
+import { jsonEncoder, JsonEncoder, model, option, TraceId } from 'zipkin';
 
 describe('JsonEncoder', () => {
     it('should have correct type', () => {

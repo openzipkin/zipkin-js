@@ -1,5 +1,5 @@
-import { Annotation, InetAddress } from 'zipkin';
 import {expect} from 'chai';
+import { Annotation, InetAddress } from 'zipkin';
 
 describe('Annotation types', () => {
     describe('[ClientSend, ClientRecv, ServerSend, ServerRecv, LocalOperationStop]', () => {
