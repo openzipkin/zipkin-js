@@ -1,7 +1,7 @@
 const sinon = require('sinon');
-const Tracer = require('../src/tracer');
-const ExplicitContext = require('../src/explicit-context');
-const HttpClient = require('../src/instrumentation/httpClient');
+const Tracer = require('../src/tracer/index.ts');
+const ExplicitContext = require('../src/explicit-context.ts');
+const HttpClient = require('../src/instrumentation/httpClient.ts');
 
 describe('Http Client Instrumentation', () => {
   it('should add headers to requests', () => {

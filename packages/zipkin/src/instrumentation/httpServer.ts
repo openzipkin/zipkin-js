@@ -1,9 +1,9 @@
-const Annotation = require('../annotation');
-const Header = require('../httpHeaders');
-const InetAddress = require('../InetAddress');
-const TraceId = require('../tracer/TraceId');
-const parseRequestUrl = require('../parseUrl');
-const {Some, None} = require('../option');
+const Annotation = require('../annotation.ts');
+const Header = require('../httpHeaders.ts');
+const InetAddress = require('../InetAddress.ts');
+const TraceId = require('../tracer/TraceId.ts');
+const parseRequestUrl = require('../parseUrl.ts');
+const {Some, None} = require('../option.ts');
 
 function stringToBoolean(str) {
   return str === '1' || str === 'true';

@@ -1,12 +1,12 @@
-const {None, Some, fromNullable} = require('../option');
-const {Sampler, alwaysSample} = require('./sampler');
+const {None, Some, fromNullable} = require('../option.ts');
+const {Sampler, alwaysSample} = require('./sampler.ts');
 
-const Annotation = require('../annotation');
-const Record = require('./record');
-const TraceId = require('./TraceId');
-const randomTraceId = require('./randomTraceId');
-const {now, hrtime} = require('../time');
-const {Endpoint} = require('../model');
+const Annotation = require('../annotation.ts');
+const Record = require('./record.ts');
+const TraceId = require('./TraceId.ts');
+const randomTraceId = require('./randomTraceId.ts');
+const {now, hrtime} = require('../time.ts');
+const {Endpoint} = require('../model.ts');
 
 const isPromise = require('is-promise');
 

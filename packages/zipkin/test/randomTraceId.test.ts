@@ -1,4 +1,4 @@
-const randomTraceId = require('../src/tracer/randomTraceId');
+const randomTraceId = require('../src/tracer/randomTraceId.ts');
 
 describe('random trace id', () => {
   it('should have fixed length of 16 characters', () => {

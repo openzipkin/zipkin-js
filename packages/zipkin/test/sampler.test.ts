@@ -1,6 +1,6 @@
-const TraceId = require('../src/tracer/TraceId');
-const {Sampler, CountingSampler} = require('../src/tracer/sampler');
-const {Some, None} = require('../src/option');
+const TraceId = require('../src/tracer/TraceId.ts');
+const {Sampler, CountingSampler} = require('../src/tracer/sampler.ts');
+const {Some, None} = require('../src/option.ts');
 
 const T = new Some(true);
 const F = new Some(false);

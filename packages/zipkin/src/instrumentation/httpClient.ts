@@ -1,6 +1,6 @@
-const Annotation = require('../annotation');
-const Request = require('../request');
-const parseRequestUrl = require('../parseUrl');
+const Annotation = require('../annotation.ts');
+const Request = require('../request.ts');
+const parseRequestUrl = require('../parseUrl.ts');
 
 function requiredArg(name) {
   throw new Error(`HttpClientInstrumentation: Missing required argument ${name}.`);

@@ -1,8 +1,8 @@
 const sinon = require('sinon');
-const Tracer = require('../src/tracer');
-const {Some, None} = require('../src/option');
-const ExplicitContext = require('../src/explicit-context');
-const HttpServer = require('../src/instrumentation/httpServer');
+const Tracer = require('../src/tracer/index.ts');
+const {Some, None} = require('../src/option.ts');
+const ExplicitContext = require('../src/explicit-context.ts');
+const HttpServer = require('../src/instrumentation/httpServer.ts');
 
 describe('Http Server Instrumentation', () => {
   it('should create traceId', () => {
