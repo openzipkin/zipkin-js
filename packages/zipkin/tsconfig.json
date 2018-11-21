@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+      "module": "system",
+      "noImplicitAny": true,
+      "removeComments": true,
+      "preserveConstEnums": true,
+      "outFile": "../../built/local/tsc.js",
+      "sourceMap": true,
+      "lib": [
+        "es2015.symbol",
+        "es2015.symbol.wellknown"
+      ]
+  },
+  "include": [
+      "src/**/*"
+  ],
+  "exclude": [
+      "node_modules",
+      "**/*.spec.ts"
+  ]
+}
