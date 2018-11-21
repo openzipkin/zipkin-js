@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src -d lib",
+    "build": "babel src -d lib --extensions \".ts\" --extensions \".js\"",
     "test": "tsc index.d.ts && mocha --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
