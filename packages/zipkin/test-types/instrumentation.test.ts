@@ -1,5 +1,5 @@
-import {Instrumentation, Tracer, ExplicitContext, ConsoleRecorder} from 'zipkin';
 import {expect} from 'chai';
+import {ConsoleRecorder, ExplicitContext, Instrumentation, Tracer} from 'zipkin';
 
 describe('Instrumentation', () => {
     describe('HttpClient', () => {
@@ -7,7 +7,7 @@ describe('Instrumentation', () => {
             const instrumentation: Instrumentation.HttpClient = new Instrumentation.HttpClient({
                     tracer: new Tracer({
                         ctxImpl: new ExplicitContext(),
-                        recorder: new ConsoleRecorder(),
+                        recorder: new ConsoleRecorder()
                     }),
                     serviceName: 'weather-app',
                     remoteServiceName: 'weather-forecast-service'
@@ -22,9 +22,9 @@ describe('Instrumentation', () => {
             const instrumentation: Instrumentation.HttpServer = new Instrumentation.HttpServer({
                     tracer: new Tracer({
                         ctxImpl: new ExplicitContext(),
-                        recorder: new ConsoleRecorder(),
+                        recorder: new ConsoleRecorder()
                     }),
-                    port: 8000,
+                    port: 8000
                 }
             );
 

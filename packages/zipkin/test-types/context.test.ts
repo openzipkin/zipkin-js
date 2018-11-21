@@ -1,5 +1,5 @@
-import { ExplicitContext } from 'zipkin';
 import {expect} from 'chai';
+import { ExplicitContext } from 'zipkin';
 
 describe('ExplicitContext', () => {
     it('should return correct type', () => {

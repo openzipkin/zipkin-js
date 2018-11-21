@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import {Request, TraceId, option, RequestZipkinHeaders} from 'zipkin';
+import {option, Request, RequestZipkinHeaders, TraceId} from 'zipkin';
 import Some = option.Some;
 
 describe('Request', () => {
@@ -25,7 +25,7 @@ describe('Request', () => {
                 spanId: '48485a3953bb6124'
             });
 
-            const requestWithCookie: RequestZipkinHeaders<{ url : string}, { cookie: string }> =
+            const requestWithCookie: RequestZipkinHeaders<{ url: string}, { cookie: string }> =
                 Request.addZipkinHeaders(
                     { url: 'google.com', headers: { cookie: 'abc' } },
                     traceId

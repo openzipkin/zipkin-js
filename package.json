@@ -12,7 +12,7 @@
     "audit": "lerna exec npm audit",
     "audit:fix": "lerna exec npm audit fix",
     "lint:es": "eslint packages",
-    "lint:ts": "tslint -c tslint.json -e \"./packages/**/node_modules/**/*.ts\" packages/**/*.ts",
+    "lint:ts": "tslint -c tslint.json -e './packages/**/node_modules/**/*.ts' './packages/**/*.ts'",
     "lint": "npm-run-all --parallel lint:*",
     "test:es": "npm run lerna-test",
     "test:ts": "tsr packages/zipkin/test-types/*.test.ts --noAnnotate --libDeclarations && mocha --opts test/mocha-types.opts",
