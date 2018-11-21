@@ -1,21 +1,18 @@
 import { expect } from 'chai';
 import { option } from 'zipkin';
 import IOption = option.IOption;
+import INone = option.INone;
 import Some = option.Some;
 import None = option.None;
 
 describe('Option', () => {
     describe('None', () => {
-        it('type should be of expected type', () => {
-            const t: 'None' = None.type;
+        it('should have expected interface', () => {
+            // Both type and present will be checked by ts-runtime
+            const value: INone<never> = None;
 
-            expect(t).to.equal('None');
-        });
-
-        it('present should be of expected type', () => {
-            const p: false = None.present;
-
-            expect(p).to.equal(false);
+            // Avoid unused value warning
+            expect(value.type).to.equal('None');
         });
 
         it('getOrElse should return value type', () => {
@@ -48,16 +45,12 @@ describe('Option', () => {
     });
 
     describe('Some', () => {
-        it('type should be of expected type', () => {
-            const t: 'Some' = new Some(0).type;
+        it('should have expected interface', () => {
+            // Both type and present will be checked by ts-runtime
+            const value: IOption<number> = new Some(0);
 
-            expect(t).to.equal('Some');
-        });
-
-        it('present should be of expected type', () => {
-            const p: true = new Some(0).present;
-
-            expect(p).to.equal(true);
+            // Avoid unused value warning
+            expect(value.type).to.equal('Some');
         });
 
         it('getOrElse should return value type', () => {
