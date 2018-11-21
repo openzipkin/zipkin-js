@@ -1,6 +1,6 @@
-const TraceId = require('../src/tracer/TraceId');
-const {Span, Endpoint} = require('../src/model');
-const {Some} = require('../src/option');
+const TraceId = require('../src/tracer/TraceId.ts');
+const {Span, Endpoint} = require('../src/model.ts');
+const {Some} = require('../src/option.ts');
 
 describe('Endpoint setters', () => {
   // Zipkin does this, so doing so early alerts users

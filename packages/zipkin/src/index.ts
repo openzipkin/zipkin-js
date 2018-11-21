@@ -1,26 +1,26 @@
-const option = require('./option');
+const option = require('./option.ts');
 
-const Annotation = require('./annotation');
-const Tracer = require('./tracer');
-const createNoopTracer = require('./tracer/noop');
-const randomTraceId = require('./tracer/randomTraceId');
-const TraceId = require('./tracer/TraceId');
-const sampler = require('./tracer/sampler');
+const Annotation = require('./annotation.ts');
+const Tracer = require('./tracer.ts');
+const createNoopTracer = require('./tracer/noop.ts');
+const randomTraceId = require('./tracer/randomTraceId.ts');
+const TraceId = require('./tracer/TraceId.ts');
+const sampler = require('./tracer/sampler.ts');
 
-const HttpHeaders = require('./httpHeaders');
-const InetAddress = require('./InetAddress');
+const HttpHeaders = require('./httpHeaders.ts');
+const InetAddress = require('./InetAddress.ts');
 
-const BatchRecorder = require('./batch-recorder');
-const ConsoleRecorder = require('./console-recorder');
+const BatchRecorder = require('./batch-recorder.ts');
+const ConsoleRecorder = require('./console-recorder.ts');
 
-const ExplicitContext = require('./explicit-context');
+const ExplicitContext = require('./explicit-context.ts');
 
-const Request = require('./request');
-const Instrumentation = require('./instrumentation');
+const Request = require('./request.ts');
+const Instrumentation = require('./instrumentation.ts');
 
-const model = require('./model');
-const jsonEncoder = require('./jsonEncoder');
-const parseRequestUrl = require('./parseUrl');
+const model = require('./model.ts');
+const jsonEncoder = require('./jsonEncoder.ts');
+const parseRequestUrl = require('./parseUrl.ts');
 
 module.exports = {
   Tracer,

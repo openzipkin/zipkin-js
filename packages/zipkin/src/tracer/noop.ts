@@ -1,5 +1,5 @@
 const Tracer = require('./');
-const ExplicitContext = require('../explicit-context');
+const ExplicitContext = require('../explicit-context.ts');
 
 module.exports = function createNoopTracer() {
   const recorder = {record() { }};

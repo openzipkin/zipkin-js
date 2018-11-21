@@ -1,5 +1,5 @@
 const lolex = require('lolex');
-const ExplicitContext = require('../src/explicit-context.js');
+const ExplicitContext = require('../src/explicit-context.ts');
 
 describe('ExplicitContext', () => {
   it('should start with context null', () => {

@@ -1,4 +1,4 @@
-const annotation = require('../src/annotation');
+const annotation = require('../src/annotation.ts');
 
 describe('Annotation types', () => {
   Object.keys(annotation).forEach(key => {

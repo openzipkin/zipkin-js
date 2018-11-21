@@ -1,5 +1,5 @@
-const {Some} = require('../src/option');
-const TraceId = require('../src/tracer/TraceId');
+const {Some} = require('../src/option.ts');
+const TraceId = require('../src/tracer/TraceId.ts');
 
 describe('TraceId', () => {
   it('should accept a 64bit trace id', () => {
