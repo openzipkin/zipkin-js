@@ -68,13 +68,13 @@ describe('Option', () => {
         });
 
         it('ifPresent should return void', () => {
-            const value: IOption<number> = new Some(0)
+            const value: IOption<number> = new Some(0);
             const x: void = value.ifPresent(v => v);
 
             expect(x).to.equal(undefined);
-        })
+        });
 
-       it('map should have correct return types', () => {
+        it('map should have correct return types', () => {
             const value: IOption<string> = new Some('some value');
 
             const mappedValue: IOption<number> = value.map(v => v.length);
