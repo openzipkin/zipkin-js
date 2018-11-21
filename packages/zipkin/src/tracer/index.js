@@ -25,8 +25,11 @@ class Tracer {
     // 64 and 128 bit incoming traces from upstream sources.
     traceId128Bit = false,
     localServiceName,
-    localEndpoint
+    localEndpoint,
+    /* eslint-disable no-console */
+    log = console
   }) {
+    this.log = log;
     this.recorder = recorder;
     this.sampler = sampler;
     this.traceId128Bit = traceId128Bit;
@@ -209,8 +212,7 @@ class Tracer {
   }
 
   writeIdToConsole(message) {
-    /* eslint-disable no-console */
-    console.log(`${message}: ${this.id.toString()}`);
+    this.log.info(`${message}: ${this.id.toString()}`);
   }
 }
 

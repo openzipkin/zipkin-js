@@ -6,3 +6,4 @@ yarn-error.log
 packages/**/package-lock.json
 **/test-types/*.test.js
 **/tsr-declarations.js
+.idea/

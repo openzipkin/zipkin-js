@@ -11,10 +11,11 @@ module.exports = class KafkaLogger {
     const producerDefaults = {
       requireAcks: 0
     };
+    /* eslint-disable no-console */
+    const log = options.log || console;
     const producerOpts = Object.assign({}, producerDefaults, options.producerOpts || {});
     this.onError = options.onError || function(err) {
-      /* eslint-disable no-console */
-      console.error(err);
+      log.error(err);
     };
 
     this.topic = options.topic || 'zipkin';
