@@ -9,12 +9,14 @@ This is a module that sends Zipkin trace data from zipkin-js to Scribe or Fluent
 ```javascript
 const {Tracer, BatchRecorder} = require('zipkin');
 const {ScribeLogger} = require('zipkin-transport-scribe');
+const noop = require('noop-logger');
 
 const scribeRecorder = new BatchRecorder({
   logger: new ScribeLogger({
     scribeHost: '127.0.0.1',
     scribePort: port,
-    scribeInterval: 1
+    scribeInterval: 1,
+    log: noop // optional (defaults to console)
   })
 });
 
