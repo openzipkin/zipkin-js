@@ -330,6 +330,18 @@ describe('Tracer', () => {
     clock.uninstall();
   });
 
+  it('should log timestamps from second parameter if it present', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const trace = new Tracer({ctxImpl, recorder});
+
+    ctxImpl.scoped(() => {
+      trace.recordAnnotation(new Annotation.ServerSend(), 87654321);
+      expect(record.getCall(0).args[0].timestamp).to.equal(87654321);
+    });
+  });
+
   it('should create fixed-length 64-bit trace ID by default', () => {
     const recorder = {
       record: () => {}
