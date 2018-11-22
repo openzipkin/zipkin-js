@@ -23,6 +23,6 @@
     "@types/node": "10.12.9",
     "bluebird": "^3.5.1",
     "mocha": "^3.2.0",
-    "typescript": "^2.4.2"
+    "typescript": "^3.1.6"
   }
 }
