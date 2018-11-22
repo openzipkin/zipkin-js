@@ -50,7 +50,7 @@
     "sinon": "^1.17.6",
     "ts-runtime": "^0.1.35",
     "tslint": "^5.0.0",
-    "typescript": "^2.9.2"
+    "typescript": "^3.1.6"
   },
   "workspaces": [
     "packages/*"
