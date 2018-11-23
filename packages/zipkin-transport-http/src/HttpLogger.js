@@ -13,8 +13,17 @@ const {
 const EventEmitter = require('events').EventEmitter;
 
 class HttpLogger extends EventEmitter {
-  constructor({endpoint, headers = {}, httpInterval = 1000, jsonEncoder = JSON_V1, timeout = 0}) {
+  constructor({
+    endpoint,
+    headers = {},
+    httpInterval = 1000,
+    jsonEncoder = JSON_V1,
+    timeout = 0,
+    /* eslint-disable no-console */
+    log = console
+  }) {
     super(); // must be before any reference to *this*
+    this.log = log;
     this.endpoint = endpoint;
     this.queue = [];
     this.jsonEncoder = jsonEncoder;
@@ -41,7 +50,7 @@ class HttpLogger extends EventEmitter {
   on(...args) {
     const eventName = args[0];
     // if the instance has an error handler set then we don't need to
-    // console.log errors anymore
+    // skips error logging
     if (eventName.toLowerCase() === 'error') this.errorListenerSet = true;
     super.on.apply(this, args);
   }
@@ -65,14 +74,14 @@ class HttpLogger extends EventEmitter {
             `${response.status}, body: ${postBody}`;
 
           if (self.errorListenerSet) this.emit('error', new Error(err));
-          else console.error(err);
+          else this.log.error(err);
         } else {
           this.emit('success', response);
         }
       }).catch((error) => {
         const err = `Error sending Zipkin data ${error}`;
         if (self.errorListenerSet) this.emit('error', new Error(err));
-        else console.error(err);
+        else this.log.error(err);
       });
       self.queue.length = 0;
     }

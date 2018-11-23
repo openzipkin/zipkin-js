@@ -30,7 +30,16 @@ declare namespace zipkin {
   }
 
   class Tracer {
-    constructor(args: { ctxImpl: Context<TraceId>, recorder: Recorder, sampler?: sampler.Sampler, traceId128Bit?: boolean, localServiceName?: string, localEndpoint?: model.Endpoint });
+    constructor(args: {
+      ctxImpl: Context<TraceId>,
+      recorder: Recorder,
+      sampler?: sampler.Sampler,
+      traceId128Bit?: boolean,
+      localServiceName?: string,
+      localEndpoint?: model.Endpoint,
+      log?: Console
+    });
+
     id: TraceId;
 
     scoped<V>(callback: () => V): V;
