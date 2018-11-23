@@ -157,13 +157,13 @@ class Tracer {
     return this._localEndpoint;
   }
 
-  recordAnnotation(annotation) {
+  recordAnnotation(annotation, timestamp = now(this._startTimestamp, this._startTick)) {
     this.id.sampled.ifPresent(sampled => {
       if (!sampled) return;
 
       this.recorder.record(new Record({
         traceId: this.id,
-        timestamp: now(this._startTimestamp, this._startTick),
+        timestamp,
         annotation
       }));
     });

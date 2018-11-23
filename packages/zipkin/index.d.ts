@@ -48,7 +48,7 @@ declare namespace zipkin {
     createChildId(): TraceId;
     letId<V>(traceId: TraceId, callback: () => V): V;
     setId(traceId: TraceId): void;
-    recordAnnotation(annotation: IAnnotation): void;
+    recordAnnotation(annotation: IAnnotation, timestamp?: number): void;
     recordMessage(message: string): void;
     recordServiceName(serviceName: string): void;
     recordRpc(name: string): void;
