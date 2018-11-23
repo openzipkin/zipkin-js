@@ -19,13 +19,16 @@ class HttpLogger extends EventEmitter {
     httpInterval = 1000,
     jsonEncoder = JSON_V1,
     timeout = 0,
+    maxPayloadSize = 0,
     /* eslint-disable no-console */
     log = console
   }) {
     super(); // must be before any reference to *this*
     this.log = log;
     this.endpoint = endpoint;
+    this.maxPayloadSize = maxPayloadSize;
     this.queue = [];
+    this.queueBytes = 0;
     this.jsonEncoder = jsonEncoder;
 
     this.errorListenerSet = false;
@@ -47,6 +50,14 @@ class HttpLogger extends EventEmitter {
     }
   }
 
+  _getPayloadSize(nextSpan) {
+    // Our payload is in format '[s1,s2,s3]', so we need to add 2 brackets and
+    // one comma separator for each payload, including the next span if defined
+    return nextSpan
+      ? this.queueBytes + 2 + this.queue.length + nextSpan.length
+      : this.queueBytes + 2 + Math.min(this.queue.length - 1, 0);
+  }
+
   on(...args) {
     const eventName = args[0];
     // if the instance has an error handler set then we don't need to
@@ -56,7 +67,19 @@ class HttpLogger extends EventEmitter {
   }
 
   logSpan(span) {
-    this.queue.push(this.jsonEncoder.encode(span));
+    const encodedSpan = this.jsonEncoder.encode(span);
+    if (this.maxPayloadSize && this._getPayloadSize(encodedSpan) > this.maxPayloadSize) {
+      this.processQueue();
+      if (this._getPayloadSize(encodedSpan) > this.maxPayloadSize) {
+        // Payload size is too large even with an empty queue, can only drop
+        const err = 'Zipkin span got dropped, reason: payload too large';
+        if (this.errorListenerSet) this.emit('error', new Error(err));
+        else this.log.error(err);
+        return;
+      }
+    }
+    this.queue.push(encodedSpan);
+    this.queueBytes += encodedSpan.length;
   }
 
   processQueue() {
@@ -84,6 +107,7 @@ class HttpLogger extends EventEmitter {
         else this.log.error(err);
       });
       self.queue.length = 0;
+      self.queueBytes = 0;
     }
   }
 }

@@ -80,6 +80,52 @@ describe('HTTP transport - integration test', () => {
     });
   });
 
+  it('should not send trace data payload larger than maxPayloadSize', function(done) {
+    let publisherCount = 0;
+    const maxPayloadSize = 1024;
+    const app = mockPublisher((req) => {
+      const contentLength = parseInt(req.headers['content-length'], 10);
+      expect(contentLength).to.be.below(maxPayloadSize);
+      if (++publisherCount == 2) {
+        this.server.close(done);
+      }
+    });
+
+    this.server = app.listen(0, () => {
+      this.port = this.server.address().port;
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:${this.port}/api/v1/spans`,
+        jsonEncoder: JSON_V2,
+        httpInterval: 1,
+        maxPayloadSize
+      });
+
+      for (var i=0; i<6; i++) {
+        triggerPublish(httpLogger);
+      }
+    });
+  })
+
+  it('should emit an error when payload size is too large', function(done) {
+    const self = this;
+    const app = mockPublisher(() => {});
+
+    const maxPayloadSize = 100;
+    self.server = app.listen(0, () => {
+      self.port = self.server.address().port;
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:${self.port}/api/v1/spans/causeerror`,
+        jsonEncoder: JSON_V2,
+        httpInterval: 1,
+        maxPayloadSize
+      });
+
+      // if an error was emitted then this works
+      httpLogger.on('error', () => { self.server.close(done); });
+      triggerPublish(httpLogger);
+    });
+  })
+
   it('should emit an error when an error listener is set', function(done) {
     const self = this;
     const app = mockPublisher(() => {});
