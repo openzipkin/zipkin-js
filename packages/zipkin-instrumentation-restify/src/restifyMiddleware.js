@@ -1,7 +1,4 @@
-const {
-  option: {Some, None},
-  Instrumentation
-} = require('zipkin');
+const {option: {Some, None}, Instrumentation} = require('zipkin');
 const url = require('url');
 
 function headerOption(req, header) {
@@ -17,17 +14,18 @@ function formatRequestUrl(request) {
   return url.format({
     protocol: request.isSecure() ? 'https' : 'http',
     host: request.header('host'),
-    pathname: request.path()
+    pathname: request.path(),
+    search: request.getQuery()
   });
 }
 
 module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
+  const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
+
   return function zipkinRestifyMiddleware(req, res, next) {
-    const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
-    const readHeader = headerOption.bind(null, req);
+    const readHeader = (header) => headerOption(req, header);
     tracer.scoped(() => {
-      const id =
-        instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
+      const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
 
       const onCloseOrFinish = () => {
         res.removeListener('close', onCloseOrFinish);
