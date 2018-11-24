@@ -84,9 +84,9 @@ describe('HTTP transport - integration test', () => {
     let publisherCount = 0;
     const maxPayloadSize = 1024;
     const app = mockPublisher((req) => {
-      const contentLength = parseInt(req.headers['content-length'], 10);
+      const contentLength = parseInt(req.headers['content-length']);
       expect(contentLength).to.be.below(maxPayloadSize);
-      if (++publisherCount == 2) {
+      if (++publisherCount === 2) {
         this.server.close(done);
       }
     });
@@ -100,11 +100,11 @@ describe('HTTP transport - integration test', () => {
         maxPayloadSize
       });
 
-      for (var i=0; i<6; i++) {
+      for (let i = 0; i < 6; i++) {
         triggerPublish(httpLogger);
       }
     });
-  })
+  });
 
   it('should emit an error when payload size is too large', function(done) {
     const self = this;
@@ -124,7 +124,7 @@ describe('HTTP transport - integration test', () => {
       httpLogger.on('error', () => { self.server.close(done); });
       triggerPublish(httpLogger);
     });
-  })
+  });
 
   it('should emit an error when an error listener is set', function(done) {
     const self = this;
