@@ -31,13 +31,11 @@ class HttpServerInstrumentation {
     serviceName = tracer.localEndpoint.serviceName,
     host,
     port = requiredArg('port'),
-    supportsJoin = true,
   }) {
     this.tracer = tracer;
     this.serviceName = serviceName;
     this.host = host && new InetAddress(host);
     this.port = port;
-    this.supportsJoin = supportsJoin;
   }
 
   _createIdFromHeaders(readHeader) {
@@ -56,7 +54,7 @@ class HttpServerInstrumentation {
           flags
         });
       });
-      return !this.supportsJoin
+      return !this.tracer.supportsJoin
         ? parentId.map(id =>
             this.tracer.letId(id, () =>
               this.tracer.createChildId()

@@ -24,6 +24,11 @@ class Tracer {
     // Regardless of this setting, the library will propagate and support both
     // 64 and 128 bit incoming traces from upstream sources.
     traceId128Bit = false,
+    // supportsJoin enables using the same span ID for both server spans and client
+    // spans. By default it is set to true, but if you are sending the tracing data
+    // to a service that expects to have a unique span ID for each span you must set
+    // this to false.
+    supportsJoin = true,
     localServiceName,
     localEndpoint,
     /* eslint-disable no-console */
@@ -33,6 +38,7 @@ class Tracer {
     this.recorder = recorder;
     this.sampler = sampler;
     this.traceId128Bit = traceId128Bit;
+    this.supportsJoin = supportsJoin;
     if (localEndpoint) {
       this._localEndpoint = localEndpoint;
     } else {

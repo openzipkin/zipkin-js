@@ -123,7 +123,7 @@ describe('Http Server Instrumentation', () => {
       const record = sinon.spy();
       const recorder = {record};
       const ctxImpl = new ExplicitContext();
-      const tracer = new Tracer({recorder, ctxImpl});
+      const tracer = new Tracer({recorder, ctxImpl, supportsJoin: false});
 
       const port = 80;
       const host = '127.0.0.1';
@@ -131,8 +131,7 @@ describe('Http Server Instrumentation', () => {
       const instrumentation = new HttpServer({
         tracer,
         serviceName: 'service-a',
-        port,
-        supportsJoin: false
+        port
       });
 
       const readHeader = function(name) {
