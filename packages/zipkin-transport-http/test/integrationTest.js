@@ -31,6 +31,24 @@ const triggerPublish = (logger) => {
   });
 };
 
+const triggerLargePublish = (logger) => {
+  const ctxImpl = new ExplicitContext();
+  const recorder = new BatchRecorder({logger});
+  const tracer = new Tracer({recorder, ctxImpl});
+
+  ctxImpl.scoped(() => {
+    tracer.recordAnnotation(new Annotation.ServerRecv());
+    tracer.recordServiceName('my-service');
+    tracer.recordRpc('GET');
+    tracer.recordBinary('http.url', 'http://example.com');
+    tracer.recordBinary('http.response_code', '200');
+    for (let i = 0; i < 20; i += 1) {
+      tracer.recordAnnotation(new Annotation.Message(`Message ${i + 1}`));
+    }
+    tracer.recordAnnotation(new Annotation.ServerSend());
+  });
+};
+
 describe('HTTP transport - integration test', () => {
   it('should send trace data via HTTP using JSON_V1', function(done) {
     const app = mockPublisher((req) => {
@@ -110,11 +128,11 @@ describe('HTTP transport - integration test', () => {
     const self = this;
     const app = mockPublisher(() => {});
 
-    const maxPayloadSize = 100;
+    const maxPayloadSize = 1024;
     self.server = app.listen(0, () => {
       self.port = self.server.address().port;
       const httpLogger = new HttpLogger({
-        endpoint: `http://localhost:${self.port}/api/v1/spans/causeerror`,
+        endpoint: `http://localhost:${self.port}/api/v1/spans`,
         jsonEncoder: JSON_V2,
         httpInterval: 1,
         maxPayloadSize
@@ -122,7 +140,42 @@ describe('HTTP transport - integration test', () => {
 
       // if an error was emitted then this works
       httpLogger.on('error', () => { self.server.close(done); });
-      triggerPublish(httpLogger);
+      triggerLargePublish(httpLogger);
+    });
+  });
+
+  it('should emit both payload data and an error when adding a too large span', function(done) {
+    let publisherCount = 0;
+    let errorEmitted = false;
+    const maxPayloadSize = 1024;
+    const app = mockPublisher((req) => {
+      const contentLength = parseInt(req.headers['content-length']);
+      expect(contentLength).to.be.below(maxPayloadSize);
+      publisherCount++;
+      if (++publisherCount === 2) {
+        expect(errorEmitted).to.equal(true);
+        this.server.close(done);
+      }
+    });
+
+    this.server = app.listen(0, () => {
+      this.port = this.server.address().port;
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:${this.port}/api/v1/spans`,
+        jsonEncoder: JSON_V2,
+        httpInterval: 1,
+        maxPayloadSize
+      });
+
+      // if an error was emitted then this works
+      httpLogger.on('error', () => {
+        errorEmitted = true;
+      });
+
+      for (let i = 0; i < 6; i++) {
+        triggerPublish(httpLogger);
+      }
+      triggerLargePublish(httpLogger);
     });
   });
 
