@@ -41,7 +41,7 @@ class HttpServerInstrumentation {
   _createIdFromHeaders(readHeader) {
     if (containsRequiredHeaders(readHeader)) {
       const spanId = readHeader(Header.SpanId);
-      return spanId.map(sid => {
+      const parentId = spanId.map(sid => {
         const traceId = readHeader(Header.TraceId);
         const parentSpanId = readHeader(Header.ParentSpanId);
         const sampled = readHeader(Header.Sampled);
@@ -54,6 +54,13 @@ class HttpServerInstrumentation {
           flags
         });
       });
+      return !this.tracer.supportsJoin
+        ? parentId.map(id =>
+            this.tracer.letId(id, () =>
+              this.tracer.createChildId()
+            )
+          )
+        : parentId;
     } else {
       if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
         const sampled = readHeader(Header.Sampled) === None ?
