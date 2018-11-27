@@ -1,0 +1,24 @@
+{
+  "name": "zipkin-instrumentation-connect",
+  "version": "0.14.3",
+  "description": "Connect middleware for instrumentation with Zipkin.js",
+  "main": "lib/middleware.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "devDependencies": {
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
+    "mocha": "^3.2.0",
+    "node-fetch": "^1.5.3",
+    "restify": "^7.2.3",
+    "express": "^4.13.4",
+    "connect": "^3.6.6",
+    "zipkin": "^0.14.3"
+  }
+}
