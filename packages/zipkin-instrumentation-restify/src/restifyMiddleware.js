@@ -24,22 +24,20 @@ module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
 
   return function zipkinRestifyMiddleware(req, res, next) {
     const readHeader = (header) => headerOption(req, header);
-    tracer.scoped(() => {
-      const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
+    const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
 
-      const onCloseOrFinish = () => {
-        res.removeListener('close', onCloseOrFinish);
-        res.removeListener('finish', onCloseOrFinish);
+    const onCloseOrFinish = () => {
+      res.removeListener('close', onCloseOrFinish);
+      res.removeListener('finish', onCloseOrFinish);
 
-        tracer.scoped(() => {
-          instrumentation.recordResponse(id, res.statusCode);
-        });
-      };
+      tracer.scoped(() => {
+        instrumentation.recordResponse(id, res.statusCode);
+      });
+    };
 
-      res.once('close', onCloseOrFinish);
-      res.once('finish', onCloseOrFinish);
+    res.once('close', onCloseOrFinish);
+    res.once('finish', onCloseOrFinish);
 
-      next();
-    });
+    next();
   };
 };
