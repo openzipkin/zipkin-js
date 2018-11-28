@@ -109,7 +109,6 @@ describe('memcached interceptor', () => {
             expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
             expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
           });
-
           done();
         });
       });

@@ -14,14 +14,14 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "@types/kafka-node": "^2.0.3",
-    "kafka-node": "^2.2.0",
+    "kafka-node": "^2.6.1",
     "zipkin-encoder-thrift": "^0.14.3"
   },
   "devDependencies": {
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
     "kafka-please": "^1.0.1",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "zipkin": "^0.14.3"
   }
 }

@@ -11,6 +11,7 @@ const postgresConnectionOptions = {
 };
 
 const Postgres = require('pg');
+delete Postgres.native;
 
 function getPostgres(tracer) {
   return zipkinClient(tracer, Postgres);

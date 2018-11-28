@@ -5,7 +5,7 @@
   "main": "lib/request.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --require @babel/polyfill --require @babel/register --require ../../test/helper.js",
+    "test": "mocha --exit --require @babel/polyfill --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -24,11 +24,11 @@
     "co": "^4.6.0",
     "co-mocha": "^1.2.1",
     "express": "^4.13.4",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "nock": "^9.0.14",
     "sinon": "^2.3.8",
     "uuid": "^3.2.1",
-    "zipkin-context-cls": "^0.11.0"
+    "zipkin-context-cls": "^0.14.2"
   },
   "dependencies": {
     "asap": "^2.0.6",
