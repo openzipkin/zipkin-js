@@ -22,7 +22,7 @@ function headerOption(req, header) {
 function formatRequestUrl(req) {
   const parsed = url.parse(req.url);
   return url.format({
-    protocol: req.protocol,
+    protocol: req.connection.encrypted ? 'https' : 'http',
     host: req.headers.host,
     pathname: parsed.pathname,
     search: parsed.search

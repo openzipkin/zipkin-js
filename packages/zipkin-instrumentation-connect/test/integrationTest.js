@@ -5,6 +5,8 @@ const restify = require('restify');
 const express = require('express');
 const connect = require('connect');
 const middleware = require('../src/middleware');
+const https = require('https');
+const fs = require('fs');
 
 const serviceName = 'service-a';
 const testSetup = () => {
@@ -572,6 +574,58 @@ describe('connect middleware - integration test', () => {
 
           expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
 
+          done();
+        })
+          .catch(err => {
+            server.close();
+            done(err);
+          });
+      });
+    });
+  });
+
+  it('should work with https', done => {
+    const {record, ctxImpl, tracer} = testSetup();
+
+    const tlsOptions = {
+      rejectUnauthorized: false,
+      key: fs.readFileSync('test/keys/server.key'),
+      cert: fs.readFileSync('test/keys/server.crt')
+    };
+
+    ctxImpl.scoped(() => {
+      const app = connect();
+      app.use(middleware({tracer, serviceName}));
+      app.use('/foo', (req, res) => {
+        // Use setTimeout to test that the trace context is propagated into the callback
+        const ctx = ctxImpl.getContext();
+        setTimeout(() => {
+          ctxImpl.letContext(ctx, () => {
+            tracer.recordBinary('message', 'hello from within app');
+            res.statusCode = 202; // eslint-disable-line no-param-reassign
+            res.end(JSON.stringify({status: 'OK'}));
+          });
+        }, 10);
+      });
+      const server = https.createServer(tlsOptions, app);
+      server.listen(4443, () => {
+        const traceId = '863ac35c9f6413ad48485a3953bb6124';
+        const port = 4443;
+        const url = `https://127.0.0.1:${port}/foo`;
+        fetch(url, {
+          agent: new https.Agent({rejectUnauthorized: false}),
+          method: 'post',
+          headers: {
+            'X-B3-TraceId': traceId,
+            'X-B3-SpanId': '48485a3953bb6124',
+            'X-B3-Flags': '1'
+          }
+        }).then(res => res.json()).then(() => {
+          server.close();
+
+          const annotations = record.args.map(args => args[0]);
+
+          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
           .catch(err => {
