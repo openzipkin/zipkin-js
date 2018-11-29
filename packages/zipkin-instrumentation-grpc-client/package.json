@@ -1,0 +1,23 @@
+{
+  "name": "zipkin-instrumentation-grpc-client",
+  "version": "0.14.3",
+  "description": "Zipking.js Interceptor for gRPC client",
+  "main": "lib/grpcClient.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha --require ../../test/helper.js",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "devDependencies": {
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
+    "express": "^4.13.4",
+    "mocha": "^5.2.0",
+    "zipkin": "^0.14.3",
+    "grpc": "^1.16.0",
+    "@grpc/proto-loader": "^0.3.0"
+  }
+}
