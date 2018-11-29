@@ -4,11 +4,23 @@ const {Some, None} = require('../src/option');
 const ExplicitContext = require('../src/explicit-context');
 const HttpServer = require('../src/instrumentation/httpServer');
 
+const setupTest = () => {
+  const record = sinon.spy();
+  const recorder = {record};
+  const ctxImpl = new ExplicitContext();
+  return {record, recorder, ctxImpl};
+};
+
+const setupServerUrl = () => {
+  const port = 80;
+  const host = '127.0.0.1';
+  const url = `http://${host}:${port}`;
+  return {port, host, url};
+};
+
 describe('Http Server Instrumentation', () => {
   it('should create traceId', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
+    const {record, recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
     const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port: 80});
     const url = '/foo';
@@ -69,14 +81,10 @@ describe('Http Server Instrumentation', () => {
 
   traceContextCases.forEach((headers, index) => {
     it(`should extract trace from the client and record annotations case ${index}`, () => {
-      const record = sinon.spy();
-      const recorder = {record};
-      const ctxImpl = new ExplicitContext();
+      const {record, recorder, ctxImpl} = setupTest();
       const tracer = new Tracer({recorder, ctxImpl});
 
-      const port = 80;
-      const host = '127.0.0.1';
-      const url = `http://${host}:${port}`;
+      const {port, url} = setupServerUrl();
       const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
 
       const readHeader = function(name) {
@@ -119,15 +127,42 @@ describe('Http Server Instrumentation', () => {
   });
 
   traceContextCases.forEach((headers, index) => {
+    it(`should record default tags ${index}`, () => {
+      const {record, recorder, ctxImpl} = setupTest();
+      const tracer = new Tracer({recorder, ctxImpl});
+
+      const {port, url} = setupServerUrl();
+      const serverTags = {myTag: 'some random stuff', oneMore: 'more random stuff'};
+      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port, serverTags});
+
+      const readHeader = function(name) {
+        return headers[name] ? new Some(headers[name]) : None;
+      };
+      ctxImpl.scoped(() => {
+        const id = instrumentation.recordRequest('POST', url, readHeader);
+        instrumentation.recordResponse(id, 202);
+      });
+      const annotations = record.args.map(args => args[0]);
+
+      annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
+      annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
+
+      expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[3].annotation.key).to.equal('myTag');
+      expect(annotations[3].annotation.value).to.equal('some random stuff');
+
+      expect(annotations[4].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[4].annotation.key).to.equal('oneMore');
+      expect(annotations[4].annotation.value).to.equal('more random stuff');
+    });
+  });
+
+  traceContextCases.forEach((headers, index) => {
     it(`should should not join spans if join not supported case ${index}`, () => {
-      const record = sinon.spy();
-      const recorder = {record};
-      const ctxImpl = new ExplicitContext();
+      const {record, recorder, ctxImpl} = setupTest();
       const tracer = new Tracer({recorder, ctxImpl, supportsJoin: false});
 
-      const port = 80;
-      const host = '127.0.0.1';
-      const url = `http://${host}:${port}`;
+      const {port, url} = setupServerUrl();
       const instrumentation = new HttpServer({
         tracer,
         serviceName: 'service-a',
@@ -203,13 +238,10 @@ describe('Http Server Instrumentation', () => {
     }
 
     it(`should receive sampling flags from the client with ${caseName.join(', ')}`, () => {
-      const record = sinon.spy();
-      const recorder = {record};
-      const ctxImpl = new ExplicitContext();
+      const {record, recorder, ctxImpl} = setupTest();
       const tracer = new Tracer({recorder, ctxImpl});
 
-      const port = 80;
-      const url = `http://127.0.0.1:${port}`;
+      const {port, url} = setupServerUrl();
       const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
 
 
@@ -260,9 +292,7 @@ describe('Http Server Instrumentation', () => {
   });
 
   it('should properly report the path excluding the query string', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
+    const {record, recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
 
     const port = 80;
@@ -283,9 +313,7 @@ describe('Http Server Instrumentation', () => {
   });
 
   it('should accept a 128bit X-B3-TraceId', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
+    const {record, recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
 
     const port = 80;
@@ -310,9 +338,7 @@ describe('Http Server Instrumentation', () => {
   });
 
   it('should tolerate boolean literals for sampled header received from the client', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
+    const {recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
 
     const headersCases = [
@@ -343,9 +369,7 @@ describe('Http Server Instrumentation', () => {
   });
 
   it('should allow the host to be overridden', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
+    const {record, recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
     const instrumentation = new HttpServer({
       tracer,
@@ -367,9 +391,7 @@ describe('Http Server Instrumentation', () => {
   });
 
   it('should work if the host option is not defined', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
+    const {record, recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
     const instrumentation = new HttpServer({
       tracer,

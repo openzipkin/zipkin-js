@@ -306,7 +306,13 @@ declare namespace zipkin {
 
   namespace Instrumentation {
     class HttpServer {
-      constructor(args: { tracer: Tracer, port: number });
+      constructor(args: {
+        tracer: Tracer,
+        port: number,
+        serviceName?: string,
+        host?: string,
+        serverTags?: {[key: string]: string}
+      });
 
       recordRequest(
         method: string,
