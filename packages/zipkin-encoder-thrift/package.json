@@ -7,7 +7,7 @@
     "build": "babel src -d lib",
     "gen-thrift": "thrift -gen js:node -o src/ src/zipkinCore.thrift",
     "prepublish": "npm run build",
-    "test": "mocha --require ../../test/helper.js"
+    "test": "mocha --exit --require ../../test/helper.js"
   },
   "repository": {
     "type": "git",

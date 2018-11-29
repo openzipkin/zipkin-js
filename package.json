@@ -3,12 +3,10 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
-    "@babel/preset-env": "^7.1.6",
-    "lerna": "^3.5.0",
-    "yarn": "^1.3.2"
+    "@babel/preset-env": "^7.1.6"
   },
   "scripts": {
-    "install:deps": "lerna exec npm install",
+    "install:deps": "lerna exec npm install --no-shrinkwrap",
     "audit": "lerna exec npm audit",
     "audit:fix": "lerna exec npm audit fix",
     "lint:es": "eslint packages",
@@ -26,6 +24,8 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
+    "yarn": "^1.3.2",
+    "lerna": "^3.5.0",
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
     "@babel/polyfill": "7.0.0",
