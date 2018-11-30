@@ -4,7 +4,6 @@ const Instrumentation = require('./grpcClientInstrumentation');
 /**
  * @typedef {Object} InterceptorContext
  * @property {zipkin.Tracer} tracer
- * @property {string} serviceName
  * @property {string} remoteServiceName
  */
 
@@ -14,8 +13,8 @@ const Instrumentation = require('./grpcClientInstrumentation');
  * @param {InterceptorContext} context
  * @returns {Interceptor}
  */
-const interceptor = (grpc, {tracer, serviceName, remoteServiceName}) => {
-  const instrumentation = new Instrumentation(grpc, {tracer, serviceName, remoteServiceName});
+const interceptor = (grpc, {tracer, remoteServiceName}) => {
+  const instrumentation = new Instrumentation(grpc, {tracer, remoteServiceName});
 
   /**
    * @typedef {Function} Interceptor
@@ -33,8 +32,8 @@ const interceptor = (grpc, {tracer, serviceName, remoteServiceName}) => {
          * @param {function(metadata: grpc.Metadata, listener: Object)} next
          */
         start(metadata, listener, next) {
-          const zipkinMetadata = instrumentation.start(metadata, method);
-          const traceId = tracer.id;
+          const traceId = instrumentation.start(metadata, method);
+          const zipkinMetadata = Instrumentation.setHeaders(metadata, traceId);
 
           next(zipkinMetadata, {
             /**

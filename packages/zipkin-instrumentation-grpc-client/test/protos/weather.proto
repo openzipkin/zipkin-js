@@ -12,5 +12,6 @@ message TemperatureRequest {
 
 message TemperatureReply {
     int32 temperature = 1;
+    map<string, string> metadata = 2;
 }
 

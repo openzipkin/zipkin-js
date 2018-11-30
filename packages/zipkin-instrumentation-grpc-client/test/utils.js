@@ -13,10 +13,11 @@ const definition = protoLoader.loadSync(PROTO_PATH, PROTO_OPTIONS);
 const weather = grpc.loadPackageDefinition(definition).weather;
 
 function getTemperature(call, callback) {
+  const metadata = call.metadata.getMap();
   switch (call.request.location) {
     case 'Las Vegas': return callback(new Error('test'));
-    case 'Tahoe': return callback(null, {temperature: '26'});
-    default: return callback(null, {temperature: '50'});
+    case 'Tahoe': return callback(null, {temperature: '26', metadata});
+    default: return callback(null, {temperature: '50', metadata});
   }
 }
 

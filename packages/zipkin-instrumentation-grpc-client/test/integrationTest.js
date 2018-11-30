@@ -58,11 +58,7 @@ describe('gRPC client instrumentation (integration test)', () => {
 
         expect(annotations[3].annotation.annotationType).to.equal('ServerAddr');
 
-        expect(annotations[4].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[4].annotation.key).to.equal('grpc.status_code');
-        expect(annotations[4].annotation.value).to.equal('0');
-
-        expect(annotations[5].annotation.annotationType).to.equal('ClientRecv');
+        expect(annotations[4].annotation.annotationType).to.equal('ClientRecv');
         return done();
       });
     });
@@ -99,6 +95,26 @@ describe('gRPC client instrumentation (integration test)', () => {
         expect(annotations[5].annotation.value).to.equal('2');
 
         expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+        return done();
+      });
+    });
+  });
+
+  it('should send "x-b3-flags" header', done => {
+    tracer.scoped(() => {
+      const client = getClient();
+
+      // enables debug
+      tracer.setId(tracer.createRootId(undefined, true));
+
+      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
+      client.getTemperature({location: 'Tahoe'}, {interceptors: [interceptor]}, (err, res) => {
+        if (err) {
+          return done(err);
+        }
+        const {metadata} = res;
+        // eslint-disable-next-line no-unused-expressions
+        expect(metadata['x-b3-flags']).to.equal('1');
         return done();
       });
     });

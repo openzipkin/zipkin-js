@@ -30,7 +30,6 @@ function requiredArg(name) {
 /**
  * @typedef {Object} GrpcClientContext
  * @property {zipkin.Tracer} tracer
- * @property {string} serviceName
  * @property {string} remoteServiceName
  */
 
@@ -43,18 +42,15 @@ class GrpcClientInstrumentation {
    * @param {Object} grpc
    * @param {GrpcClientContext} context
    */
-  constructor(grpc, {
-    tracer = requiredArg('tracer'),
-    serviceName = tracer.localEndpoint.serviceName,
-    remoteServiceName
-  }) {
+  constructor(grpc, {tracer = requiredArg('tracer'), remoteServiceName}) {
+    this.grpc = grpc;
     this.tracer = tracer;
-    this.serviceName = serviceName;
+    this.serviceName = tracer.localEndpoint.serviceName;
     this.remoteServiceName = remoteServiceName;
   }
 
   /**
-   * Appends zipking headers to gRPC metadata
+   * Appends zipkin headers to gRPC metadata
    * @static
    * @param {grpc.Metadata} originalMetadata
    * @param {zipkin.TraceId} traceId
@@ -71,6 +67,9 @@ class GrpcClientInstrumentation {
     traceId.sampled.ifPresent(sampled => {
       metadata.add(HttpHeaders.Sampled, sampled ? '1' : '0');
     });
+    if (traceId.isDebug()) {
+      metadata.add(HttpHeaders.Flags, '1');
+    }
 
     return metadata;
   }
@@ -79,7 +78,7 @@ class GrpcClientInstrumentation {
    * Records start of RPC request
    * @param {grpc.Metadata} metadata
    * @param {string} method
-   * @return {grpc.Metadata}
+   * @return {zipkin.TraceId}
    */
   start(metadata, method) {
     this.tracer.setId(this.tracer.createChildId());
@@ -94,7 +93,7 @@ class GrpcClientInstrumentation {
       }));
     }
 
-    return GrpcClientInstrumentation.setHeaders(metadata, traceId);
+    return traceId;
   }
 
   /**
@@ -103,11 +102,11 @@ class GrpcClientInstrumentation {
    * @param {grpc.Status} status
    */
   onReceiveStatus(traceId, status) {
-    const code = status.code.toString();
+    const {code} = status;
     this.tracer.setId(traceId);
-    this.tracer.recordBinary('grpc.status_code', code);
-    if (code !== '0') {
-      this.tracer.recordBinary('error', code);
+    if (code !== this.grpc.status.OK) {
+      this.tracer.recordBinary('grpc.status_code', String(code));
+      this.tracer.recordBinary('error', String(code));
     }
     this.tracer.recordAnnotation(new Annotation.ClientRecv());
   }
