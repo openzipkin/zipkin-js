@@ -12,6 +12,10 @@ function appendZipkinHeaders(req, traceId) {
     headers[HttpHeaders.Sampled] = sampled ? '1' : '0';
   });
 
+  if (traceId.isDebug()) {
+    headers[HttpHeaders.Flags] = '1';
+  }
+
   return headers;
 }
 
