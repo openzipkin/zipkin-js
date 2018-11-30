@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package weather;
+
+service WeatherService {
+    rpc GetTemperature (TemperatureRequest) returns (TemperatureReply) {}
+}
+
+message TemperatureRequest {
+    string location = 1;
+}
+
+message TemperatureReply {
+    int32 temperature = 1;
+    map<string, string> metadata = 2;
+}
+
