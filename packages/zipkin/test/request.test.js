@@ -28,4 +28,15 @@ describe('Request', () => {
     expect(req.headers[HttpHeaders.SpanId]).to.equal('48485a3953bb6124');
     expect(req.headers[HttpHeaders.ParentSpanId]).to.equal('d56852c923dc9325');
   });
+
+  it('should add flags headers if debug is on', () => {
+    const traceId = new TraceId({
+      spanId: '48485a3953bb6124',
+      flags: 1
+    });
+    const req = Request.addZipkinHeaders({}, traceId);
+
+    expect(req.headers[HttpHeaders.Flags]).to.equal('1');
+    expect(req.headers[HttpHeaders.SpanId]).to.equal('48485a3953bb6124');
+  });
 });
