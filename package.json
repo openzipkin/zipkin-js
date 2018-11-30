@@ -3,12 +3,10 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
-    "@babel/preset-env": "^7.1.6",
-    "lerna": "^2.11.0",
-    "yarn": "^1.3.2"
+    "@babel/preset-env": "^7.1.6"
   },
   "scripts": {
-    "install:deps": "lerna exec npm install",
+    "install:deps": "lerna exec npm install --no-shrinkwrap",
     "audit": "lerna exec npm audit",
     "audit:fix": "lerna exec npm audit fix",
     "lint:es": "eslint packages",
@@ -21,11 +19,13 @@
     "lerna-clean": "lerna clean",
     "lerna-build": "lerna run build",
     "lerna-publish": "lerna publish --force-publish *",
-    "postinstall": "yarn lerna-build --silent"
+    "postinstall": "yarn lerna-build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
+    "yarn": "^1.3.2",
+    "lerna": "^3.5.0",
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
     "@babel/polyfill": "7.0.0",
@@ -33,7 +33,6 @@
     "@babel/register": "7.0.0",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
-    "buster": "^0.7.18",
     "chai": "^3.5.0",
     "co": "^4.6.0",
     "co-mocha": "^1.2.1",
@@ -43,7 +42,7 @@
     "eslint-plugin-jsx-a11y": "^1.0.2",
     "eslint-plugin-react": "^5.0.1",
     "lolex": "^1.5.1",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "npm-run-all": "^4.1.3",
     "sinon": "^1.17.6",
     "ts-runtime": "^0.1.35",

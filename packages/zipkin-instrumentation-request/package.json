@@ -6,7 +6,7 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --require ../../test/helper.js",
+    "test": "mocha --exit --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -19,10 +19,8 @@
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
     "@types/request": "^2.0.8",
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
     "express": "^4.13.4",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "request": "^2.88.0",
     "zipkin": "^0.14.3"
   }
