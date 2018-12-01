@@ -84,11 +84,8 @@ class HttpServerInstrumentation {
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.path', path);
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const tag in this.serverTags) {
-      if (this.serverTags.hasOwnProperty(tag)) {
-        this.tracer.recordBinary(tag, this.serverTags[tag]);
-      }
+    if (this.serverTags) {
+      this.tracer.setTags(this.serverTags);
     }
 
     this.tracer.recordAnnotation(new Annotation.ServerRecv());

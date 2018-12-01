@@ -96,6 +96,29 @@ describe('Tracer', () => {
     });
   });
 
+  it('should record binary tags', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const localServiceName = 'smoothie-store';
+    const trace = new Tracer({ctxImpl, recorder, localServiceName});
+    const defaultTags = {myTag: 'some random stuff', oneMore: 'more random stuff'};
+
+    ctxImpl.scoped(() => {
+      trace.setTags(defaultTags);
+
+      const annotations = record.args.map(args => args[0]);
+
+      expect(annotations[0].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[0].annotation.key).to.equal('myTag');
+      expect(annotations[0].annotation.value).to.equal('some random stuff');
+
+      expect(annotations[1].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[1].annotation.key).to.equal('oneMore');
+      expect(annotations[1].annotation.value).to.equal('more random stuff');
+    });
+  });
+
   it('should complete a local span on error type', () => {
     const record = sinon.spy();
     const recorder = {record};
