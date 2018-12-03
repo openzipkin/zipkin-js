@@ -1,7 +1,7 @@
-const option = require('./option');
+import * as option from './option';
 
-const Annotation = require('./annotation');
-const Tracer = require('./tracer');
+import Annotation from './annotation';
+import Tracer from './tracer';
 const createNoopTracer = require('./tracer/noop');
 const randomTraceId = require('./tracer/randomTraceId');
 const TraceId = require('./tracer/TraceId');
