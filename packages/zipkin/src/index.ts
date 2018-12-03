@@ -1,26 +1,26 @@
-import * as option from './option';
+import option from './option';
 
 import Annotation from './annotation';
 import Tracer from './tracer';
-const createNoopTracer = require('./tracer/noop');
-const randomTraceId = require('./tracer/randomTraceId');
-const TraceId = require('./tracer/TraceId');
-const sampler = require('./tracer/sampler');
+import createNoopTracer from './tracer/noop';
+import randomTraceId from './tracer/randomTraceId';
+import sampler from './tracer/sampler';
+import TraceId from './tracer/TraceId';
 
-const HttpHeaders = require('./httpHeaders');
-const InetAddress = require('./InetAddress');
+import HttpHeaders from './httpHeaders';
+import InetAddress from './InetAddress';
 
-const BatchRecorder = require('./batch-recorder');
-const ConsoleRecorder = require('./console-recorder');
+import BatchRecorder from './batch-recorder';
+import ConsoleRecorder from './console-recorder';
 
-const ExplicitContext = require('./explicit-context');
+import ExplicitContext from './explicit-context';
 
-const Request = require('./request');
-const Instrumentation = require('./instrumentation');
+import Instrumentation from './instrumentation';
+import Request from './request';
 
-const model = require('./model');
-const jsonEncoder = require('./jsonEncoder');
-const parseRequestUrl = require('./parseUrl');
+import jsonEncoder from './jsonEncoder';
+import model from './model';
+import parseRequestUrl from './parseUrl';
 
 module.exports = {
   Tracer,
