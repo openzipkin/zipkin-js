@@ -1,9 +1,9 @@
-const Annotation = require('../annotation');
+import Annotation from '../annotation';
 const Header = require('../httpHeaders');
 const InetAddress = require('../InetAddress');
 const TraceId = require('../tracer/TraceId');
 const parseRequestUrl = require('../parseUrl');
-import { Some, None } from '../option.ts';
+import { Some, None } from '../option';
 
 function stringToBoolean(str) {
   return str === '1' || str === 'true';

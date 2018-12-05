@@ -86,6 +86,8 @@ BinaryAnnotation.prototype.toString = function (): string {
   return `BinaryAnnotation(${this.key}="${this.value}")`;
 };
 
+new ServiceName('teste');
+
 const annotation = {
   ClientSend,
   ClientRecv,

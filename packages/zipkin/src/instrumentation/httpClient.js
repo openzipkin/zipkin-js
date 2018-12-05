@@ -1,4 +1,4 @@
-const Annotation = require('../annotation');
+import Annotation from '../annotation';
 const Request = require('../request');
 const parseRequestUrl = require('../parseUrl');
 

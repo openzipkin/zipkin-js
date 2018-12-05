@@ -3,7 +3,7 @@ const lolex = require('lolex');
 const Promise = require('bluebird');
 const isPromise = require('is-promise');
 const Tracer = require('../src/tracer');
-const Annotation = require('../src/annotation');
+import Annotation from '../src/annotation';
 const {Sampler, neverSample} = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
 const {Some} = require('../src/option');

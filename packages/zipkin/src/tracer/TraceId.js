@@ -1,4 +1,4 @@
-import {Some, None, verifyIsOptional, verifyIsNotOptional} from '../option.ts';
+import {Some, None, verifyIsOptional, verifyIsNotOptional} from '../option';
 
 class TraceId {
   constructor(params) {
