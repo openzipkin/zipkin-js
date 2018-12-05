@@ -6,6 +6,7 @@
     "object-curly-spacing": [2, "never"],
     "space-before-function-paren": [2, "never"],
     "eqeqeq": [2, "allow-null"],
+    "quotes": [2, "single", "avoid-escape"],
     "no-else-return": "off",
     "prefer-arrow-callback": ["error", { "allowNamedFunctions": true }],
     "no-underscore-dangle": "off",

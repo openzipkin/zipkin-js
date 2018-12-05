@@ -1,7 +1,7 @@
 const InetAddress = require('./InetAddress');
 
 class SimpleAnnotation {
-  toString() {
+  toString(): string {
     return `${this.annotationType}()`;
   }
 }
@@ -14,75 +14,75 @@ class ProducerStop extends SimpleAnnotation {}
 class ConsumerStart extends SimpleAnnotation {}
 class ConsumerStop extends SimpleAnnotation {}
 
-function LocalOperationStart(name) {
+function LocalOperationStart(name): void {
   this.name = name;
 }
-LocalOperationStart.prototype.toString = function() {
+LocalOperationStart.prototype.toString = function (): string {
   return `LocalOperationStart("${this.name}")`;
 };
 
 class LocalOperationStop extends SimpleAnnotation {}
 
-function Message(message) {
+function Message(message): void {
   this.message = message;
 }
-Message.prototype.toString = function() {
+Message.prototype.toString = function (): string {
   return `Message("${this.message}")`;
 };
 
-function ServiceName(serviceName) {
+function ServiceName(serviceName): void {
   this.serviceName = serviceName;
 }
-ServiceName.prototype.toString = function() {
+ServiceName.prototype.toString = function (): string {
   return `ServiceName("${this.serviceName}")`;
 };
 
-function Rpc(name) {
+function Rpc(name): void {
   this.name = name;
 }
-Rpc.prototype.toString = function() {
+Rpc.prototype.toString = function (): string {
   return `Rpc("${this.name}")`;
 };
 
-function ClientAddr({host, port}) {
+function ClientAddr({host, port}): void {
   this.host = host;
   this.port = port;
 }
-ClientAddr.prototype.toString = function() {
+ClientAddr.prototype.toString = function (): string {
   return `ClientAddr(host="${this.host}", port=${this.port})`;
 };
 
-function ServerAddr({serviceName, host, port}) {
+function ServerAddr({serviceName, host, port}): void {
   this.serviceName = serviceName;
   this.host = host || undefined;
   this.port = port || 0;
 }
-ServerAddr.prototype.toString = function() {
+ServerAddr.prototype.toString = function (): string {
   return `ServerAddr(serviceName="${this.serviceName}", host="${this.host}", port=${this.port})`;
 };
 
-function LocalAddr({host, port}) {
+function LocalAddr({host, port}): void {
   this.host = host || InetAddress.getLocalAddress();
   this.port = port || 0;
 }
-LocalAddr.prototype.toString = function() {
+LocalAddr.prototype.toString = function (): string {
   return `LocalAddr(host="${this.host.toString()}", port=${this.port})`;
 };
 
-function MessageAddr({serviceName, host, port}) {
+function MessageAddr({serviceName, host, port}): void {
   this.serviceName = serviceName;
   this.host = host;
   this.port = port;
 }
-MessageAddr.prototype.toString = function() {
+MessageAddr.prototype.toString = function (): string {
   return `MessageAddr(serviceName="${this.serviceName}", host="${this.host}", port=${this.port})`;
 };
 
-function BinaryAnnotation(key, value) {
+function BinaryAnnotation(key, value): void {
   this.key = key;
   this.value = value;
 }
-BinaryAnnotation.prototype.toString = function() {
+BinaryAnnotation.prototype.toString = function (): string {
   return `BinaryAnnotation(${this.key}="${this.value}")`;
 };
 
@@ -111,4 +111,4 @@ Object.keys(annotation).forEach(key => {
   annotation[key].prototype.annotationType = key;
 });
 
-module.exports = annotation;
+export default annotation;
