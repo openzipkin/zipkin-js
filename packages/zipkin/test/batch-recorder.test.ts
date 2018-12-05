@@ -1,12 +1,12 @@
-const sinon = require('sinon');
-const lolex = require('lolex');
-const Tracer = require('../src/tracer');
-const BatchRecorder = require('../src/batch-recorder');
-const TraceId = require('../src/tracer/TraceId');
-const Annotation = require('../src/annotation');
-const InetAddress = require('../src/InetAddress');
-const {Some, None} = require('../src/option');
-const ExplicitContext = require('../src/explicit-context');
+import lolex from 'lolex';
+import sinon from 'sinon';
+import Annotation from '../src/annotation';
+import BatchRecorder from '../src/batch-recorder';
+import ExplicitContext from '../src/explicit-context';
+import InetAddress from '../src/InetAddress';
+import {None, Some} from '../src/option';
+import Tracer from '../src/tracer';
+import TraceId from '../src/tracer/TraceId';
 
 describe('Batch Recorder', () => {
   it('should accumulate annotations into PartialSpans', () => {

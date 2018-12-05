@@ -1,4 +1,4 @@
-import {Some} from '../option.ts';
+import {Some} from '../option';
 // Determines whether or not a traceId should be sampled.
 // If no sample decision is already made (by a debug flag, or
 // the "sampled" property is set), it will use evaluator,

@@ -1,7 +1,7 @@
-import {None, Some, fromNullable} from '../option.ts';
+import {None, Some, fromNullable} from '../option';
 import {Sampler, alwaysSample} from './sampler';
 
-const Annotation = require('../annotation');
+import Annotation from '../annotation';
 const Record = require('./record');
 const TraceId = require('./TraceId');
 const randomTraceId = require('./randomTraceId');
@@ -169,56 +169,42 @@ class Tracer {
 
   recordAnnotation(annotation, timestamp = now(this._startTimestamp, this._startTick)) {
     this.id.sampled.ifPresent(sampled => {
-      if (!sampled) return;
+      if (!sampled) { return; }
 
       this.recorder.record(new Record({
-        traceId: this.id,
+        annotation,
         timestamp,
-        annotation
+        traceId: this.id,
       }));
     });
   }
 
   recordMessage(message) {
-    this.recordAnnotation(
-      new Annotation.Message(message)
-    );
+    this.recordAnnotation(new Annotation.Message(message));
   }
 
   recordServiceName(serviceName) {
-    this.recordAnnotation(
-      new Annotation.ServiceName(serviceName)
-    );
+    this.recordAnnotation(new Annotation.ServiceName(serviceName));
   }
 
   recordRpc(name) {
-    this.recordAnnotation(
-      new Annotation.Rpc(name)
-    );
+    this.recordAnnotation(new Annotation.Rpc(name));
   }
 
   recordClientAddr(ia) {
-    this.recordAnnotation(
-      new Annotation.ClientAddr(ia)
-    );
+    this.recordAnnotation(new Annotation.ClientAddr(ia));
   }
 
   recordServerAddr(ia) {
-    this.recordAnnotation(
-      new Annotation.ServerAddr(ia)
-    );
+    this.recordAnnotation(new Annotation.ServerAddr(ia));
   }
 
   recordLocalAddr(ia) {
-    this.recordAnnotation(
-      new Annotation.LocalAddr(ia)
-    );
+    this.recordAnnotation(new Annotation.LocalAddr(ia));
   }
 
   recordBinary(key, value) {
-    this.recordAnnotation(
-      new Annotation.BinaryAnnotation(key, value)
-    );
+    this.recordAnnotation(new Annotation.BinaryAnnotation(key, value));
   }
 
   writeIdToConsole(message) {

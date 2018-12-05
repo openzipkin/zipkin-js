@@ -1,4 +1,4 @@
-import * as annotation from '../src/annotation.ts';
+import annotation from '../src/annotation';
 
 describe('Annotation types', () => {
   Object.keys(annotation).forEach(key => {
