@@ -220,6 +220,15 @@ class Tracer {
   writeIdToConsole(message) {
     this.log.info(`${message}: ${this.id.toString()}`);
   }
+
+  setTags(tags = {}) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const tag in tags) {
+      if (tags.hasOwnProperty(tag)) {
+        this.recordBinary(tag, tags[tag]);
+      }
+    }
+  }
 }
 
 module.exports = Tracer;

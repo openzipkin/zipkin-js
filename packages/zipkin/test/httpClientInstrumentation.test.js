@@ -50,6 +50,37 @@ describe('Http Client Instrumentation', () => {
     expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
   });
 
+  it('should record default tags', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({ctxImpl, recorder});
+    const url = 'http://127.0.0.1:80/weather?index=10&count=300';
+    const clientTags = {myTag: 'some random stuff', oneMore: 'more random stuff'};
+
+    const instrumentation = new HttpClient({
+      tracer,
+      clientTags,
+      serviceName: 'weather-app',
+      remoteServiceName: 'weather-forecast-service'
+    });
+
+    tracer.scoped(() => {
+      instrumentation.recordRequest({}, url, 'GET');
+      instrumentation.recordResponse(tracer.id, '202');
+    });
+
+    const annotations = record.args.map(args => args[0]);
+
+    expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[3].annotation.key).to.equal('myTag');
+    expect(annotations[3].annotation.value).to.equal('some random stuff');
+
+    expect(annotations[4].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[4].annotation.key).to.equal('oneMore');
+    expect(annotations[4].annotation.value).to.equal('more random stuff');
+  });
+
   it('should record an error', () => {
     const record = sinon.spy();
     const recorder = {record};
