@@ -60,6 +60,10 @@ At the time of writing, zipkin-js instruments these libraries:
 - [redis](packages/zipkin-instrumentation-redis) (zipkin-instrumentation-redis)
 - [restify](packages/zipkin-instrumentation-restify) (zipkin-instrumentation-restify)
 - [postgres](packages/zipkin-instrumentation-postgres) (zipkin-instrumentation-postgres)
+- [request](packages/zipkin-instrumentation-request) (zipkin-instrumentation-request)
+- [connect](packages/zipkin-instrumentation-connect) (zipkin-instrumentation-connect)
+- [superagent](packages/zipkin-instrumentation-superagent) (zipkin-instrumentation-superagent)
+- [grpc-client](packages/zipkin-instrumentation-grpc-client) (zipkin-instrumentation-grpc-client)
 
 Every module has a README.md file that describes how to use it.
 
