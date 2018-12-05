@@ -5,8 +5,8 @@
   "main": "lib/index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src -d lib",
-    "test": "tsc index.d.ts && mocha --require ../../test/helper.js",
+    "build": "babel src -d lib --extensions \".ts\" --extensions \".js\"",
+    "test": "tsc index.d.ts && mocha --require ../../test/helper.js --require @babel/register",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -19,6 +19,7 @@
   "devDependencies": {
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
+    "@babel/preset-typescript": "7.1.0",
     "bluebird": "^3.5.1",
     "mocha": "^5.2.0",
     "typescript": "^2.4.2"
