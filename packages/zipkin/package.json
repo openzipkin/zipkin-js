@@ -5,8 +5,8 @@
   "main": "lib/index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src -d lib --extensions \".ts\" --extensions \".js\"",
-    "test": "tsc index.d.ts && mocha --require ../../test/helper.js --require @babel/register",
+    "build": "babel src -d lib --extensions \".ts,.js\"",
+    "test": "tsc index.d.ts && mocha --require esm --require ../../test/helper.js test/*.ts",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -19,9 +19,15 @@
   "devDependencies": {
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
+    "@babel/preset-env": "7.1.6",
     "@babel/preset-typescript": "7.1.0",
+    "@babel/register": "7.0.0",
+    "@types/mocha": "5.2.5",
+    "babel-plugin-transform-export-extensions": "6.22.0",
     "bluebird": "^3.5.1",
+    "esm": "3.0.84",
     "mocha": "^5.2.0",
+    "ts-node": "7.0.1",
     "typescript": "^2.4.2"
   }
 }

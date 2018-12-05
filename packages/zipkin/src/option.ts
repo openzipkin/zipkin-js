@@ -1,53 +1,70 @@
 const None = {
+
   get type() {
     return 'None';
   },
+
   get present() {
     return false;
   },
+
   map() {
     return this;
   },
+
   ifPresent() {},
+
   flatMap() {
     return this;
   },
+
   getOrElse(f) {
     return f instanceof Function ? f() : f;
   },
+
   equals(other) {
     return other === this;
   },
+
   toString() {
     return 'None';
   }
 };
 
 class Some {
+
   constructor(value) {
     this.value = value;
   }
+
   get type() {
     return 'Some';
   }
+
   get present() {
     return true;
   }
+
   map(f) {
     return new Some(f(this.value));
   }
+
   ifPresent(f) {
     f(this.value);
   }
+
   flatMap(f) {
     return f(this.value);
   }
+
   getOrElse() {
     return this.value;
   }
+
   equals(other) {
     return other instanceof Some && other.value === this.value;
   }
+
   toString() {
     return `Some(${this.value})`;
   }
@@ -81,9 +98,4 @@ function fromNullable(nullable) {
   return nullable == null ? None : new Some(nullable);
 }
 
-module.exports.Some = Some;
-module.exports.None = None;
-module.exports.isOptional = isOptional;
-module.exports.verifyIsOptional = verifyIsOptional;
-module.exports.verifyIsNotOptional = verifyIsNotOptional;
-module.exports.fromNullable = fromNullable;
+export { None, Some, isOptional, verifyIsOptional, verifyIsNotOptional, fromNullable };
