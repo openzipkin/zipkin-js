@@ -1,7 +1,7 @@
 import * as option from './option';
 
 import Annotation from './annotation';
-import * as Tracer from './tracer';
+import Tracer from './tracer';
 import createNoopTracer from './tracer/noop';
 import randomTraceId from './tracer/randomTraceId';
 import sampler from './tracer/sampler';
