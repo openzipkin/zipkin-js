@@ -1,4 +1,5 @@
-const {Tracer, ExplicitContext} = require('zipkin');
+// const {Tracer, ExplicitContext} = require('zipkin');
+import { Tracer, ExplicitContext } from 'zipkin';
 const express = require('express');
 const sinon = require('sinon');
 const rest = require('rest');
