@@ -1,4 +1,4 @@
-const {Some, None, verifyIsOptional, verifyIsNotOptional} = require('../option');
+import {Some, None, verifyIsOptional, verifyIsNotOptional} from '../option.ts';
 
 class TraceId {
   constructor(params) {

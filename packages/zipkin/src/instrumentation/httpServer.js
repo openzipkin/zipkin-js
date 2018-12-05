@@ -3,7 +3,7 @@ const Header = require('../httpHeaders');
 const InetAddress = require('../InetAddress');
 const TraceId = require('../tracer/TraceId');
 const parseRequestUrl = require('../parseUrl');
-const {Some, None} = require('../option');
+import { Some, None } from '../option.ts';
 
 function stringToBoolean(str) {
   return str === '1' || str === 'true';

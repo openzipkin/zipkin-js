@@ -1,5 +1,5 @@
-const {None, Some, fromNullable} = require('../option');
-const {Sampler, alwaysSample} = require('./sampler');
+import {None, Some, fromNullable} from '../option.ts';
+import {Sampler, alwaysSample} from './sampler';
 
 const Annotation = require('../annotation');
 const Record = require('./record');

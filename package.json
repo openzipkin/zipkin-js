@@ -2,9 +2,6 @@
   "name": "zipkin-js",
   "private": true,
   "license": "Apache-2.0",
-  "dependencies": {
-    "@babel/preset-env": "^7.1.6"
-  },
   "scripts": {
     "install:deps": "lerna exec npm install --no-shrinkwrap",
     "audit": "lerna exec npm audit",
@@ -27,7 +24,9 @@
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
     "@babel/polyfill": "7.0.0",
+    "@babel/preset-env": "7.2.0",
     "@babel/preset-es2015": "7.0.0-beta.53",
+    "@babel/preset-typescript": "7.1.0",
     "@babel/register": "7.0.0",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
