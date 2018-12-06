@@ -32,7 +32,8 @@ class Tracer {
     localServiceName,
     localEndpoint,
     /* eslint-disable no-console */
-    log = console
+    log = console,
+    defaultTags
   }) {
     this.log = log;
     this.recorder = recorder;
@@ -50,6 +51,9 @@ class Tracer {
     this._defaultTraceId = this.createRootId();
     this._startTimestamp = now();
     this._startTick = hrtime();
+    if (defaultTags) {
+      this.setTags(defaultTags);
+    }
   }
 
   scoped(callback) {

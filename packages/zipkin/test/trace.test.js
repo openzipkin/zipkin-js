@@ -119,6 +119,28 @@ describe('Tracer', () => {
     });
   });
 
+  it('should record defaultTags', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const localServiceName = 'smoothie-store';
+    const defaultTags = {myTag: 'some random stuff', oneMore: 'more random stuff'};
+    // eslint-disable-next-line no-unused-vars
+    const trace = new Tracer({ctxImpl, recorder, localServiceName, defaultTags});
+
+    ctxImpl.scoped(() => {
+      const annotations = record.args.map(args => args[0]);
+
+      expect(annotations[0].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[0].annotation.key).to.equal('myTag');
+      expect(annotations[0].annotation.value).to.equal('some random stuff');
+
+      expect(annotations[1].annotation.annotationType).to.equal('BinaryAnnotation');
+      expect(annotations[1].annotation.key).to.equal('oneMore');
+      expect(annotations[1].annotation.value).to.equal('more random stuff');
+    });
+  });
+
   it('should complete a local span on error type', () => {
     const record = sinon.spy();
     const recorder = {record};
