@@ -102,7 +102,7 @@ describe('Tracer', () => {
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
-    const defaultTags = {myTag: 'some random stuff', oneMore: 'more random stuff'};
+    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
 
     ctxImpl.scoped(() => {
       trace.setTags(defaultTags);
@@ -110,12 +110,12 @@ describe('Tracer', () => {
       const annotations = record.args.map(args => args[0]);
 
       expect(annotations[0].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[0].annotation.key).to.equal('myTag');
-      expect(annotations[0].annotation.value).to.equal('some random stuff');
+      expect(annotations[0].annotation.key).to.equal('instanceId');
+      expect(annotations[0].annotation.value).to.equal('i-1234567890abcdef0');
 
       expect(annotations[1].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[1].annotation.key).to.equal('oneMore');
-      expect(annotations[1].annotation.value).to.equal('more random stuff');
+      expect(annotations[1].annotation.key).to.equal('cluster');
+      expect(annotations[1].annotation.value).to.equal('nodeservice-stage');
     });
   });
 
@@ -124,7 +124,7 @@ describe('Tracer', () => {
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
-    const defaultTags = {myTag: 'some random stuff', oneMore: 'more random stuff'};
+    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
     // eslint-disable-next-line no-unused-vars
     const trace = new Tracer({ctxImpl, recorder, localServiceName, defaultTags});
 
@@ -132,12 +132,12 @@ describe('Tracer', () => {
       const annotations = record.args.map(args => args[0]);
 
       expect(annotations[0].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[0].annotation.key).to.equal('myTag');
-      expect(annotations[0].annotation.value).to.equal('some random stuff');
+      expect(annotations[0].annotation.key).to.equal('instanceId');
+      expect(annotations[0].annotation.value).to.equal('i-1234567890abcdef0');
 
       expect(annotations[1].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[1].annotation.key).to.equal('oneMore');
-      expect(annotations[1].annotation.value).to.equal('more random stuff');
+      expect(annotations[1].annotation.key).to.equal('cluster');
+      expect(annotations[1].annotation.value).to.equal('nodeservice-stage');
     });
   });
 
