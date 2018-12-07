@@ -3,7 +3,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import resolve from 'rollup-plugin-node-resolve';
 import replace from 'rollup-plugin-replace';
 import {terser} from 'rollup-plugin-terser';
-import autoExternal from 'rollup-plugin-auto-external';
+import builtins from 'rollup-plugin-node-builtins';
 
 const basePlugins = [
   commonjs(),
@@ -12,8 +12,9 @@ const basePlugins = [
     extensions: ['.js', '.ts'],
   }),
   resolve(),
-  autoExternal(),
 ];
+
+const external = ['os', 'url'];
 
 export default [
   // CommonJS
@@ -21,6 +22,7 @@ export default [
     input: 'src/index.ts',
     output: {file: 'lib/index.js', format: 'cjs'},
     plugins: basePlugins,
+    external,
   },
 
   // ES
@@ -28,6 +30,7 @@ export default [
     input: 'src/index.ts',
     output: {file: 'es/index.js', format: 'es'},
     plugins: basePlugins,
+    external,
   },
 
   // UMD Development
@@ -41,7 +44,8 @@ export default [
     plugins: basePlugins.concat([
       replace({
         'process.env.NODE_ENV': JSON.stringify('development')
-      })
+      }),
+      builtins(),
     ]),
   },
 
@@ -64,7 +68,8 @@ export default [
           unsafe_comps: true,
           warnings: false
         }
-      })
+      }),
+      builtins(),
     ]),
   }
 ];
