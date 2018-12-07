@@ -127,37 +127,6 @@ describe('Http Server Instrumentation', () => {
   });
 
   traceContextCases.forEach((headers, index) => {
-    it(`should record default tags ${index}`, () => {
-      const {record, recorder, ctxImpl} = setupTest();
-      const tracer = new Tracer({recorder, ctxImpl});
-
-      const {port, url} = setupServerUrl();
-      const serverTags = {myTag: 'some random stuff', oneMore: 'more random stuff'};
-      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port, serverTags});
-
-      const readHeader = function(name) {
-        return headers[name] ? new Some(headers[name]) : None;
-      };
-      ctxImpl.scoped(() => {
-        const id = instrumentation.recordRequest('POST', url, readHeader);
-        instrumentation.recordResponse(id, 202);
-      });
-      const annotations = record.args.map(args => args[0]);
-
-      annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
-      annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
-
-      expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[3].annotation.key).to.equal('myTag');
-      expect(annotations[3].annotation.value).to.equal('some random stuff');
-
-      expect(annotations[4].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[4].annotation.key).to.equal('oneMore');
-      expect(annotations[4].annotation.value).to.equal('more random stuff');
-    });
-  });
-
-  traceContextCases.forEach((headers, index) => {
     it(`should should not join spans if join not supported case ${index}`, () => {
       const {record, recorder, ctxImpl} = setupTest();
       const tracer = new Tracer({recorder, ctxImpl, supportsJoin: false});

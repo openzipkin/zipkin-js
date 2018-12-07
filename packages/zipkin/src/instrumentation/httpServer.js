@@ -30,14 +30,12 @@ class HttpServerInstrumentation {
     tracer = requiredArg('tracer'),
     serviceName = tracer.localEndpoint.serviceName,
     host,
-    port = requiredArg('port'),
-    serverTags = {}
+    port = requiredArg('port')
   }) {
     this.tracer = tracer;
     this.serviceName = serviceName;
     this.host = host && new InetAddress(host);
     this.port = port;
-    this.serverTags = serverTags;
   }
 
   _createIdFromHeaders(readHeader) {
@@ -83,10 +81,6 @@ class HttpServerInstrumentation {
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.path', path);
-
-    if (this.serverTags) {
-      this.tracer.setTags(this.serverTags);
-    }
 
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
     this.tracer.recordAnnotation(new Annotation.LocalAddr({host: this.host, port: this.port}));

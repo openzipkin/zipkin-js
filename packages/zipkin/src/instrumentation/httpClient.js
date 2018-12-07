@@ -10,11 +10,9 @@ class HttpClientInstrumentation {
   constructor({
     tracer = requiredArg('tracer'),
     serviceName = tracer.localEndpoint.serviceName,
-    remoteServiceName,
-    clientTags = {}
+    remoteServiceName
   }) {
     this.tracer = tracer;
-    this.clientTags = clientTags;
     this.serviceName = serviceName;
     this.remoteServiceName = remoteServiceName;
   }
@@ -27,10 +25,6 @@ class HttpClientInstrumentation {
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.path', path);
-
-    if (this.clientTags) {
-      this.tracer.setTags(this.clientTags);
-    }
 
     this.tracer.recordAnnotation(new Annotation.ClientSend());
     if (this.remoteServiceName) {
