@@ -4,8 +4,7 @@
 [![npm version](https://badge.fury.io/js/zipkin.svg)](https://badge.fury.io/js/zipkin)
 [![Gitter chat](https://badges.gitter.im/openzipkin/zipkin.svg)](https://gitter.im/openzipkin/zipkin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-This is a library for instrumenting Node.js applications. It uses a lot of
-new JavaScript features and syntax, so Node.js version 6 or newer is required.
+This is a set of libraries for instrumenting Node.js and browser applications. The `zipkin` library can be run in both Node.js and the browser.
 
 If you'd like to try this out right away, try our [example app](https://github.com/openzipkin/zipkin-js-example) which shows
 how tracing services looks.
@@ -45,7 +44,30 @@ const remoteServiceName = 'youtube';
 const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName});
 ```
 
-## Instrumentations
+## Browser
+
+The `zipkin` library can be used in the browser. There are a few [examples](https://github.com/openzipkin/zipkin-js-example) available for the `web` and `react-native`.
+
+## Transports
+
+ Currently, the only way to record spans in the browser is to use the `ConsoleRecorder`: 
+
+```javascript
+const tracer = new Tracer({
+  ctxImpl: new ExplicitContext(),
+  recorder: new ConsoleRecorder(),
+  localServiceName: 'service-a' // name of this application
+});
+```
+
+## Node.js
+
+The following libraries are specific to Node.js. Node.js version 6.x and later are supported:
+
+- zipkin-context-cls
+- zipkin-encoder-thrift
+
+### Instrumentations
 
 Various Node.js libraries have been instrumented with Zipkin support.
 Every instrumentation has an npm package called `zipkin-instrumentation-*`.
@@ -67,7 +89,7 @@ At the time of writing, zipkin-js instruments these libraries:
 
 Every module has a README.md file that describes how to use it.
 
-## Transports
+### Transports
 
 You can choose between multiple transports; they are npm packages called `zipkin-transport-*`.
 
