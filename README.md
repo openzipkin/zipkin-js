@@ -46,7 +46,13 @@ const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName});
 
 ## Browser
 
-The `zipkin` library can be used in the browser. There are a few [examples](https://github.com/openzipkin/zipkin-js-example) available for the `web` and `react-native`.
+The `zipkin` library can be used in the browser. The `web` [example](https://github.com/openzipkin/zipkin-js-example) shows an example of a browser based application making a call to a backend server with trace headers attached.
+
+## Instrumentation
+
+The following libraries can be instrumented in the browser:
+
+- [fetch](packages/zipkin-instrumentation-fetch) (zipkin-instrumentation-fetch)
 
 ## Transports
 
