@@ -48,15 +48,19 @@ const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName});
 
 The `zipkin` library can be used in the browser. The `web` [example](https://github.com/openzipkin/zipkin-js-example) shows an example of a browser based application making a call to a backend server with trace headers attached.
 
-## Instrumentation
+### Instrumentation
 
 The following libraries can be instrumented in the browser:
 
 - [fetch](packages/zipkin-instrumentation-fetch) (zipkin-instrumentation-fetch)
 
-## Transports
+### Transports
 
- Currently, the only way to record spans in the browser is to use the `ConsoleRecorder`: 
+The following transport is available for use in the browser:
+
+- [http](packages/zipkin-transport-http)
+
+For debugging purposes, you can also use the `ConsoleRecorder`:
 
 ```javascript
 const tracer = new Tracer({
@@ -64,6 +68,26 @@ const tracer = new Tracer({
   recorder: new ConsoleRecorder(),
   localServiceName: 'service-a' // name of this application
 });
+```
+
+### Typescript
+
+Since some of the `zipkin-js` libraries are used in both the browser and Node.js runtimes, some Typescript may complain about missing dependencies when attempting to compile with these libraries for the browser. For instance, the `zipkin-transport-http` library will determine at runtime whether to use the `window.fetch` API instead of `node-fetch` but the compiler will attempt to resolve `node-fetch`. As a workaround, you can stub the libraries since they are not used in your `tsconfig.json` (this assumes you added the `empty` module to your `package.json` but any library could be used):
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "node-fetch": [
+        "node_modules/empty-module/index.js"
+      ],
+      "os": [
+        "node_modules/empty-module/index.js"
+      ],
+    }
+  }
+}
 ```
 
 ## Node.js
