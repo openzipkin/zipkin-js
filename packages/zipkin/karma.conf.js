@@ -24,7 +24,14 @@ module.exports = function(config) {
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
-    browsers: ['ChromeHeadless'],
+    // see https://github.com/karma-runner/karma-firefox-launcher/issues/76
+    customLaunchers: {
+      FirefoxHeadless: {
+        base: 'Firefox',
+        flags: ['-headless'],
+      },
+    },
+    browsers: ['ChromeHeadless', 'FirefoxHeadless'],
     autoWatch: false,
     concurrency: Infinity
   });
