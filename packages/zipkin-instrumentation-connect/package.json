@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-connect",
-  "version": "0.14.3",
+  "version": "0.15.0",
   "description": "Connect middleware for instrumentation with Zipkin.js",
   "main": "lib/middleware.js",
   "scripts": {
@@ -14,11 +14,11 @@
   "devDependencies": {
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
+    "connect": "^3.6.6",
+    "express": "^4.13.4",
     "mocha": "^5.2.0",
     "node-fetch": "^1.5.3",
     "restify": "^7.2.3",
-    "express": "^4.13.4",
-    "connect": "^3.6.6",
-    "zipkin": "^0.14.3"
+    "zipkin": "^0.15.0"
   }
 }

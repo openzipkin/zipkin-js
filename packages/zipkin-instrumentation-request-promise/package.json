@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-request-promise",
-  "version": "0.14.3",
+  "version": "0.15.0",
   "description": "Instrumentation for request-promise with Zipkin.js",
   "main": "lib/request.js",
   "scripts": {
@@ -15,11 +15,11 @@
     "@types/request": "^2.0.8"
   },
   "devDependencies": {
-    "@types/request": "^2.0.8",
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
     "@babel/polyfill": "7.0.0",
     "@babel/preset-es2015": "7.0.0-beta.53",
+    "@types/request": "^2.0.8",
     "chai": "^4.0.2",
     "co": "^4.6.0",
     "co-mocha": "^1.2.1",
@@ -28,12 +28,12 @@
     "nock": "^9.0.14",
     "sinon": "^2.3.8",
     "uuid": "^3.2.1",
-    "zipkin-context-cls": "^0.14.2"
+    "zipkin-context-cls": "^0.15.0"
   },
   "dependencies": {
     "asap": "^2.0.6",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
-    "zipkin": "^0.14.3"
+    "zipkin": "^0.15.0"
   }
 }
