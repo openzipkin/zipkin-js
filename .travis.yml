@@ -1,4 +1,6 @@
 language: node_js
+dist: trusty
+sudo: required
 
 matrix:
   include:
@@ -6,11 +8,21 @@ matrix:
       env:
         - CXX=clang-3.6
         - KAFKA_PLEASE_LOG=verbose
+        - TEST_SUITE=nodejs
 
     - node_js: 8
       env:
         - CXX=clang-3.6
         - KAFKA_PLEASE_LOG=verbose
+        - TEST_SUITE=nodejs
+
+    - name: 'browser'
+      node_js: 8
+      env:
+        - CXX=clang-3.6
+        - TEST_SUITE=browser
+      addons:
+        chrome: stable
 
 before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 0.27.5
