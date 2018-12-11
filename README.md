@@ -4,8 +4,7 @@
 [![npm version](https://badge.fury.io/js/zipkin.svg)](https://badge.fury.io/js/zipkin)
 [![Gitter chat](https://badges.gitter.im/openzipkin/zipkin.svg)](https://gitter.im/openzipkin/zipkin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-This is a library for instrumenting Node.js applications. It uses a lot of
-new JavaScript features and syntax, so Node.js version 6 or newer is required.
+This is a set of libraries for instrumenting Node.js and browser applications. The `zipkin` library can be run in both Node.js and the browser.
 
 If you'd like to try this out right away, try our [example app](https://github.com/openzipkin/zipkin-js-example) which shows
 how tracing services looks.
@@ -45,7 +44,60 @@ const remoteServiceName = 'youtube';
 const zipkinFetch = wrapFetch(fetch, {tracer, remoteServiceName});
 ```
 
-## Instrumentations
+## Browser
+
+The `zipkin` library can be used in the browser. The `web` [example](https://github.com/openzipkin/zipkin-js-example) shows an example of a browser based application making a call to a backend server with trace headers attached.
+
+### Instrumentation
+
+The following libraries can be instrumented in the browser:
+
+- [fetch](packages/zipkin-instrumentation-fetch) (zipkin-instrumentation-fetch)
+
+### Transports
+
+The following transport is available for use in the browser:
+
+- [http](packages/zipkin-transport-http)
+
+For debugging purposes, you can also use the `ConsoleRecorder`:
+
+```javascript
+const tracer = new Tracer({
+  ctxImpl: new ExplicitContext(),
+  recorder: new ConsoleRecorder(),
+  localServiceName: 'service-a' // name of this application
+});
+```
+
+### Typescript
+
+Since some of the `zipkin-js` libraries are used in both the browser and Node.js runtimes, some Typescript may complain about missing dependencies when attempting to compile with these libraries for the browser. For instance, the `zipkin-transport-http` library will determine at runtime whether to use the `window.fetch` API instead of `node-fetch` but the compiler will attempt to resolve `node-fetch`. As a workaround, you can stub the libraries since they are not used in your `tsconfig.json` (this assumes you added the `empty` module to your `package.json` but any library could be used):
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "node-fetch": [
+        "node_modules/empty-module/index.js"
+      ],
+      "os": [
+        "node_modules/empty-module/index.js"
+      ],
+    }
+  }
+}
+```
+
+## Node.js
+
+The following libraries are specific to Node.js. Node.js version 6.x and later are supported:
+
+- zipkin-context-cls
+- zipkin-encoder-thrift
+
+### Instrumentations
 
 Various Node.js libraries have been instrumented with Zipkin support.
 Every instrumentation has an npm package called `zipkin-instrumentation-*`.
@@ -67,7 +119,7 @@ At the time of writing, zipkin-js instruments these libraries:
 
 Every module has a README.md file that describes how to use it.
 
-## Transports
+### Transports
 
 You can choose between multiple transports; they are npm packages called `zipkin-transport-*`.
 
