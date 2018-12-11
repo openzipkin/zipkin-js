@@ -1,5 +1,7 @@
 node_modules
 lib
+es
+dist
 npm-debug.log
 lerna-debug.log
 yarn-error.log

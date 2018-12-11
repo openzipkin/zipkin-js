@@ -3,9 +3,11 @@
   "version": "0.15.0",
   "description": "The core tracer for zipkin.js",
   "main": "lib/index.js",
+  "unpkg": "dist/zipkin.js",
+  "module": "es/index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "babel src -d lib --extensions \".ts\" --extensions \".js\"",
+    "build": "rollup -c",
     "test": "tsc index.d.ts && mocha --require ../../test/helper.js --require @babel/register && karma start --single-run --browsers ChromeHeadless,FirefoxHeadless karma.conf.js",
     "test-browser": "tsc index.d.ts && karma start --single-run --browsers ChromeHeadless karma.conf.js",
     "prepublish": "npm run build"
