@@ -18,7 +18,7 @@
     "lerna-test": "lerna run test",
     "lerna-clean": "lerna clean",
     "lerna-build": "lerna run build",
-    "lerna-publish": "lerna publish --force-publish *",
+    "lerna-publish": "lerna publish",
     "postinstall": "yarn lerna-build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
