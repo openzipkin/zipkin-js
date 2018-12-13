@@ -52,6 +52,11 @@ module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
 
     res.on('finish', () => {
       tracer.scoped(() => {
+        tracer.setId(id);
+        // if route is terminated on middleware req.route won't be available
+        if (req.route) {
+          tracer.recordRpc(`${req.method} ${req.route.path}`);
+        }
         instrumentation.recordResponse(id, res.statusCode);
       });
     });
