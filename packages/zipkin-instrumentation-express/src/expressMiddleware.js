@@ -1,9 +1,11 @@
-const {
-  option: {Some, None},
-  Instrumentation
-} = require('zipkin');
+const {option: {Some, None}, Instrumentation} = require('zipkin');
 const url = require('url');
 
+/**
+ * @private
+ * @param {http.IncomingMessage} req
+ * @return {string}
+ */
 function formatRequestUrl(req) {
   const parsed = url.parse(req.originalUrl);
   return url.format({
@@ -14,29 +16,45 @@ function formatRequestUrl(req) {
   });
 }
 
+/**
+ * @typedef {Object} MiddlewareOptions
+ * @property {Object} tracer
+ * @property {string} serviceName
+ * @property {number} port
+ */
+
+/**
+ * @param {MiddlewareOptions}
+ * @return {ZipkinMiddleware}
+ */
 module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
+
+  /**
+   * @method
+   * @typedef {function} ZipkinMiddleware
+   * @param {http.IncomingMessage} req
+   * @param {http.ServerResponse} res
+   * @param {function()} next
+   */
   return function zipkinExpressMiddleware(req, res, next) {
-    tracer.scoped(() => {
-      function readHeader(header) {
-        const val = req.header(header);
-        if (val != null) {
-          return new Some(val);
-        } else {
-          return None;
-        }
+    function readHeader(header) {
+      const val = req.header(header);
+      if (val != null) {
+        return new Some(val);
+      } else {
+        return None;
       }
+    }
 
-      const id =
-        instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
+    const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
 
-      res.on('finish', () => {
-        tracer.scoped(() => {
-          instrumentation.recordResponse(id, res.statusCode);
-        });
+    res.on('finish', () => {
+      tracer.scoped(() => {
+        instrumentation.recordResponse(id, res.statusCode);
       });
-
-      next();
     });
+
+    next();
   };
 };

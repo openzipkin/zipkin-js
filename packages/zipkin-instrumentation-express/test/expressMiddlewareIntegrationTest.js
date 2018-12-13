@@ -131,6 +131,67 @@ describe('express middleware - integration test', () => {
     });
   });
 
+  it('should have the same traceId within async calls', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    function step(num) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          tracer.scoped(() => {
+            tracer.recordBinary('step', num);
+            resolve();
+          });
+        }, 10);
+      });
+    }
+
+    ctxImpl.scoped(() => {
+      const app = express();
+      app.use(middleware({
+        tracer,
+        serviceName: 'service-a'
+      }));
+
+      app.get('/foo', (req, res) => step(1)
+          .then(() => step(2))
+          .then(() => step(3))
+          .then(() => res.status(202).json({status: 'OK'})));
+
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const host = '127.0.0.1';
+        const urlPath = '/foo';
+        const url = `http://${host}:${port}${urlPath}?abc=123`;
+        fetch(url, {
+          method: 'get'
+        }).then(res => res.json())
+          .then(() => {
+            server.close();
+
+            const annotations = record.args.map(args => args[0]);
+            const originalTraceId = annotations[0].traceId.traceId;
+            const originalSpanId = annotations[0].traceId.spanId;
+
+            annotations.forEach(ann => expect(ann.traceId.traceId)
+              .to.have.lengthOf(16).and
+              .to.equal(originalTraceId));
+            annotations.forEach(ann => expect(ann.traceId.spanId)
+              .to.have.lengthOf(16).and
+              .to.equal(originalSpanId));
+
+            done();
+          })
+          .catch(err => {
+            server.close();
+            done(err);
+          });
+      });
+    });
+  });
+
   it('should mark 500 respones as errors', done => {
     const record = sinon.spy();
     const recorder = {record};
