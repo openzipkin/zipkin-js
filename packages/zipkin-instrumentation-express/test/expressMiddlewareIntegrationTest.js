@@ -131,6 +131,92 @@ describe('express middleware - integration test', () => {
     });
   });
 
+  it('should have the same traceId in async calls on same request', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    // const recorder = new ConsoleRecorder();
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    function step(num) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          tracer.scoped(() => {
+            tracer.recordBinary('step', num);
+            resolve();
+          });
+        }, 10);
+      });
+    }
+
+    ctxImpl.scoped(() => {
+      const app = express();
+      app.use(middleware({
+        tracer,
+        serviceName: 'service-a'
+      }));
+
+      app.get('/foo', (req, res) => step(1)
+          .then(() => step(2))
+          .then(() => step(3))
+          .then(() => res.status(202).json({status: 'OK'})));
+
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const host = '127.0.0.1';
+        const urlPath = '/foo';
+        const url = `http://${host}:${port}${urlPath}?abc=123`;
+
+        fetch(url)
+          .then(res => res.json())
+          .then(() => {
+            const annotations = record.args.map(args => args[0]);
+            const originalTraceId = annotations[0].traceId.traceId;
+            const originalSpanId = annotations[0].traceId.spanId;
+
+            annotations.forEach(ann =>
+              expect(ann.traceId.traceId)
+                .to.have.lengthOf(16).and
+                .to.equal(originalTraceId));
+
+            annotations.forEach(ann =>
+              expect(ann.traceId.spanId)
+                .to.have.lengthOf(16).and
+                .to.equal(originalSpanId));
+
+            record.reset();
+
+            fetch(url)
+              .then(res => res.json())
+              .then(() => {
+                server.close();
+
+                const annot2 = record.args.map(args => args[0]);
+                const traceId2 = annot2[0].traceId.traceId;
+                const spanId2 = annot2[0].traceId.spanId;
+
+                annot2.forEach(ann =>
+                  expect(ann.traceId.traceId)
+                    .to.have.lengthOf(16).and
+                    .to.equal(traceId2));
+
+                annot2.forEach(ann =>
+                  expect(ann.traceId.spanId)
+                    .to.have.lengthOf(16).and
+                    .to.equal(spanId2));
+
+                expect(originalTraceId).to.not.equal(traceId2);
+                done();
+              });
+          })
+          .catch(err => {
+            server.close();
+            done(err);
+          });
+      });
+    });
+  });
+
   it('should mark 500 respones as errors', done => {
     const record = sinon.spy();
     const recorder = {record};
