@@ -67,11 +67,14 @@ describe('express middleware - integration test', () => {
             expect(annotations[5].annotation.key).to.equal('message');
             expect(annotations[5].annotation.value).to.equal('hello from within app');
 
-            expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-            expect(annotations[6].annotation.key).to.equal('http.status_code');
-            expect(annotations[6].annotation.value).to.equal('202');
+            expect(annotations[6].annotation.annotationType).to.equal('Rpc');
+            expect(annotations[6].annotation.name).to.equal('POST /foo');
 
-            expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
+            expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
+            expect(annotations[7].annotation.key).to.equal('http.status_code');
+            expect(annotations[7].annotation.value).to.equal('202');
+
+            expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
             done();
           })
           .catch(err => {
@@ -131,10 +134,56 @@ describe('express middleware - integration test', () => {
     });
   });
 
+  it('should report Rpc with route path', done => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    ctxImpl.scoped(() => {
+      const app = express();
+      app.use(middleware({tracer, serviceName: 'service-a'}));
+
+      app.get('/foo/:id', (req, res) => {
+        // Use setTimeout to test that the trace context is propagated into the callback
+        const ctx = ctxImpl.getContext();
+        setTimeout(() => {
+          ctxImpl.letContext(ctx, () => {
+            tracer.recordBinary('message', 'hello from within app');
+            res.status(202).json({status: 'OK'});
+          });
+        }, 10);
+      });
+
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const host = '127.0.0.1';
+        const urlPath = '/foo/123';
+        const url = `http://${host}:${port}${urlPath}`;
+        fetch(url, {
+          method: 'get'
+        }).then(res => res.json())
+          .then(() => {
+            server.close();
+
+            const annotations = record.args.map(args => args[0]);
+
+            expect(annotations[6].annotation.annotationType).to.equal('Rpc');
+            expect(annotations[6].annotation.name).to.equal('GET /foo/:id');
+
+            done();
+          })
+          .catch(err => {
+            server.close();
+            done(err);
+          });
+      });
+    });
+  });
+
   it('should have the same traceId in async calls on same request', done => {
     const record = sinon.spy();
     const recorder = {record};
-    // const recorder = new ConsoleRecorder();
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
 
@@ -225,14 +274,13 @@ describe('express middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({
-        tracer,
-        serviceName: 'service-a'
-      }));
+      app.use(middleware({tracer, serviceName: 'service-a'}));
+
       app.get('/error', (req, res) => {
         tracer.recordBinary('message', 'hello from within app');
         res.status(500).send({status: 'An Error Occurred'});
       });
+
       const server = app.listen(0, () => {
         const port = server.address().port;
         const urlPath = `http://127.0.0.1:${port}/error`;
@@ -246,10 +294,10 @@ describe('express middleware - integration test', () => {
 
           const annotations = record.args.map(args => args[0]);
 
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('500');
-          expect(annotations[7].annotation.key).to.equal('error');
+          expect(annotations[7].annotation.key).to.equal('http.status_code');
           expect(annotations[7].annotation.value).to.equal('500');
+          expect(annotations[8].annotation.key).to.equal('error');
+          expect(annotations[8].annotation.value).to.equal('500');
 
           done();
         })
