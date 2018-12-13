@@ -48,6 +48,7 @@ module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
     }
 
     const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
+    Object.defineProperty(req, '_trace_id', {configurable: false, get: () => id});
 
     res.on('finish', () => {
       tracer.scoped(() => {
