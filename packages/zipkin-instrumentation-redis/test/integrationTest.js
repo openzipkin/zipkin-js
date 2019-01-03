@@ -86,12 +86,12 @@ describe('redis interceptor', () => {
     redis.on('error', done);
     tracer.setId(tracer.createRootId());
     redis.set('ping', 'pong', 10, () => {
-      redis.batch([['get', 'ping']]).exec(() => {
+      redis.batch([['get', 'ping'], ['set', 'syn', 'ack']]).exec(() => {
         const annotations = recorder.record.args.map(args => args[0]);
         const firstAnn = annotations[0];
         expect(annotations).to.have.length(11);
         expect(annotations[5].annotation.key).to.equal('commands');
-        expect(annotations[5].annotation.value).to.deep.equal('[["get","ping"]]');
+        expect(annotations[5].annotation.value).to.deep.equal('["get","set"]');
         expect(annotations[6].annotation.name).to.equal('exec');
 
         // we expect two spans, run annotations tests for each
