@@ -57,8 +57,9 @@ module.exports = function zipkinClient(
         clientNeedsToBeModified[method] = function(...args) {
           const multiInstance = actualFn.apply(this, args);
           const id = tracer.createChildId();
+          const commands = args[0].map(command => command[0]);
           tracer.letId(id, () => {
-            tracer.recordBinary('commands', JSON.stringify(args[0]));
+            tracer.recordBinary('commands', JSON.stringify(commands));
           });
           wrap(multiInstance, id);
           return multiInstance;
