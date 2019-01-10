@@ -2,7 +2,7 @@
   "name": "zipkin-instrumentation-grpc-client",
   "version": "0.15.0",
   "description": "Zipking.js Interceptor for gRPC client",
-  "main": "lib/grpcClient.js",
+  "main": "lib/grpcClientInterceptor.js",
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha --require ../../test/helper.js",
