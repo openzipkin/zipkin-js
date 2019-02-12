@@ -1,6 +1,7 @@
 const sinon = require('sinon');
 const Tracer = require('../src/tracer');
 const {Some, None} = require('../src/option');
+const { Sampler, alwaysSample, neverSample } = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
 const HttpServer = require('../src/instrumentation/httpServer');
 
@@ -333,6 +334,33 @@ describe('Http Server Instrumentation', () => {
       ctxImpl.scoped(() => {
         const id = instrumentation.recordRequest('POST', url, readHeader);
         expect(id._sampled.value).to.equal(true);
+      });
+    });
+  });
+
+  const samplerCases = [
+    new Sampler(alwaysSample),
+    new Sampler(neverSample)
+  ];
+
+  samplerCases.forEach(sampler => {
+    it(`should use tracer\'s sampler to make decision if id headers exist while missing X-B3-Sampled header (${sampler})`, () => {
+      const { recorder, ctxImpl } = setupTest();
+      const tracer = new Tracer({ recorder, ctxImpl, sampler });
+
+      const headers = {
+        'X-B3-TraceId': 'aaa',
+        'X-B3-SpanId': 'bbb'
+      };
+
+      const { port, url } = setupServerUrl();
+      const instrumentation = new HttpServer({ tracer, serviceName: 'service-a', port });
+      const readHeader = function (name) {
+        return headers[name] ? new Some(headers[name]) : None;
+      };
+      ctxImpl.scoped(() => {
+        const id = instrumentation.recordRequest('POST', url, readHeader);
+        expect(id._sampled.value).to.equal(sampler.shouldSample(id).value);
       });
     });
   });
