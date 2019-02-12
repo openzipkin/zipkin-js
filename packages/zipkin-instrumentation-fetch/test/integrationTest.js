@@ -84,13 +84,26 @@ describe('wrapFetch', () => {
     });
   });
 
-
   it('should not throw when using fetch without options', function(done) {
     const tracer = createNoopTracer();
     const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service', tracer});
 
     const path = `http://127.0.0.1:${this.port}/user`;
     fetch(path)
+      .then(res => res.json())
+      .then(() => {
+        done();
+      })
+      .catch(done);
+  });
+
+  it('should not throw when using fetch with a request object', function(done) {
+    const tracer = createNoopTracer();
+    const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service', tracer});
+
+    const path = `http://127.0.0.1:${this.port}/user`;
+    const request = {url: path};
+    fetch(request)
       .then(res => res.json())
       .then(() => {
         done();
