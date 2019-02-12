@@ -353,7 +353,7 @@ describe('Http Server Instrumentation', () => {
         'X-B3-SpanId': 'bbb'
       };
 
-      const { port, url } = setupServerUrl();
+      const {port, url} = setupServerUrl();
       const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
       const readHeader = function(name) {
         return headers[name] ? new Some(headers[name]) : None;
