@@ -157,7 +157,7 @@ class Tracer {
 
   join(traceId) {
     if (traceId === None) {
-      return this.createRootId();
+      return new Some(this.createRootId());
     }
 
     const value = traceId.getOrElse();

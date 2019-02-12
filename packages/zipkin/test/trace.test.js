@@ -4,10 +4,18 @@ const Promise = require('bluebird');
 const isPromise = require('is-promise');
 const Tracer = require('../src/tracer');
 const Annotation = require('../src/annotation');
-const {Sampler, neverSample} = require('../src/tracer/sampler');
+const {Sampler, neverSample, alwaysSample} = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
-const {Some} = require('../src/option');
+const TraceId = require('../src/tracer/TraceId');
+const {Some, None} = require('../src/option');
 const {Endpoint} = require('../src/model');
+
+const setupTest = () => {
+  const record = sinon.spy();
+  const recorder = {record};
+  const ctxImpl = new ExplicitContext();
+  return {record, recorder, ctxImpl};
+};
 
 describe('Tracer', () => {
   it('should make parent and child spans', () => {
@@ -407,5 +415,47 @@ describe('Tracer', () => {
 
     const rootTracerId = tracer.createRootId();
     expect(rootTracerId.traceId.length).to.eql(32);
+  });
+
+  it('should create new TraceId when joining None', () => {
+    const {recorder, ctxImpl} = setupTest();
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    const newTraceId = tracer.join(None).getOrElse();
+    expect(newTraceId instanceof TraceId);
+  });
+
+  const samplerCases = [
+    new Sampler(alwaysSample),
+    new Sampler(neverSample)
+  ];
+
+  samplerCases.forEach(sampler => {
+    it(`should follow sampler if sampled value is missing when joining (${sampler})`, () => {
+      const {recorder, ctxImpl} = setupTest();
+      const tracer = new Tracer({recorder, ctxImpl, sampler});
+
+      const rootTraceId = tracer.createRootId();
+
+      // Force sampled to None for testing
+      rootTraceId._sampled = None;
+
+      const newTraceId = tracer.join(new Some(rootTraceId)).getOrElse();
+      expect(rootTraceId == newTraceId); // eslint-disable-line eqeqeq
+      expect(newTraceId._sampled.value).to.eql(sampler.shouldSample(rootTraceId).value);
+    });
+  });
+
+  it('should create childId if supportsJoin=false when joining', () => {
+    const {recorder, ctxImpl} = setupTest();
+    const tracer = new Tracer({recorder, ctxImpl, supportsJoin: false});
+
+    const rootTraceId = tracer.createRootId();
+
+    const newTraceId = tracer.join(new Some(rootTraceId)).getOrElse();
+    expect(newTraceId.traceId).to.eql(rootTraceId.traceId);
+    expect(newTraceId.parentId).to.eql(rootTraceId.spanId);
+    expect(newTraceId.sampled).to.eql(rootTraceId.sampled);
+    expect(newTraceId.flags).to.eql(rootTraceId.flags);
   });
 });
