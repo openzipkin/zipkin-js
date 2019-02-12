@@ -155,6 +155,25 @@ class Tracer {
     });
   }
 
+  join(traceId) {
+    if (traceId === None) {
+      return this.createRootId();
+    }
+
+    const value = traceId.getOrElse();
+    if (value._sampled === None) {
+      value._sampled = this.sampler.shouldSample(value);
+    }
+
+    return !this.supportsJoin
+      ? traceId.map(id =>
+        this.letId(id, () =>
+          this.createChildId()
+        )
+      )
+      : traceId;
+  }
+
   setId(traceId) {
     this._ctxImpl.setContext(traceId);
   }

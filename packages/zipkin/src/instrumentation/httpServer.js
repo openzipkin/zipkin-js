@@ -55,17 +55,7 @@ class HttpServerInstrumentation {
         });
       });
 
-      const parentIdValue = parentId.getOrElse();
-      if (parentIdValue._sampled === None) {
-        parentIdValue._sampled = this.tracer.sampler.shouldSample(parentIdValue);
-      }
-      return !this.tracer.supportsJoin
-        ? parentId.map(id =>
-            this.tracer.letId(id, () =>
-              this.tracer.createChildId()
-            )
-          )
-        : parentId;
+      return this.tracer.join(parentId);
     } else {
       if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
         const sampled = readHeader(Header.Sampled) === None ?
