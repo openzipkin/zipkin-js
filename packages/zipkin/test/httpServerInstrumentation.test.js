@@ -1,7 +1,7 @@
 const sinon = require('sinon');
 const Tracer = require('../src/tracer');
 const {Some, None} = require('../src/option');
-const { Sampler, alwaysSample, neverSample } = require('../src/tracer/sampler');
+const {Sampler, alwaysSample, neverSample} = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
 const HttpServer = require('../src/instrumentation/httpServer');
 
@@ -344,9 +344,9 @@ describe('Http Server Instrumentation', () => {
   ];
 
   samplerCases.forEach(sampler => {
-    it(`should use tracer\'s sampler to make decision if id headers exist while missing X-B3-Sampled header (${sampler})`, () => {
-      const { recorder, ctxImpl } = setupTest();
-      const tracer = new Tracer({ recorder, ctxImpl, sampler });
+    it(`should use sampler to calculate sampled value if missing in header (${sampler})`, () => {
+      const {recorder, ctxImpl} = setupTest();
+      const tracer = new Tracer({recorder, ctxImpl, sampler});
 
       const headers = {
         'X-B3-TraceId': 'aaa',
@@ -354,8 +354,8 @@ describe('Http Server Instrumentation', () => {
       };
 
       const { port, url } = setupServerUrl();
-      const instrumentation = new HttpServer({ tracer, serviceName: 'service-a', port });
-      const readHeader = function (name) {
+      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+      const readHeader = function(name) {
         return headers[name] ? new Some(headers[name]) : None;
       };
       ctxImpl.scoped(() => {
