@@ -156,21 +156,19 @@ class Tracer {
   }
 
   join(traceId) {
-    if (traceId === None) {
-      return new Some(this.createRootId());
+    if (!(traceId instanceof TraceId)) {
+      return this.createRootId();
     }
 
-    const value = traceId.getOrElse();
-    if (value._sampled === None) {
-      value._sampled = this.sampler.shouldSample(value);
+    if (traceId._sampled === None) {
+      /* eslint-disable no-param-reassign */
+      traceId._sampled = this.sampler.shouldSample(traceId);
     }
 
     return !this.supportsJoin
-      ? traceId.map(id =>
-        this.letId(id, () =>
+      ? this.letId(traceId, () =>
           this.createChildId()
         )
-      )
       : traceId;
   }
 

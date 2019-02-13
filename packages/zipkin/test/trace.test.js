@@ -417,11 +417,11 @@ describe('Tracer', () => {
     expect(rootTracerId.traceId.length).to.eql(32);
   });
 
-  it('should create new TraceId when joining None', () => {
+  it('should create new TraceId when joining none TraceId value', () => {
     const {recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
 
-    const newTraceId = tracer.join(None).getOrElse();
+    const newTraceId = tracer.join(null);
     expect(newTraceId instanceof TraceId);
   });
 
@@ -440,7 +440,7 @@ describe('Tracer', () => {
       // Force sampled to None for testing
       rootTraceId._sampled = None;
 
-      const newTraceId = tracer.join(new Some(rootTraceId)).getOrElse();
+      const newTraceId = tracer.join(rootTraceId);
       expect(rootTraceId == newTraceId); // eslint-disable-line eqeqeq
       expect(newTraceId._sampled.value).to.eql(sampler.shouldSample(rootTraceId).value);
     });
@@ -452,7 +452,7 @@ describe('Tracer', () => {
 
     const rootTraceId = tracer.createRootId();
 
-    const newTraceId = tracer.join(new Some(rootTraceId)).getOrElse();
+    const newTraceId = tracer.join(rootTraceId);
     expect(newTraceId.traceId).to.eql(rootTraceId.traceId);
     expect(newTraceId.parentId).to.eql(rootTraceId.spanId);
     expect(newTraceId.sampled).to.eql(rootTraceId.sampled);

@@ -55,7 +55,7 @@ class HttpServerInstrumentation {
         });
       });
 
-      return this.tracer.join(parentId);
+      return new Some(this.tracer.join(parentId.getOrElse()));
     } else {
       if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
         const sampled = readHeader(Header.Sampled) === None ?
