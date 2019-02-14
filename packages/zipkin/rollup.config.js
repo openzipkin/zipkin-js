@@ -3,6 +3,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import resolve from 'rollup-plugin-node-resolve';
 import replace from 'rollup-plugin-replace';
 import {terser} from 'rollup-plugin-terser';
+import globals from 'rollup-plugin-node-globals';
 import builtins from 'rollup-plugin-node-builtins';
 
 const basePlugins = [
@@ -45,6 +46,7 @@ export default [
       replace({
         'process.env.NODE_ENV': JSON.stringify('development')
       }),
+      globals(),
       builtins(),
     ]),
   },
@@ -69,6 +71,7 @@ export default [
           warnings: false
         }
       }),
+      globals(),
       builtins(),
     ]),
   }
