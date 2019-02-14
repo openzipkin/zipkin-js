@@ -4,9 +4,10 @@ const {
 
 function wrapFetch(fetch, {tracer, serviceName, remoteServiceName}) {
   const instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
-  return function zipkinfetch(url, opts = {}) {
+  return function zipkinfetch(input, opts = {}) {
     return new Promise((resolve, reject) => {
       tracer.scoped(() => {
+        const url = (typeof input === 'string') ? input : input.url;
         const method = opts.method || 'GET';
         const zipkinOpts =
           instrumentation.recordRequest(opts, url, method);
