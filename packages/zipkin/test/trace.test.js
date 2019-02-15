@@ -141,6 +141,43 @@ describe('Tracer', () => {
     });
   });
 
+  it('should make a local span with defaultTags', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const localServiceName = 'smoothie-store';
+    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
+    const trace = new Tracer({ctxImpl, recorder, localServiceName, defaultTags});
+
+    ctxImpl.scoped(() => {
+      const result = trace.local('buy-smoothie', () => {
+        trace.recordBinary('taste', 'banana');
+        return 'smoothie';
+      });
+
+      expect(result).to.eql('smoothie');
+
+      expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.ServiceName('smoothie-store')
+      );
+      expect(record.getCall(1).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStart('buy-smoothie')
+      );
+      expect(record.getCall(2).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('instanceId', 'i-1234567890abcdef0')
+      );
+      expect(record.getCall(3).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('cluster', 'nodeservice-stage')
+      );
+      expect(record.getCall(4).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('taste', 'banana')
+      );
+      expect(record.getCall(5).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStop()
+      );
+    });
+  });
+
   it('should complete a local span on error type', () => {
     const record = sinon.spy();
     const recorder = {record};
