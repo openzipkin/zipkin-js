@@ -96,6 +96,40 @@ describe('Tracer', () => {
     });
   });
 
+  it('should make a local span with defaultTgas', () => {
+    const record = sinon.spy();
+    const recorder = {record};
+    const ctxImpl = new ExplicitContext();
+    const localServiceName = 'smoothie-store';
+    const defaultTags = {instanceId: 'i-1234567890abcdef0'};
+    const trace = new Tracer({ctxImpl, recorder, localServiceName, defaultTags});
+
+    ctxImpl.scoped(() => {
+      const result = trace.local('buy-smoothie', () => {
+        trace.recordBinary('taste', 'banana');
+        return 'smoothie';
+      });
+
+      expect(result).to.eql('smoothie');
+
+      expect(record.getCall(0).args[0].annotation).to.eql(
+        new Annotation.ServiceName('smoothie-store')
+      );
+      expect(record.getCall(1).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStart('buy-smoothie')
+      );
+      expect(record.getCall(2).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('instanceId', defaultTags.instanceId)
+      );
+      expect(record.getCall(3).args[0].annotation).to.eql(
+        new Annotation.BinaryAnnotation('taste', 'banana')
+      );
+      expect(record.getCall(4).args[0].annotation).to.eql(
+        new Annotation.LocalOperationStop()
+      );
+    });
+  });
+
   it('should record binary tags', () => {
     const record = sinon.spy();
     const recorder = {record};
@@ -129,6 +163,7 @@ describe('Tracer', () => {
     const trace = new Tracer({ctxImpl, recorder, localServiceName, defaultTags});
 
     ctxImpl.scoped(() => {
+      trace.recordDefaultTags();
       const annotations = record.args.map(args => args[0]);
 
       expect(annotations[0].annotation.annotationType).to.equal('BinaryAnnotation');

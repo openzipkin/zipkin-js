@@ -8,7 +8,8 @@ const setupTest = () => {
   const record = sinon.spy();
   const recorder = {record};
   const ctxImpl = new ExplicitContext();
-  return {record, recorder, ctxImpl};
+  const defaultTags = {instanceId: 'i-1234567890abcdef0'};
+  return {record, recorder, ctxImpl, defaultTags};
 };
 
 const setupServerUrl = () => {
@@ -378,5 +379,32 @@ describe('Http Server Instrumentation', () => {
                               .find(annotation => annotation.annotationType === 'LocalAddr');
 
     expect(localAddr.host.addr).not.to.equal(undefined);
+  });
+
+  it('should send defaultTags', () => {
+    const {record, recorder, ctxImpl, defaultTags} = setupTest();
+    const tracer = new Tracer({recorder, ctxImpl, defaultTags});
+    const instrumentation = new HttpServer({
+      tracer,
+      serviceName: 'service-a',
+      host: '1.1.1.1',
+      port: 80
+    });
+
+    const urlPath = '/test-url';
+    ctxImpl.scoped(() => {
+      const id = instrumentation.recordRequest('POST', urlPath, () => None);
+      instrumentation.recordResponse(id, 202);
+    });
+
+    const annotations = record.args.map(args => args[0]);
+
+    expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[2].annotation.key).to.equal('http.path');
+    expect(annotations[2].annotation.value).to.equal(urlPath);
+
+    expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
+    expect(annotations[3].annotation.key).to.equal('instanceId');
+    expect(annotations[3].annotation.value).to.equal(defaultTags.instanceId);
   });
 });

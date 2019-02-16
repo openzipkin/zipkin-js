@@ -14,6 +14,8 @@ function requiredArg(name) {
   throw new Error(`Tracer: Missing required argument ${name}.`);
 }
 
+const defaultTagsSymbol = Symbol('defaultTags');
+
 class Tracer {
   constructor({
     ctxImpl = requiredArg('ctxImpl'),
@@ -51,9 +53,7 @@ class Tracer {
     this._defaultTraceId = this.createRootId();
     this._startTimestamp = now();
     this._startTick = hrtime();
-    if (defaultTags) {
-      this.setTags(defaultTags);
-    }
+    this[defaultTagsSymbol] = defaultTags || {};
   }
 
   scoped(callback) {
@@ -113,6 +113,7 @@ class Tracer {
       this.setId(traceId);
       this.recordServiceName(this._localEndpoint.serviceName);
       this.recordAnnotation(new Annotation.LocalOperationStart(operationName));
+      this.recordDefaultTags();
 
       let result;
       try {
@@ -165,6 +166,10 @@ class Tracer {
 
   get localEndpoint() {
     return this._localEndpoint;
+  }
+
+  get defaultTags() {
+    return this[defaultTagsSymbol];
   }
 
   recordAnnotation(annotation, timestamp = now(this._startTimestamp, this._startTick)) {
@@ -232,6 +237,10 @@ class Tracer {
         this.recordBinary(tag, tags[tag]);
       }
     }
+  }
+
+  recordDefaultTags() {
+    this.setTags(this.defaultTags);
   }
 }
 

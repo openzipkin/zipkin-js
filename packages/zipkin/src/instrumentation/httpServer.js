@@ -81,6 +81,7 @@ class HttpServerInstrumentation {
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.path', path);
+    this.tracer.recordDefaultTags();
 
     this.tracer.recordAnnotation(new Annotation.ServerRecv());
     this.tracer.recordAnnotation(new Annotation.LocalAddr({host: this.host, port: this.port}));
