@@ -6,7 +6,6 @@ const Tracer = require('../src/tracer');
 const Annotation = require('../src/annotation');
 const {Sampler, neverSample, alwaysSample} = require('../src/tracer/sampler');
 const ExplicitContext = require('../src/explicit-context');
-const TraceId = require('../src/tracer/TraceId');
 const {Some, None} = require('../src/option');
 const {Endpoint} = require('../src/model');
 
@@ -417,12 +416,11 @@ describe('Tracer', () => {
     expect(rootTracerId.traceId.length).to.eql(32);
   });
 
-  it('should create new TraceId when joining none TraceId value', () => {
+  it('should throw error when joining none TraceId value', () => {
     const {recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
 
-    const newTraceId = tracer.join(null);
-    expect(newTraceId instanceof TraceId);
+    expect(() => { tracer.join(null); }).to.throw();
   });
 
   const samplerCases = [

@@ -157,7 +157,7 @@ class Tracer {
 
   join(traceId) {
     if (!(traceId instanceof TraceId)) {
-      return this.createRootId();
+      throw new Error('Must be valid TraceId instance');
     }
 
     if (traceId._sampled === None) {
