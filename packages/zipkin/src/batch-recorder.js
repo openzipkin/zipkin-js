@@ -1,25 +1,51 @@
 const {now, hrtime} = require('./time');
 const {Span, Endpoint} = require('./model');
 
-function PartialSpan(traceId) {
-  this.traceId = traceId;
-  this.startTimestamp = now();
-  this.startTick = hrtime();
-  this.delegate = new Span(traceId);
-  this.localEndpoint = new Endpoint({});
-}
-PartialSpan.prototype.finish = function finish() {
-  if (this.endTimestamp) {
-    return;
-  }
-  this.endTimestamp = now(this.startTimestamp, this.startTick);
-};
+/**
+ * default timeout = 60 seconds (in microseconds)
+ * @type {number}
+ */
+const defaultTimeout = 60 * 1000000;
 
+/**
+ * @class PartialSpan
+ */
+class PartialSpan {
+  /**
+   * @constructor
+   * @param {TraceId} traceId
+   */
+  constructor(traceId) {
+    this.traceId = traceId;
+    this.startTimestamp = now();
+    this.startTick = hrtime();
+    this.delegate = new Span(traceId);
+    this.localEndpoint = new Endpoint({});
+  }
+
+  /**
+   * adds endTimestamp to span
+   * @return {void}
+   */
+  finish() {
+    if (this.endTimestamp) {
+      return;
+    }
+    this.endTimestamp = now(this.startTimestamp, this.startTick);
+  }
+}
+
+/**
+ * @class BatchRecorder
+ */
 class BatchRecorder {
-  constructor({
-    logger,
-    timeout = 60 * 1000000 // default timeout = 60 seconds
-  }) {
+  /**
+   * @constructor
+   * @param {Object} options
+   * @property {HttpLogger|KafkaLogger} logger logs the data to openZipkin
+   * @property {number} timeout timeout for span in microseconds
+   */
+  constructor({logger, timeout = defaultTimeout}) {
     this.logger = logger;
     this.timeout = timeout;
     this.partialSpans = new Map();
