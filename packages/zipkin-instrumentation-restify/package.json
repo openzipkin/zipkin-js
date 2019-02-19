@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-restify",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "Restify middleware for instrumentation with Zipkin.js",
   "main": "lib/index.js",
   "scripts": {
@@ -17,6 +17,6 @@
     "mocha": "^5.2.0",
     "node-fetch": "^1.5.3",
     "restify": "^7.2.3",
-    "zipkin": "^0.16.0"
+    "zipkin": "^0.16.1"
   }
 }
