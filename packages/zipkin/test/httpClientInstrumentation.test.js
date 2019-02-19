@@ -4,9 +4,16 @@ const ExplicitContext = require('../src/explicit-context');
 const HttpClient = require('../src/instrumentation/httpClient');
 
 describe('Http Client Instrumentation', () => {
-  it('should add headers to requests', () => {
+  let recorder;
+
+  beforeEach(() => {
     const record = sinon.spy();
-    const recorder = {record};
+    const setDefaultTags = sinon.spy();
+    recorder = {record, setDefaultTags};
+  });
+
+  it('should add headers to requests', () => {
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
     const instrumentation = new HttpClient({
@@ -50,45 +57,8 @@ describe('Http Client Instrumentation', () => {
     expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
   });
 
-  it('should add headers to requests', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const defaultTags = {instanceId: 'i-1234567890abcdef0'};
-    const tracer = new Tracer({ctxImpl, recorder, defaultTags});
-    const instrumentation = new HttpClient({
-      tracer,
-      serviceName: 'weather-app',
-      remoteServiceName: 'weather-forecast-service'});
-
-    const port = '80';
-    const host = '127.0.0.1';
-    const urlPath = '/weather';
-    const url = `http://${host}:${port}${urlPath}?index=10&count=300`;
-    tracer.scoped(() => {
-      instrumentation.recordRequest({}, url, 'GET');
-      instrumentation.recordResponse(tracer.id, '202');
-    });
-    const annotations = record.args.map(args => args[0]);
-
-    expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-    expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-    expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-    expect(annotations[1].annotation.name).to.equal('GET');
-
-    expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[2].annotation.key).to.equal('http.path');
-    expect(annotations[2].annotation.value).to.equal(urlPath);
-
-    expect(annotations[3].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[3].annotation.key).to.equal('instanceId');
-    expect(annotations[3].annotation.value).to.equal(defaultTags.instanceId);
-  });
-
   it('should record an error', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
     const instrumentation = new HttpClient({
@@ -114,8 +84,7 @@ describe('Http Client Instrumentation', () => {
 
   [400, 500].forEach((statusCode) => {
     it('should record an error on status code >399', () => {
-      const record = sinon.spy();
-      const recorder = {record};
+      const {record} = recorder;
       const ctxImpl = new ExplicitContext();
       const tracer = new Tracer({ctxImpl, recorder});
       const instrumentation = new HttpClient({

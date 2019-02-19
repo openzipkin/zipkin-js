@@ -10,10 +10,15 @@ const {Some} = require('../src/option');
 const {Endpoint} = require('../src/model');
 
 describe('Tracer', () => {
+  let recorder;
+
+  beforeEach(() => {
+    const record = sinon.spy();
+    const setDefaultTags = sinon.spy();
+    recorder = {record, setDefaultTags};
+  });
+
   it('should make parent and child spans', () => {
-    const recorder = {
-      record: () => {}
-    };
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
 
@@ -41,9 +46,6 @@ describe('Tracer', () => {
   });
 
   it('should clear scope after letId', () => {
-    const recorder = {
-      record: () => {}
-    };
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
 
@@ -67,8 +69,7 @@ describe('Tracer', () => {
   });
 
   it('should make a local span', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
@@ -96,43 +97,8 @@ describe('Tracer', () => {
     });
   });
 
-  it('should make a local span with defaultTgas', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const localServiceName = 'smoothie-store';
-    const defaultTags = {instanceId: 'i-1234567890abcdef0'};
-    const trace = new Tracer({ctxImpl, recorder, localServiceName, defaultTags});
-
-    ctxImpl.scoped(() => {
-      const result = trace.local('buy-smoothie', () => {
-        trace.recordBinary('taste', 'banana');
-        return 'smoothie';
-      });
-
-      expect(result).to.eql('smoothie');
-
-      expect(record.getCall(0).args[0].annotation).to.eql(
-        new Annotation.ServiceName('smoothie-store')
-      );
-      expect(record.getCall(1).args[0].annotation).to.eql(
-        new Annotation.LocalOperationStart('buy-smoothie')
-      );
-      expect(record.getCall(2).args[0].annotation).to.eql(
-        new Annotation.BinaryAnnotation('instanceId', defaultTags.instanceId)
-      );
-      expect(record.getCall(3).args[0].annotation).to.eql(
-        new Annotation.BinaryAnnotation('taste', 'banana')
-      );
-      expect(record.getCall(4).args[0].annotation).to.eql(
-        new Annotation.LocalOperationStop()
-      );
-    });
-  });
-
   it('should record binary tags', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
@@ -153,32 +119,8 @@ describe('Tracer', () => {
     });
   });
 
-  it('should record defaultTags', () => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const localServiceName = 'smoothie-store';
-    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
-    // eslint-disable-next-line no-unused-vars
-    const trace = new Tracer({ctxImpl, recorder, localServiceName, defaultTags});
-
-    ctxImpl.scoped(() => {
-      trace.recordDefaultTags();
-      const annotations = record.args.map(args => args[0]);
-
-      expect(annotations[0].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[0].annotation.key).to.equal('instanceId');
-      expect(annotations[0].annotation.value).to.equal('i-1234567890abcdef0');
-
-      expect(annotations[1].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[1].annotation.key).to.equal('cluster');
-      expect(annotations[1].annotation.value).to.equal('nodeservice-stage');
-    });
-  });
-
   it('should complete a local span on error type', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
@@ -212,8 +154,7 @@ describe('Tracer', () => {
   });
 
   it('should make a local span for a promise', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
@@ -248,8 +189,7 @@ describe('Tracer', () => {
   });
 
   it('should close the correct span for a promise', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
@@ -277,8 +217,7 @@ describe('Tracer', () => {
   });
 
   it('should make a local span for a promise that produces an error', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
@@ -319,9 +258,6 @@ describe('Tracer', () => {
   });
 
   function runTest(bool, done) {
-    const recorder = {
-      record: sinon.spy()
-    };
     const ctxImpl = new ExplicitContext();
     const sampler = new Sampler(() => bool);
     const tracer = new Tracer({
@@ -345,8 +281,7 @@ describe('Tracer', () => {
   });
 
   it('should not record unsampled spans', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const sampler = new Sampler(neverSample);
     const trace = new Tracer({ctxImpl, recorder, sampler});
@@ -360,8 +295,6 @@ describe('Tracer', () => {
   });
 
   it('should default to unknown endpoint', () => {
-    const record = sinon.spy();
-    const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const trace = new Tracer({ctxImpl, recorder});
 
@@ -369,8 +302,6 @@ describe('Tracer', () => {
   });
 
   it('should accept localServiceName parameter', () => {
-    const record = sinon.spy();
-    const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const trace = new Tracer({ctxImpl, recorder, localServiceName: 'robot'});
 
@@ -378,8 +309,6 @@ describe('Tracer', () => {
   });
 
   it('should accept localEndpoint parameter', () => {
-    const record = sinon.spy();
-    const recorder = {record};
     const ctxImpl = new ExplicitContext();
     const localEndpoint = new Endpoint({
       serviceName: 'portal-service',
@@ -394,8 +323,7 @@ describe('Tracer', () => {
   it('should log timestamps in microseconds', () => {
     const clock = lolex.install(12345678);
 
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const trace = new Tracer({ctxImpl, recorder});
 
@@ -411,8 +339,7 @@ describe('Tracer', () => {
   });
 
   it('should log timestamps from second parameter if it present', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const trace = new Tracer({ctxImpl, recorder});
 
@@ -423,9 +350,6 @@ describe('Tracer', () => {
   });
 
   it('should create fixed-length 64-bit trace ID by default', () => {
-    const recorder = {
-      record: () => {}
-    };
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
 
@@ -434,13 +358,19 @@ describe('Tracer', () => {
   });
 
   it('should create fixed-length 128-bit trace ID on traceId128Bit', () => {
-    const recorder = {
-      record: () => {}
-    };
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder, traceId128Bit: true});
 
     const rootTracerId = tracer.createRootId();
     expect(rootTracerId.traceId.length).to.eql(32);
+  });
+
+  it('should record defaultTags', () => {
+    const {setDefaultTags} = recorder;
+    const ctxImpl = new ExplicitContext();
+    const localServiceName = 'smoothie-store';
+    // eslint-disable-next-line no-unused-vars
+    const tracer = new Tracer({ctxImpl, recorder, localServiceName});
+    expect(setDefaultTags.called).to.eql(true);
   });
 });

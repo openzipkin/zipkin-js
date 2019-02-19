@@ -8,6 +8,12 @@ const {Span, Endpoint} = require('./model');
 const defaultTimeout = 60 * 1000000;
 
 /**
+ * defaultTags property name
+ * @type {symbol}
+ */
+const defaultTagsSymbol = Symbol('defaultTags');
+
+/**
  * @class PartialSpan
  */
 class PartialSpan {
@@ -33,6 +39,26 @@ class PartialSpan {
     }
     this.endTimestamp = now(this.startTimestamp, this.startTick);
   }
+
+  /**
+   * factory: creates new span and set
+   * @static
+   * @param {TraceId} id
+   * @param {Object} defaultTags
+   * @return {PartialSpan}
+   */
+  static create(id, defaultTags = {}) {
+    const span = new PartialSpan(id);
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const tag in defaultTags) {
+      if (defaultTags.hasOwnProperty(tag)) {
+        span.delegate.putTag(tag, defaultTags[tag]);
+      }
+    }
+
+    return span;
+  }
 }
 
 /**
@@ -49,6 +75,7 @@ class BatchRecorder {
     this.logger = logger;
     this.timeout = timeout;
     this.partialSpans = new Map();
+    this[defaultTagsSymbol] = {};
 
     // read through the partials spans regularly
     // and collect any timed-out ones
@@ -90,7 +117,7 @@ class BatchRecorder {
     if (this.partialSpans.has(id)) {
       span = this.partialSpans.get(id);
     } else {
-      span = new PartialSpan(id);
+      span = PartialSpan.create(id, this[defaultTagsSymbol]);
     }
     updater(span);
     if (span.endTimestamp) {
@@ -182,6 +209,10 @@ class BatchRecorder {
           break;
       }
     });
+  }
+
+  setDefaultTags(tags) {
+    this[defaultTagsSymbol] = tags;
   }
 
   toString() {

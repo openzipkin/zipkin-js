@@ -25,7 +25,6 @@ class HttpClientInstrumentation {
     this.tracer.recordServiceName(this.serviceName);
     this.tracer.recordRpc(method.toUpperCase());
     this.tracer.recordBinary('http.path', path);
-    this.tracer.recordDefaultTags();
 
     this.tracer.recordAnnotation(new Annotation.ClientSend());
     if (this.remoteServiceName) {

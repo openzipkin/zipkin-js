@@ -279,7 +279,25 @@ describe('Batch Recorder', () => {
     });
   });
 
-  it('should capture BinaryAnnotation event from tracer defaultTags', () => {
+  it('should capture tracer defaultTags', () => {
+    const logSpan = sinon.spy();
+
+    const ctxImpl = new ExplicitContext();
+    const logger = {logSpan};
+    const recorder = new BatchRecorder({logger});
+    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
+    const trace = new Tracer({ctxImpl, recorder, defaultTags});
+
+    trace.recordServiceName('producer');
+    trace.recordRpc('send-msg');
+    trace.recordAnnotation(new Annotation.LocalOperationStop());
+
+    const loggedSpan = logSpan.getCall(0).args[0];
+    expect(loggedSpan.tags.instanceId).to.equal(defaultTags.instanceId);
+    expect(loggedSpan.tags.cluster).to.equal(defaultTags.cluster);
+  });
+
+  it('should capture tracer defaultTags on local scope', () => {
     const logSpan = sinon.spy();
 
     const ctxImpl = new ExplicitContext();
@@ -297,7 +315,6 @@ describe('Batch Recorder', () => {
       }));
       trace.recordServiceName('producer');
       trace.recordRpc('send-msg');
-      trace.recordDefaultTags();
       trace.recordAnnotation(new Annotation.LocalOperationStop());
 
       const loggedSpan = logSpan.getCall(0).args[0];
