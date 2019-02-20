@@ -51,7 +51,10 @@ class Tracer {
     this._defaultTraceId = this.createRootId();
     this._startTimestamp = now();
     this._startTick = hrtime();
-    this.recorder.setDefaultTags(defaultTags);
+    // only set defaultTags in recorders which know about it
+    if (this.recorder.setDefaultTags) {
+      this.recorder.setDefaultTags(defaultTags);
+    }
   }
 
   scoped(callback) {

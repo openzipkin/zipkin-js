@@ -8,8 +8,7 @@ describe('Http Client Instrumentation', () => {
 
   beforeEach(() => {
     const record = sinon.spy();
-    const setDefaultTags = sinon.spy();
-    recorder = {record, setDefaultTags};
+    recorder = {record};
   });
 
   it('should add headers to requests', () => {
