@@ -3,7 +3,7 @@ export { default as option } from './option';
 export { default as Annotation } from './annotation';
 export { default as Tracer } from './tracer';
 export { default as createNoopTracer } from './tracer/noop';
-export { default as randomTraceId } from './tracer/randomTraceId';
+export { randomTraceId, randomTraceId128bit } from './tracer/randomTraceId';
 export { default as sampler } from './tracer/sampler';
 export { default as TraceId } from './tracer/TraceId';
 

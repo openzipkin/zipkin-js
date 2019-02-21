@@ -408,4 +408,32 @@ describe('Tracer', () => {
     const rootTracerId = tracer.createRootId();
     expect(rootTracerId.traceId.length).to.eql(32);
   });
+
+  it('should accept the spanId generation algorithm', () => {
+    const recorder = {
+      record: () => {}
+    };
+    const ctxImpl = new ExplicitContext();
+    const generateSpanId = sinon.spy(() => 'notsorandomspanid');
+    const tracer = new Tracer({ctxImpl, recorder, generateSpanId});
+
+    const rootTracerId = tracer.createRootId();
+
+    expect(generateSpanId.called).to.equal(true);
+    expect(rootTracerId._spanId).to.equal('notsorandomspanid');
+  });
+
+  it('should accept the traceId generation algorithm', () => {
+    const recorder = {
+      record: () => {}
+    };
+    const ctxImpl = new ExplicitContext();
+    const generateTraceId = sinon.spy(() => 'notsorandomtraceid');
+    const tracer = new Tracer({ctxImpl, recorder, generateTraceId});
+
+    const rootTracerId = tracer.createRootId();
+
+    expect(generateTraceId.called).to.equal(true);
+    expect(rootTracerId._traceId.getOrElse('')).to.equal('notsorandomtraceid');
+  });
 });

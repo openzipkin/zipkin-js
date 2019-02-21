@@ -4,7 +4,7 @@ const {Sampler, alwaysSample} = require('./sampler');
 const Annotation = require('../annotation');
 const Record = require('./record');
 const TraceId = require('./TraceId');
-const randomTraceId = require('./randomTraceId');
+const {randomTraceId, randomTraceId128bit} = require('./randomTraceId');
 const {now, hrtime} = require('../time');
 const {Endpoint} = require('../model');
 
@@ -19,6 +19,8 @@ class Tracer {
     ctxImpl = requiredArg('ctxImpl'),
     recorder = requiredArg('recorder'),
     sampler = new Sampler(alwaysSample),
+    generateSpanId = randomTraceId,
+    generateTraceId,
     // traceID128Bit enables the generation of 128 bit traceIDs in case the tracer
     // needs to create a root span. By default regular 64 bit traceIDs are used.
     // Regardless of this setting, the library will propagate and support both
@@ -39,6 +41,8 @@ class Tracer {
     this.recorder = recorder;
     this.sampler = sampler;
     this.traceId128Bit = traceId128Bit;
+    this.generateSpanId = generateSpanId;
+    this.generateTraceId = generateTraceId || (traceId128Bit ? randomTraceId128bit : randomTraceId);
     this.supportsJoin = supportsJoin;
     if (localEndpoint) {
       this._localEndpoint = localEndpoint;
@@ -65,10 +69,8 @@ class Tracer {
   }
 
   createRootId(isSampled = None, isDebug = false) {
-    const rootSpanId = randomTraceId();
-    const traceId = this.traceId128Bit
-      ? new Some(randomTraceId() + rootSpanId)
-      : None;
+    const rootSpanId = this.generateSpanId();
+    const traceId = new Some(this.generateTraceId());
     const id = new TraceId({
       traceId,
       parentId: None,
@@ -92,7 +94,7 @@ class Tracer {
     const childId = new TraceId({
       traceId: currentId.map(id => id.traceId),
       parentId: currentId.map(id => id.spanId),
-      spanId: randomTraceId(),
+      spanId: this.generateSpanId(),
       sampled: currentId.flatMap(id => id.sampled),
       flags: currentId.map(id => id.flags).getOrElse(0)
     });

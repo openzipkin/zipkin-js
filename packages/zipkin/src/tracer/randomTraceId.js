@@ -1,5 +1,5 @@
 // === Generate a random 64-bit number in fixed-length hex format
-function randomTraceId() {
+export function randomTraceId() {
   const digits = '0123456789abcdef';
   let n = '';
   for (let i = 0; i < 16; i++) {
@@ -9,4 +9,6 @@ function randomTraceId() {
   return n;
 }
 
-module.exports = randomTraceId;
+export function randomTraceId128bit() {
+  return randomTraceId() + randomTraceId();
+}
