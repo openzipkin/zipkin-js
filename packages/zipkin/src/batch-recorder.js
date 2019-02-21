@@ -68,7 +68,7 @@ class BatchRecorder {
   /**
    * @constructor
    * @param {Object} options
-   * @property {HttpLogger|KafkaLogger} logger logs the data to openZipkin
+   * @property {Logger} logger logs the data to openZipkin
    * @property {number} timeout timeout for span in microseconds
    */
   constructor({logger, timeout = defaultTimeout}) {
