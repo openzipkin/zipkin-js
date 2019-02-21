@@ -4,9 +4,15 @@ const ExplicitContext = require('../src/explicit-context');
 const HttpClient = require('../src/instrumentation/httpClient');
 
 describe('Http Client Instrumentation', () => {
-  it('should add headers to requests', () => {
+  let recorder;
+
+  beforeEach(() => {
     const record = sinon.spy();
-    const recorder = {record};
+    recorder = {record};
+  });
+
+  it('should add headers to requests', () => {
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
     const instrumentation = new HttpClient({
@@ -51,8 +57,7 @@ describe('Http Client Instrumentation', () => {
   });
 
   it('should record an error', () => {
-    const record = sinon.spy();
-    const recorder = {record};
+    const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
     const instrumentation = new HttpClient({
@@ -78,8 +83,7 @@ describe('Http Client Instrumentation', () => {
 
   [400, 500].forEach((statusCode) => {
     it('should record an error on status code >399', () => {
-      const record = sinon.spy();
-      const recorder = {record};
+      const {record} = recorder;
       const ctxImpl = new ExplicitContext();
       const tracer = new Tracer({ctxImpl, recorder});
       const instrumentation = new HttpClient({
