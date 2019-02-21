@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-superagent",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "description": "Interceptor for superagent with Zipking.js",
   "main": "lib/superagentPlugin.js",
   "scripts": {
@@ -19,6 +19,6 @@
     "nock": "^9.0.14",
     "sinon": "^2.3.8",
     "superagent": "^4.0.0",
-    "zipkin": "^0.16.1"
+    "zipkin": "^0.16.2"
   }
 }

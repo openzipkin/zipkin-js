@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-http",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "description": "Transports Zipkin trace data via HTTP",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -21,6 +21,6 @@
     "body-parser": "^1.15.2",
     "express": "^4.13.4",
     "mocha": "^5.2.0",
-    "zipkin": "^0.16.1"
+    "zipkin": "^0.16.2"
   }
 }
