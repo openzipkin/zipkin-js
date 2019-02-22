@@ -9,13 +9,6 @@ const ExplicitContext = require('../src/explicit-context');
 const {Some, None} = require('../src/option');
 const {Endpoint} = require('../src/model');
 
-const setupTest = () => {
-  const record = sinon.spy();
-  const recorder = {record};
-  const ctxImpl = new ExplicitContext();
-  return {record, recorder, ctxImpl};
-};
-
 describe('Tracer', () => {
   let recorder;
 
@@ -373,7 +366,7 @@ describe('Tracer', () => {
   });
 
   it('should throw error when joining none TraceId value', () => {
-    const {recorder, ctxImpl} = setupTest();
+    const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl});
 
     expect(() => { tracer.join(null); }).to.throw();
@@ -386,7 +379,7 @@ describe('Tracer', () => {
 
   samplerCases.forEach(sampler => {
     it(`should follow sampler if sampled value is missing when joining (${sampler})`, () => {
-      const {recorder, ctxImpl} = setupTest();
+      const ctxImpl = new ExplicitContext();
       const tracer = new Tracer({recorder, ctxImpl, sampler});
 
       const rootTraceId = tracer.createRootId();
@@ -401,7 +394,7 @@ describe('Tracer', () => {
   });
 
   it('should create childId if supportsJoin=false when joining', () => {
-    const {recorder, ctxImpl} = setupTest();
+    const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({recorder, ctxImpl, supportsJoin: false});
 
     const rootTraceId = tracer.createRootId();
