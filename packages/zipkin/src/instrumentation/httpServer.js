@@ -54,13 +54,8 @@ class HttpServerInstrumentation {
           flags
         });
       });
-      return !this.tracer.supportsJoin
-        ? parentId.map(id =>
-            this.tracer.letId(id, () =>
-              this.tracer.createChildId()
-            )
-          )
-        : parentId;
+
+      return new Some(this.tracer.join(parentId.getOrElse()));
     } else {
       if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
         const sampled = readHeader(Header.Sampled) === None ?

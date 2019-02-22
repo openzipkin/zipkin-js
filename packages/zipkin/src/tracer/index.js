@@ -156,6 +156,23 @@ class Tracer {
     });
   }
 
+  join(traceId) {
+    if (!(traceId instanceof TraceId)) {
+      throw new Error('Must be valid TraceId instance');
+    }
+
+    if (traceId._sampled === None) {
+      /* eslint-disable no-param-reassign */
+      traceId._sampled = this.sampler.shouldSample(traceId);
+    }
+
+    return !this.supportsJoin
+      ? this.letId(traceId, () =>
+          this.createChildId()
+        )
+      : traceId;
+  }
+
   setId(traceId) {
     this._ctxImpl.setContext(traceId);
   }
