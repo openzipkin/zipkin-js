@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-request",
-  "version": "0.16.0",
+  "version": "0.16.2",
   "description": "Instrumentation for request with Zipkin.js",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -22,6 +22,6 @@
     "express": "^4.13.4",
     "mocha": "^5.2.0",
     "request": "^2.88.0",
-    "zipkin": "^0.16.0"
+    "zipkin": "^0.16.2"
   }
 }

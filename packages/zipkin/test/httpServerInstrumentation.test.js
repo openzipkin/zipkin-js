@@ -7,9 +7,11 @@ const HttpServer = require('../src/instrumentation/httpServer');
 
 const setupTest = () => {
   const record = sinon.spy();
-  const recorder = {record};
+  const setDefaultTags = sinon.spy();
+  const recorder = {record, setDefaultTags};
   const ctxImpl = new ExplicitContext();
-  return {record, recorder, ctxImpl};
+  const defaultTags = {instanceId: 'i-1234567890abcdef0'};
+  return {record, recorder, ctxImpl, defaultTags};
 };
 
 const setupServerUrl = () => {
