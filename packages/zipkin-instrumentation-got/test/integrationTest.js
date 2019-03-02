@@ -1,11 +1,21 @@
 const {Tracer, ExplicitContext, createNoopTracer} = require('zipkin');
 const express = require('express');
-const baseGot = require('got');
 const sinon = require('sinon');
+const semver = require('semver');
 const wrapGot = require('../src/wrapGot');
+
+// Node.js 8.6 or higher required by Got
+const baseGot = semver.gte(process.version, '8.6.0')
+  ? require('got')
+  : null;
 
 describe('wrapGot', () => {
   before(function(done) {
+    if (!baseGot) {
+      this.skip();
+      return;
+    }
+
     const app = express();
     app.post('/user', (req, res) => res.status(202).json({
       traceId: req.header('X-B3-TraceId') || '?',
@@ -19,7 +29,11 @@ describe('wrapGot', () => {
   });
 
   after(function(done) {
-    this.server.close(done);
+    if (this.server) {
+      this.server.close(done);
+    } else {
+      done();
+    }
   });
 
   it('should add instrumentation to "got"', function(done) {
