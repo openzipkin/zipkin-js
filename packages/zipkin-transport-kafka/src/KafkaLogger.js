@@ -17,7 +17,7 @@ module.exports = class KafkaLogger {
     this.onError = options.onError || function(err) {
       log.error(err);
     };
-
+    this.encoder = options.encoder || THRIFT;
     this.topic = options.topic || 'zipkin';
 
     if (clientOpts.connectionString) {
@@ -51,7 +51,7 @@ module.exports = class KafkaLogger {
       });
     };
     try {
-      const encodedSpan = THRIFT.encode(span);
+      const encodedSpan = this.encoder.encode(span);
       if (this.producerState === 'ready') {
         sendSpan(encodedSpan);
       } else {
