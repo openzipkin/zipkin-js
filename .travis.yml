@@ -29,7 +29,7 @@ before_install:
   - export PATH="$HOME/.yarn/bin:$PATH"
 
 install:
-  - yarn install --ignore-engines
+  - yarn install;
 
 script:
   - yarn lint
