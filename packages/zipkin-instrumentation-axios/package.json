@@ -1,0 +1,53 @@
+{
+  "name": "zipkin-js-instrumentation-axios",
+  "version": "0.2.0",
+  "description": "Library to instrument the axios HTTP-client to Support zipkin.",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "mocha --compilers js:@babel/register --exit",
+    "build": "babel src --out-dir lib",
+    "prepublish": "babel src --out-dir lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/geekeren/zipkin-js-instrumentation-axios.git"
+  },
+  "keywords": [
+    "zipkin",
+    "open-trace",
+    "http",
+    "axios"
+  ],
+  "author": "Baiyuan Wang",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/geekeren/zipkin-js-instrumentation-axios/issues"
+  },
+  "homepage": "https://github.com/geekeren/zipkin-js-instrumentation-axios#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "zipkin": "^0.16.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/register": "^7.0.0",
+    "axios": "^0.18.0",
+    "babel-plugin-add-module-exports": "^1.0.0",
+    "chai": "^4.2.0",
+    "expect": "^24.1.0",
+    "express": "^4.16.4",
+    "husky": "^1.3.1",
+    "mocha": "^5.2.0",
+    "sinon": "^7.2.3",
+    "zipkin": "^0.16.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm test",
+      "pre-push": "npm test && npm run build"
+    }
+  }
+}
