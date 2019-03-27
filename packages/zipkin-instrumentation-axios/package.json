@@ -24,10 +24,6 @@
     "url": "https://github.com/geekeren/zipkin-js-instrumentation-axios/issues"
   },
   "homepage": "https://github.com/geekeren/zipkin-js-instrumentation-axios#readme",
-  "dependencies": {
-    "axios": "^0.18.0",
-    "zipkin": "^0.16.0"
-  },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.2.2",
