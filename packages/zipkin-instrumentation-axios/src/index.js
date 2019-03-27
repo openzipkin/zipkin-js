@@ -1,4 +1,4 @@
-import { Instrumentation } from 'zipkin';
+import {Instrumentation} from 'zipkin';
 const zipkinRecordError = (error, options) => {
   const instrumentation = new Instrumentation.HttpClient(options);
   if (error.response) {
@@ -19,8 +19,10 @@ const zipkinRecordResponse = (res, options) => {
 };
 
 const wrapAxios = (axios, options = {}) => {
-  axios.interceptors.request.use(config => zipkinRecordRequest(config, options), err => zipkinRecordError(err, options));
-  axios.interceptors.response.use(res => zipkinRecordResponse(res, options), err => zipkinRecordError(err, options));
+  axios.interceptors.request.use(config => zipkinRecordRequest(config, options),
+      err => zipkinRecordError(err, options));
+  axios.interceptors.response.use(res => zipkinRecordResponse(res, options),
+      err => zipkinRecordError(err, options));
   return axios;
 };
 export default wrapAxios;

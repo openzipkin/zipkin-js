@@ -1,8 +1,8 @@
-import { Tracer, ExplicitContext } from 'zipkin';
+import {Tracer, ExplicitContext} from 'zipkin';
 import express from 'express';
 import axios from 'axios';
 import sinon from 'sinon';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import wrapAxios from '../src/index';
 
 describe('axios instrumentation - integration test', () => {
@@ -38,21 +38,21 @@ describe('axios instrumentation - integration test', () => {
   let tracer;
   beforeEach(() => {
     record = sinon.spy();
-    recorder = { record };
+    recorder = {record};
     ctxImpl = new ExplicitContext();
-    tracer = new Tracer({ recorder, ctxImpl });
+    tracer = new Tracer({recorder, ctxImpl});
   });
   it('should add headers to requests', done => {
     tracer.scoped(() => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinAxios
           .get(url)
-          .then(res => {
+          .then(() => {
             const annotations = record.args.map(args => args[0]);
             const initialTraceId = annotations[0].traceId.traceId;
             annotations.forEach(ann => expect(ann.traceId.traceId)
@@ -88,7 +88,7 @@ describe('axios instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinAxios.get(url).then(() => {
@@ -127,10 +127,10 @@ describe('axios instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
-        zipkinAxios({ url })
+        zipkinAxios({url})
           .then(() => {
             const annotations = record.args.map(args => args[0]);
             const initialTraceId = annotations[0].traceId.traceId;
@@ -167,10 +167,10 @@ describe('axios instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
-        zipkinAxios({ url }).then(() => {
+        zipkinAxios({url}).then(() => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
@@ -207,10 +207,10 @@ describe('axios instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const urlPath = '/doesNotExist';
         const url = `http://${apiHost}:${apiPort}${urlPath}`;
-        zipkinAxios({ url, timeout: 100 }).catch(() => {
+        zipkinAxios({url, timeout: 100}).catch(() => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
@@ -249,14 +249,14 @@ describe('axios instrumentation - integration test', () => {
   });
 
 
-  it('should report when service does not exist', function (done) {
+  it('should report when service does not exist', function(done) {
     this.timeout(1000); // Wait long than request timeout
     tracer.scoped(() => {
       api.listen(0, () => {
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const host = 'localhost:12345';
         const url = `http://${host}`;
-        zipkinAxios({ url, timeout: 200 }).catch(() => {
+        zipkinAxios({url, timeout: 200}).catch(() => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
@@ -296,10 +296,10 @@ describe('axios instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const urlPath = '/weather/securedTown';
         const url = `http://${apiHost}:${apiPort}${urlPath}`;
-        zipkinAxios({ url, timeout: 100 }).catch(() => {
+        zipkinAxios({url, timeout: 100}).catch(() => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
@@ -341,10 +341,10 @@ describe('axios instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinAxios = wrapAxios(axios, { tracer, serviceName, remoteServiceName });
+        const zipkinAxios = wrapAxios(axios, {tracer, serviceName, remoteServiceName});
         const urlPath = '/weather/bagCity';
         const url = `http://${apiHost}:${apiPort}${urlPath}`;
-        zipkinAxios({ url, timeout: 100 }).catch(() => {
+        zipkinAxios({url, timeout: 100}).catch(() => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
