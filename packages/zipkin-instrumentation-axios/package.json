@@ -4,7 +4,7 @@
   "description": "Library to instrument the axios HTTP-client to Support zipkin.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha --compilers js:@babel/register --exit",
+    "test": "mocha --compilers js:@babel/register --exit --require ../../test/helper.js",
     "build": "babel src --out-dir lib",
     "prepublish": "babel src --out-dir lib"
   },
@@ -14,7 +14,6 @@
   },
   "keywords": [
     "zipkin",
-    "open-trace",
     "http",
     "axios"
   ],
