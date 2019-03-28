@@ -1,0 +1,26 @@
+{
+  "name": "zipkin-instrumentation-got",
+  "version": "0.16.2",
+  "description": "Interceptor for HTTP clients using the Got library",
+  "main": "lib/index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "mocha --exit --require ../../test/helper.js",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "peerDependencies": {
+    "got": ">= 9.6.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
+    "express": "^4.13.4",
+    "got": "^9.6.0",
+    "mocha": "^5.2.0",
+    "zipkin": "^0.16.2"
+  }
+}
