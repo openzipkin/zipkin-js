@@ -1,7 +1,7 @@
 {
-  "name": "zipkin-instrumentation-axios",
+  "name": "zipkin-instrumentation-axiosjs",
   "version": "0.16.2",
-  "description": "Library to instrument the axios HTTP-client to Support zipkin.",
+  "description": "Library to instrument the axios HTTP-client to support zipkin.",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --exit --require ../../test/helper.js",

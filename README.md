@@ -1,4 +1,4 @@
-# Zipkin.js
+# Zipkin JS
 
 [![Build Status](https://travis-ci.org/openzipkin/zipkin-js.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-js)
 [![npm version](https://badge.fury.io/js/zipkin.svg)](https://badge.fury.io/js/zipkin)
@@ -117,6 +117,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [connect](packages/zipkin-instrumentation-connect) (zipkin-instrumentation-connect)
 - [superagent](packages/zipkin-instrumentation-superagent) (zipkin-instrumentation-superagent)
 - [grpc-client](packages/zipkin-instrumentation-grpc-client) (zipkin-instrumentation-grpc-client)
+- [grpc-client](packages/zipkin-instrumentation-axios) (zipkin-instrumentation-axiosjs)
 
 Every module has a README.md file that describes how to use it.
 
