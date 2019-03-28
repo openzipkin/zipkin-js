@@ -1,4 +1,4 @@
-import {PluginRegistrationObject} from 'hapi';
+import {PluginBase} from 'hapi';
 import {Tracer} from 'zipkin';
 
 export interface ZipkinPluginOptions {
@@ -6,4 +6,4 @@ export interface ZipkinPluginOptions {
     port?: number;
 }
 
-export declare const hapiMiddleware: PluginRegistrationObject<ZipkinPluginOptions>;
+export declare const hapiMiddleware: PluginBase<ZipkinPluginOptions>;

@@ -19,7 +19,7 @@ const server = new Hapi.Server();
 
 // Add the Zipkin middleware
 server.register({
-  register: zipkinMiddleware,
+  plugin: zipkinMiddleware,
   options: {tracer}
 });
 ```
