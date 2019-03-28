@@ -1,0 +1,33 @@
+{
+  "name": "zipkin-instrumentation-axios",
+  "version": "0.16.2",
+  "description": "Library to instrument the axios HTTP-client to Support zipkin.",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "mocha --exit --require ../../test/helper.js",
+    "build": "babel src -d lib",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "zipkin",
+    "http",
+    "axios"
+  ],
+  "author": "Baiyuan Wang <wangbaiyuan@outlook.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "axios": "^0.18.0",
+    "babel-plugin-add-module-exports": "^1.0.0",
+    "express": "^4.16.4",
+    "zipkin": "^0.16.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm test",
+      "pre-push": "npm test && npm run build"
+    }
+  }
+}
