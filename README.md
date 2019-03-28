@@ -92,7 +92,7 @@ Since some of the `zipkin-js` libraries are used in both the browser and Node.js
 
 ## Node.js
 
-The following libraries are specific to Node.js. Node.js version 6.x and later are supported:
+The following libraries are specific to Node.js. Node.js version 8.x and later are supported:
 
 - zipkin-context-cls
 - zipkin-encoder-thrift
@@ -117,7 +117,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [connect](packages/zipkin-instrumentation-connect) (zipkin-instrumentation-connect)
 - [superagent](packages/zipkin-instrumentation-superagent) (zipkin-instrumentation-superagent)
 - [grpc-client](packages/zipkin-instrumentation-grpc-client) (zipkin-instrumentation-grpc-client)
-- [grpc-client](packages/zipkin-instrumentation-axios) (zipkin-instrumentation-axiosjs)
+- [axios](packages/zipkin-instrumentation-axios) (zipkin-instrumentation-axiosjs)
 
 Every module has a README.md file that describes how to use it.
 
