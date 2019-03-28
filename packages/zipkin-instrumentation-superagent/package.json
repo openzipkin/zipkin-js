@@ -1,7 +1,7 @@
 {
   "name": "zipkin-instrumentation-superagent",
   "version": "0.16.2",
-  "description": "Interceptor for superagent with Zipking.js",
+  "description": "Interceptor for superagent with Zipkin.js",
   "main": "lib/superagentPlugin.js",
   "scripts": {
     "build": "babel src -d lib",
