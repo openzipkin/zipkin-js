@@ -100,6 +100,105 @@ describe('gRPC client instrumentation (integration test)', () => {
     });
   });
 
+  it('should handle nested requests', done => {
+    tracer.scoped(() => {
+      const client = getClient();
+      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
+
+      client.getTemperature({location: 'Tahoe'}, {interceptors: [interceptor]}, () => {
+        client.getLocations({temperature: 25}, {interceptors: [interceptor]}, () => {
+          const annotations = record.args.map(args => args[0]);
+          let firstTraceId;
+          let weatherSpanId;
+          let weatherParentId;
+          let locationSpanId;
+          let locationParentId;
+
+          annotations.forEach(annot => {
+            if (firstTraceId) {
+              expect(annot.traceId.traceId === firstTraceId);
+            } else {
+              firstTraceId = annot.traceId.traceId;
+            }
+
+            if (annot.annotation.name === '/weather.WeatherService/GetTemperature') {
+              weatherSpanId = annot.traceId.spanId;
+              weatherParentId = annot.traceId.parentId;
+            }
+            if (annot.annotation.name === '/weather.WeatherService/GetLocations') {
+              locationSpanId = annot.traceId.spanId;
+              locationParentId = annot.traceId.parentId;
+            }
+
+            expect(annot.traceId.spanId).to.equal(annot.traceId.parentId);
+            expect(annot.traceId.parentId).to.equal(annot.traceId.spanId);
+          });
+
+          expect(weatherSpanId).to.not.equal(locationSpanId);
+          expect(weatherParentId).to.not.equal(locationParentId);
+          expect(weatherParentId).to.not.equal(locationSpanId);
+          expect(locationSpanId).to.not.equal(weatherSpanId);
+          expect(locationParentId).to.not.equal(weatherParentId);
+          expect(locationParentId).to.not.equal(weatherSpanId);
+
+          done();
+        });
+      });
+    });
+  });
+
+  it('should handle parallel requests', () => {
+    let promise;
+    tracer.scoped(() => {
+      const client = getClient();
+      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
+
+      const getTemperature = new Promise((resolve) => {
+        client.getTemperature({location: 'Tahoe'}, {interceptors: [interceptor]}, resolve);
+      });
+      const getLocations = new Promise((resolve) => {
+        client.getLocations({temperature: 25}, {interceptors: [interceptor]}, resolve);
+      });
+
+      promise = Promise.all([getTemperature, getLocations]).then(() => {
+        const annotations = record.args.map(args => args[0]);
+        let firstTraceId;
+        let weatherSpanId;
+        let weatherParentId;
+        let locationSpanId;
+        let locationParentId;
+
+        annotations.forEach(annot => {
+          if (firstTraceId) {
+            expect(annot.traceId.traceId === firstTraceId);
+          } else {
+            firstTraceId = annot.traceId.traceId;
+          }
+
+          if (annot.annotation.name === '/weather.WeatherService/GetTemperature') {
+            weatherSpanId = annot.traceId.spanId;
+            weatherParentId = annot.traceId.parentId;
+          }
+          if (annot.annotation.name === '/weather.WeatherService/GetLocations') {
+            locationSpanId = annot.traceId.spanId;
+            locationParentId = annot.traceId.parentId;
+          }
+
+          expect(annot.traceId.spanId).to.equal(annot.traceId.parentId);
+          expect(annot.traceId.parentId).to.equal(annot.traceId.spanId);
+        });
+
+        expect(weatherSpanId).to.not.equal(locationSpanId);
+        expect(weatherParentId).to.not.equal(locationParentId);
+        expect(weatherParentId).to.not.equal(locationSpanId);
+        expect(locationSpanId).to.not.equal(weatherSpanId);
+        expect(locationParentId).to.not.equal(weatherParentId);
+        expect(locationParentId).to.not.equal(weatherSpanId);
+      });
+    });
+    return promise;
+  });
+
   it('should send "x-b3-flags" header', done => {
     tracer.scoped(() => {
       const client = getClient();

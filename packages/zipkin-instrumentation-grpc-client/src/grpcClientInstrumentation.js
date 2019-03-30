@@ -81,17 +81,18 @@ class GrpcClientInstrumentation {
    * @return {zipkin.TraceId}
    */
   start(metadata, method) {
-    this.tracer.setId(this.tracer.createChildId());
-    const traceId = this.tracer.id;
+    const traceId = this.tracer.createChildId();
 
-    this.tracer.recordServiceName(this.serviceName);
-    this.tracer.recordRpc(method);
-    this.tracer.recordAnnotation(new Annotation.ClientSend());
-    if (this.remoteServiceName) {
-      this.tracer.recordAnnotation(new Annotation.ServerAddr({
-        serviceName: this.remoteServiceName
-      }));
-    }
+    this.tracer.letId(traceId, () => {
+      this.tracer.recordServiceName(this.serviceName);
+      this.tracer.recordRpc(method);
+      this.tracer.recordAnnotation(new Annotation.ClientSend());
+      if (this.remoteServiceName) {
+        this.tracer.recordAnnotation(new Annotation.ServerAddr({
+          serviceName: this.remoteServiceName
+        }));
+      }
+    });
 
     return traceId;
   }
@@ -103,12 +104,13 @@ class GrpcClientInstrumentation {
    */
   onReceiveStatus(traceId, status) {
     const {code} = status;
-    this.tracer.setId(traceId);
-    if (code !== this.grpc.status.OK) {
-      this.tracer.recordBinary('grpc.status_code', String(code));
-      this.tracer.recordBinary('error', String(code));
-    }
-    this.tracer.recordAnnotation(new Annotation.ClientRecv());
+    this.tracer.letId(traceId, () => {
+      if (code !== this.grpc.status.OK) {
+        this.tracer.recordBinary('grpc.status_code', String(code));
+        this.tracer.recordBinary('error', String(code));
+      }
+      this.tracer.recordAnnotation(new Annotation.ClientRecv());
+    });
   }
 }
 

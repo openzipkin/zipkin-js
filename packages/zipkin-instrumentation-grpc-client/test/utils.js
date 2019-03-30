@@ -21,6 +21,11 @@ function getTemperature(call, callback) {
   }
 }
 
+function getLocations(call, callback) {
+  const metadata = call.metadata.getMap();
+  return callback(null, {locations: ['Germany', 'France'], metadata});
+}
+
 /**
  * Tracer factory
  * @return {zipkin.Tracer}
@@ -38,6 +43,7 @@ const mockServer = () => {
   const server = new grpc.Server();
   server.addService(weather.WeatherService.service, {
     // here we map real methods to the proto service stubs
+    getLocations,
     getTemperature
   });
   server.bind('0.0.0.0:50051', grpc.ServerCredentials.createInsecure());
