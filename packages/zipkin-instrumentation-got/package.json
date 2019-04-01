@@ -1,5 +1,5 @@
 {
-  "name": "zipkin-instrumentation-got",
+  "name": "zipkin-instrumentation-gotjs",
   "version": "0.16.2",
   "description": "Interceptor for HTTP clients using the Got library",
   "main": "lib/index.js",
