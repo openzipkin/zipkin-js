@@ -4,6 +4,10 @@
   "command": {
     "run": {
       "npmClient": "yarn"
+    },
+    "publish": {
+      "ignoreChanges": ["*.md"]
     }
-  }
+  },
+  "packages": ["packages/!(zipkin-instrumentation-axios)"]
 }
