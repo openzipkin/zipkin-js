@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-hapi",
-  "version": "0.16.2",
+  "version": "0.17.1",
   "description": "Hapi middleware for instrumentation with Zipkin.js",
   "main": "lib/index.js",
   "scripts": {
@@ -20,6 +20,6 @@
     "@types/hapi": "^17.0.10",
     "hapi": "^17.3.1",
     "mocha": "^5.2.0",
-    "zipkin": "^0.16.2"
+    "zipkin": "^0.17.1"
   }
 }

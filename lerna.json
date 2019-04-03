@@ -1,13 +1,17 @@
 {
   "lerna": "3.5.0",
-  "version": "0.16.2",
+  "version": "0.17.1",
   "command": {
     "run": {
       "npmClient": "yarn"
     },
     "publish": {
-      "ignoreChanges": ["*.md"]
+      "ignoreChanges": [
+        "*.md"
+      ]
     }
   },
-  "packages": ["packages/!(zipkin-instrumentation-axios)"]
+  "packages": [
+    "packages/!(zipkin-instrumentation-axios)"
+  ]
 }
