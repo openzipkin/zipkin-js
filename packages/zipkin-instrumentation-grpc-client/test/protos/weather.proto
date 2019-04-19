@@ -4,6 +4,15 @@ package weather;
 
 service WeatherService {
     rpc GetTemperature (TemperatureRequest) returns (TemperatureReply) {}
+    rpc GetLocations (LocationRequest) returns (LocationReply) {}
+}
+
+message LocationRequest {
+    int32 temperature = 1;
+}
+
+message LocationReply {
+    repeated string locations = 1;
 }
 
 message TemperatureRequest {
