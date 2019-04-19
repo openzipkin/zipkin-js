@@ -12,11 +12,15 @@ function wrapRequest(request, {tracer, serviceName, remoteServiceName}) {
     const traceId = tracer.id;
 
     const recordResponse = (response) => {
-      instrumentation.recordResponse(traceId, response.statusCode);
+      tracer.scoped(() => {
+        instrumentation.recordResponse(traceId, response.statusCode);
+      });
     };
 
     const recordError = (error) => {
-      instrumentation.recordError(traceId, error);
+      tracer.scoped(() => {
+        instrumentation.recordError(traceId, error);
+      });
     };
 
     return request(wrappedOptions, callback)

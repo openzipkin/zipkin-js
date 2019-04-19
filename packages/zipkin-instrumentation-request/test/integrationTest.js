@@ -23,11 +23,14 @@ describe('request instrumentation - integration test', () => {
   let recorder;
   let ctxImpl;
   let tracer;
+  let rootId;
   beforeEach(() => {
     record = sinon.spy();
     recorder = {record};
     ctxImpl = new ExplicitContext();
     tracer = new Tracer({recorder, ctxImpl});
+    rootId = tracer.createRootId();
+    tracer.setId(rootId);
   });
 
   it('should add headers to requests', done => {
@@ -40,7 +43,7 @@ describe('request instrumentation - integration test', () => {
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest.get(url, () => {
           const annotations = record.args.map(args => args[0]);
-          const initialTraceId = annotations[0].traceId.traceId;
+          const initialTraceId = rootId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
             .to.equal(initialTraceId).and
             .to.have.lengthOf(16));
@@ -64,6 +67,11 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.value).to.equal('202');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          const currentSpan = tracer.id.spanId;
+          expect(currentSpan).to.equal(rootId.spanId,
+            'Current span should\'ve been restored to the original parent');
+
           done();
         });
       });
@@ -79,7 +87,7 @@ describe('request instrumentation - integration test', () => {
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest(url, () => {
           const annotations = record.args.map(args => args[0]);
-          const initialTraceId = annotations[0].traceId.traceId;
+          const initialTraceId = rootId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
             .to.equal(initialTraceId).and
             .to.have.lengthOf(16));
@@ -103,6 +111,11 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.value).to.equal('202');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          const currentSpan = tracer.id.spanId;
+          expect(currentSpan).to.equal(rootId.spanId,
+            'Current span should\'ve been restored to the original parent');
+
           done();
         });
       });
@@ -118,7 +131,7 @@ describe('request instrumentation - integration test', () => {
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest({url}, () => {
           const annotations = record.args.map(args => args[0]);
-          const initialTraceId = annotations[0].traceId.traceId;
+          const initialTraceId = rootId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
             .to.equal(initialTraceId).and
             .to.have.lengthOf(16));
@@ -142,6 +155,11 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.value).to.equal('202');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          const currentSpan = tracer.id.spanId;
+          expect(currentSpan).to.equal(rootId.spanId,
+            'Current span should\'ve been restored to the original parent');
+
           done();
         });
       });
@@ -158,7 +176,7 @@ describe('request instrumentation - integration test', () => {
         zipkinRequest({
           url, callback: () => {
             const annotations = record.args.map(args => args[0]);
-            const initialTraceId = annotations[0].traceId.traceId;
+            const initialTraceId = rootId.traceId;
             annotations.forEach(ann => expect(ann.traceId.traceId)
               .to.equal(initialTraceId).and
               .to.have.lengthOf(16));
@@ -182,6 +200,11 @@ describe('request instrumentation - integration test', () => {
             expect(annotations[5].annotation.value).to.equal('202');
 
             expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+            const currentSpan = tracer.id.spanId;
+            expect(currentSpan).to.equal(rootId.spanId,
+              'Current span should\'ve been restored to the original parent');
+
             done();
           }
         });
@@ -198,7 +221,7 @@ describe('request instrumentation - integration test', () => {
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest({url}).on('response', () => {
           const annotations = record.args.map(args => args[0]);
-          const initialTraceId = annotations[0].traceId.traceId;
+          const initialTraceId = rootId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
             .to.equal(initialTraceId).and
             .to.have.lengthOf(16));
@@ -222,6 +245,11 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[5].annotation.value).to.equal('202');
 
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+
+          const currentSpan = tracer.id.spanId;
+          expect(currentSpan).to.equal(rootId.spanId,
+              'Current span should\'ve been restored to the original parent');
+
           done();
         });
       });
@@ -238,7 +266,7 @@ describe('request instrumentation - integration test', () => {
         const url = `http://${apiHost}:${apiPort}${urlPath}`;
         zipkinRequest({url, timeout: 100}).on('response', () => {
           const annotations = record.args.map(args => args[0]);
-          const initialTraceId = annotations[0].traceId.traceId;
+          const initialTraceId = rootId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
             .to.equal(initialTraceId).and
             .to.have.lengthOf(16));
@@ -269,6 +297,10 @@ describe('request instrumentation - integration test', () => {
 
           expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
 
+          const currentSpan = tracer.id.spanId;
+          expect(currentSpan).to.equal(rootId.spanId,
+              'Current span should\'ve been restored to the original parent');
+
           done();
         });
       });
@@ -284,7 +316,7 @@ describe('request instrumentation - integration test', () => {
         const url = `http://${host}`;
         zipkinRequest({url, timeout: 100}).on('error', () => {
           const annotations = record.args.map(args => args[0]);
-          const initialTraceId = annotations[0].traceId.traceId;
+          const initialTraceId = rootId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)
             .to.equal(initialTraceId).and
             .to.have.lengthOf(16));
@@ -311,6 +343,11 @@ describe('request instrumentation - integration test', () => {
           expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
 
           expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+
+          const currentSpan = tracer.id.spanId;
+          expect(currentSpan).to.equal(rootId.spanId,
+              'Current span should\'ve been restored to the original parent');
+
           done();
         });
       });
