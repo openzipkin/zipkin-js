@@ -1,0 +1,24 @@
+{
+  "name": "zipkin-instrumentation-kafkajs",
+  "version": "0.16.2",
+  "description": "Zipkin JS wrapper for kafkajs consumer and producer.",
+  "main": "lib/zipkin-instrumentation-kafkajs.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "pretest": "docker-compose up -d; timeout 60 bash -c 'until echo > /dev/tcp/localhost/9092; do sleep 1; done'",
+    "test": "mocha --require ../../test/helper.js",
+    "posttest": "docker-compose down",
+    "prepublish": "npm run build"
+  },
+  "author": "OpenZipkin <openzipkin.alt@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/openzipkin/zipkin-js",
+  "devDependencies": {
+    "promise.prototype.finally": "3.1.0",
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
+    "mocha": "^5.2.0",
+    "zipkin": "^0.17.1",
+    "kafkajs": "^1.6.0"
+  }
+}
