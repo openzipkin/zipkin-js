@@ -1,9 +1,9 @@
 import {Tracer, ExplicitContext} from 'zipkin';
-import express from 'express';
 import axios from 'axios';
 import sinon from 'sinon';
 import {expect} from 'chai';
 import wrapAxios from '../src/index';
+import {mockServer} from './utils';
 
 describe('axios instrumentation - integration test', () => {
   const serviceName = 'weather-app';
@@ -15,32 +15,8 @@ describe('axios instrumentation - integration test', () => {
   let record;
   let tracer;
   before((done) => {
-    const api = express();
-    api.get('/weather/wuhan', (req, res) => {
-      res.status(202).json({
-        traceId: req.header('X-B3-TraceId'),
-        spanId: req.header('X-B3-SpanId')
-      });
-    });
-    api.get('/weather/beijing', (req, res) => {
-      res.status(202).json({
-        traceId: req.header('X-B3-TraceId'),
-        spanId: req.header('X-B3-SpanId')
-      });
-    });
-    api.get('/weather/securedTown', (req, res) => {
-      res.status(400).json({
-        traceId: req.header('X-B3-TraceId'),
-        spanId: req.header('X-B3-SpanId')
-      });
-    });
-    api.get('/weather/bagCity', (req, res) => {
-      res.status(500).json({
-        traceId: req.header('X-B3-TraceId'),
-        spanId: req.header('X-B3-SpanId')
-      });
-    });
-    apiServer = api.listen(0, () => {
+    mockServer().then(server => {
+      apiServer = server;
       apiPort = apiServer.address().port;
       apiHost = '127.0.0.1';
       done();
