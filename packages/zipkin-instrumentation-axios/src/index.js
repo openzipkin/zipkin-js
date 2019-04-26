@@ -29,14 +29,8 @@ export const wrapAxios = (axios, options = {}) => {
   if (axios.create) {
     axiosInstance = axios.create();
   }
-  axiosInstance.interceptors.request.use(
-    config => zipkinRecordRequest(config),
-    err => zipkinRecordError(err)
-  );
-  axiosInstance.interceptors.response.use(
-    res => zipkinRecordResponse(res),
-    err => zipkinRecordError(err)
-  );
+  axiosInstance.interceptors.request.use(zipkinRecordRequest, zipkinRecordError);
+  axiosInstance.interceptors.response.use(zipkinRecordResponse, zipkinRecordError);
   return axiosInstance;
 };
 export default wrapAxios;
