@@ -282,7 +282,7 @@ describe('request instrumentation - integration test', () => {
         const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
         const host = 'bad.invalid.url';
         const url = `http://${host}`;
-        zipkinRequest({url, timeout: 100}).on('error', () => {
+        zipkinRequest({url, timeout: 5000}).on('error', () => {
           const annotations = record.args.map(args => args[0]);
           const initialTraceId = annotations[0].traceId.traceId;
           annotations.forEach(ann => expect(ann.traceId.traceId)

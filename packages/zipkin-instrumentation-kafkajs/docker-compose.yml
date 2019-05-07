@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+  kafka-zookeeper:
+    image: openzipkin/zipkin-kafka
+    container_name: kafka-zookeeper
+    environment:
+      HOSTNAME: "localhost"
+    ports:
+      - 9092:9092
