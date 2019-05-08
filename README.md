@@ -118,6 +118,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [superagent](packages/zipkin-instrumentation-superagent) (zipkin-instrumentation-superagent)
 - [grpc-client](packages/zipkin-instrumentation-grpc-client) (zipkin-instrumentation-grpc-client)
 - [axios](packages/zipkin-instrumentation-axios) (zipkin-instrumentation-axiosjs)
+- [KafkaJS](packages/zipkin-instrumentation-kafkajs) (zipkin-instrumentation-kafkajs)
 
 Every module has a README.md file that describes how to use it.
 
@@ -159,9 +160,11 @@ yarn
 
 Running tests: `yarn test`
 
-Note that the memcached, redis and postgres integration tests requires you to have local instances running.
-The Kafka integration test will start an embedded Kafka server for the test, which requires you to have
+- Note that the memcached, redis and postgres integration tests requires you to have local instances running.
+- The Kafka transport integration test will start an embedded Kafka server for the test, which requires you to have
 Java installed on your machine.
+- The KafkaJS instrumentation tests require `docker` and `docker-compose` and will start up a containerized Kafka
+instance to run against
 
 Running code style linting: `yarn lint`
 
