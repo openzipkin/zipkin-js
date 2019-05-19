@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-redis",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "Interceptor for redis clients",
   "main": "lib/zipkinClient.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "@babel/core": "7.1.5",
     "mocha": "^5.2.0",
     "redis": "^2.6.2",
-    "zipkin": "^0.17.1"
+    "zipkin": "^0.18.0"
   },
   "dependencies": {
     "redis-commands": "^1.2.0"

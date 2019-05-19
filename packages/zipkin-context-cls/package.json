@@ -1,6 +1,6 @@
 {
   "name": "zipkin-context-cls",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "A Context API implementation that uses continuation-local-storage under the hood",
   "main": "lib/CLSContext.js",
   "scripts": {
