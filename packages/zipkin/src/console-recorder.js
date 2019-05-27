@@ -10,7 +10,7 @@ class ConsoleRecorder {
   record(rec) {
     const {spanId, parentId, traceId} = rec.traceId;
     this.logger(
-      `Record at (spanId=${spanId}, parentId=${parentId}, ` +
+      `Record at (timestamp=${rec.timestamp}, spanId=${spanId}, parentId=${parentId}, ` +
       `traceId=${traceId}): ${rec.annotation.toString()}`
     );
   }
