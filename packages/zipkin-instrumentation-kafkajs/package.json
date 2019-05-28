@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-kafkajs",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "description": "Zipkin JS wrapper for kafkajs consumer and producer.",
   "main": "lib/zipkin-instrumentation-kafkajs.js",
   "scripts": {
@@ -19,6 +19,6 @@
     "kafkajs": "^1.6.0",
     "mocha": "^5.2.0",
     "promise.prototype.finally": "3.1.0",
-    "zipkin": "^0.18.0"
+    "zipkin": "^0.18.1"
   }
 }

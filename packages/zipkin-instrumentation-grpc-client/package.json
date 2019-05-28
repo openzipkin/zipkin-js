@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-grpc-client",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "description": "Zipkin JS Interceptor for gRPC client",
   "main": "lib/grpcClientInterceptor.js",
   "scripts": {
@@ -18,6 +18,6 @@
     "express": "^4.13.4",
     "grpc": "^1.16.0",
     "mocha": "^5.2.0",
-    "zipkin": "^0.18.0"
+    "zipkin": "^0.18.1"
   }
 }
