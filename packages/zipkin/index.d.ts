@@ -34,6 +34,7 @@ declare namespace zipkin {
       ctxImpl: Context<TraceId>,
       recorder: Recorder,
       sampler?: sampler.Sampler,
+      supportsJoin?: boolean,
       traceId128Bit?: boolean,
       localServiceName?: string,
       localEndpoint?: model.Endpoint,
