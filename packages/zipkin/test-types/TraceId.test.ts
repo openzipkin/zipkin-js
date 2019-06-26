@@ -15,7 +15,7 @@ describe('TraceId', () => {
     expect(sampled.map).to.be.a('function');
     expect(sampled).to.equal(option.None);
 
-    const parentId: option.IOption<string> = traceId.parentId;
+    const parentId: option.IOption<string> = traceId.parentSpanId;
     expect(parentId.map).to.be.a('function');
   });
 });

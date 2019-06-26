@@ -125,7 +125,7 @@ describe('gRPC client instrumentation (integration test)', () => {
             if (annot.annotation.name === '/weather.WeatherService/GetLocations') {
               locationSpanId = annot.traceId.spanId;
             }
-            expect(annot.traceId.parentId).to.equal(None);
+            expect(annot.traceId.parentSpanId).to.equal(None);
           });
 
           expect(weatherSpanId).to.not.equal(locationSpanId);
@@ -170,7 +170,7 @@ describe('gRPC client instrumentation (integration test)', () => {
             locationSpanId = annot.traceId.spanId;
           }
 
-          expect(annot.traceId.parentId).to.equal(None);
+          expect(annot.traceId.parentSpanId).to.equal(None);
         });
 
         expect(weatherSpanId).to.not.equal(locationSpanId);

@@ -42,8 +42,17 @@ class TraceId {
     return this._traceId;
   }
 
-  get parentId() {
+  get parentSpanId() {
     return this._parentId;
+  }
+
+  /**
+   * Please use parentSpanId instead as this can return confusing results (the span ID when absent).
+   *
+   * @deprecated since version v0.19
+   */
+  get parentId() {
+    return this._parentId.getOrElse(this._spanId);
   }
 
   get spanId() {
@@ -54,6 +63,11 @@ class TraceId {
     return this._sampled;
   }
 
+  /**
+   * Please use isDebug instead.
+   *
+   * @deprecated since version v0.19
+   */
   get flags() {
     return this._debug ? 1 : 0;
   }
@@ -68,7 +82,7 @@ class TraceId {
 
   toString() {
     return `TraceId(spanId=${this.spanId.toString()}` +
-      `, parentId=${this.parentId.toString()}` +
+      `, parentSpanId=${this.parentSpanId.toString()}` +
       `, traceId=${this.traceId.toString()})`;
   }
 }

@@ -366,7 +366,7 @@ describe('axios instrumentation - integration test', () => {
               wuhanWeatherSpanId = annot.traceId.spanId;
             }
 
-            expect(annot.traceId.parentId).to.equal(None);
+            expect(annot.traceId.parentSpanId).to.equal(None);
           });
 
           expect(beijingWeatherSpanId).to.not.equal(wuhanWeatherSpanId);
@@ -403,7 +403,7 @@ describe('axios instrumentation - integration test', () => {
             wuhanWeatherSpanId = annot.traceId.spanId;
           }
 
-          expect(annot.traceId.parentId).to.equal(None);
+          expect(annot.traceId.parentSpanId).to.equal(None);
         });
 
         expect(beijingWeatherSpanId).to.not.equal(wuhanWeatherSpanId);

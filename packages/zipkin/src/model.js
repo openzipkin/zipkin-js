@@ -28,7 +28,7 @@ Annotation.prototype.toString = function toString() {
 
 function Span(traceId) {
   this.traceId = traceId.traceId;
-  traceId._parentId.ifPresent((id) => {
+  traceId.parentSpanId.ifPresent((id) => {
     this.parentId = id;
   });
   this.id = traceId.spanId;

@@ -154,7 +154,7 @@ describe('Http Server Instrumentation', () => {
       const annotations = record.args.map(args => args[0]);
 
       annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
-      annotations.forEach(ann => expect(ann.traceId.parentId.getOrElse()).to.equal('bbb'));
+      annotations.forEach(ann => expect(ann.traceId.parentSpanId.getOrElse()).to.equal('bbb'));
       annotations.forEach(ann => expect(ann.traceId.spanId).to.not.equal('bbb'));
       annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
