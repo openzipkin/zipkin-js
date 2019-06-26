@@ -16,7 +16,7 @@ describe('Model', () => {
     describe('Span', () => {
         it('should have correct type', () => {
             const span: model.Span = new model.Span(new TraceId({
-                traceId: new option.Some('a'),
+                traceId: 'a',
                 spanId: 'b'
             }));
 

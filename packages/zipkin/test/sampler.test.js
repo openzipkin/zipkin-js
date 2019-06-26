@@ -5,13 +5,13 @@ const {Some, None} = require('../src/option');
 const T = new Some(true);
 const F = new Some(false);
 
-function makeTestTraceId({flags = 0, sampled = None}) {
+function makeTestTraceId({debug = false, sampled = None}) {
   return new TraceId({
-    traceId: new Some('abc'),
+    traceId: 'abc',
     parentId: new Some('123'),
     spanId: 'fab',
     sampled,
-    flags
+    debug
   });
 }
 
@@ -20,7 +20,7 @@ describe('Sampler', () => {
     const neverSample = () => false;
     const sampler = new Sampler(neverSample);
     expect(
-      sampler.shouldSample(makeTestTraceId({flags: 1}))
+      sampler.shouldSample(makeTestTraceId({debug: true}))
     ).to.eql(T);
   });
   it('should respect the "sampled" property when true', () => {

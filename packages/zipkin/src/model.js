@@ -41,7 +41,7 @@ function Span(traceId) {
   this.annotations = [];
   this.tags = {};
   this.debug = traceId.isDebug();
-  this.shared = false;
+  this.shared = traceId.isShared();
 }
 
 Span.prototype.setName = function setName(name) {

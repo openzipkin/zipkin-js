@@ -1,4 +1,4 @@
-import {Tracer, ExplicitContext} from 'zipkin';
+const {option: {None}, Tracer, ExplicitContext} = require('zipkin');
 import axios from 'axios';
 import sinon from 'sinon';
 import {expect} from 'chai';
@@ -218,9 +218,7 @@ describe('axios instrumentation - integration test', () => {
     });
   });
 
-
-  it('should report when service does not exist', function(done) {
-    this.timeout(1000); // Wait long than request timeout
+  it('should report when service does not exist', done => {
     tracer.scoped(() => {
       const zipkinAxiosClient = getClient();
       const host = 'localhost:12345';
@@ -352,9 +350,7 @@ describe('axios instrumentation - integration test', () => {
           const annotations = record.args.map(args => args[0]);
           let firstTraceId;
           let beijingWeatherSpanId;
-          let beijingWeatherParentId;
           let wuhanWeatherSpanId;
-          let wuhanWeatherParentId;
 
           annotations.forEach(annot => {
             if (firstTraceId) {
@@ -365,23 +361,16 @@ describe('axios instrumentation - integration test', () => {
 
             if (annot.annotation.value === '/weather/beijing') {
               beijingWeatherSpanId = annot.traceId.spanId;
-              beijingWeatherParentId = annot.traceId.parentId;
             }
             if (annot.annotation.value === '/weather/wuhan') {
               wuhanWeatherSpanId = annot.traceId.spanId;
-              wuhanWeatherParentId = annot.traceId.parentId;
             }
 
-            expect(annot.traceId.spanId).to.equal(annot.traceId.parentId);
-            expect(annot.traceId.parentId).to.equal(annot.traceId.spanId);
+            expect(annot.traceId.parentId).to.equal(None);
           });
 
           expect(beijingWeatherSpanId).to.not.equal(wuhanWeatherSpanId);
-          expect(beijingWeatherParentId).to.not.equal(wuhanWeatherParentId);
-          expect(beijingWeatherParentId).to.not.equal(wuhanWeatherSpanId);
           expect(wuhanWeatherSpanId).to.not.equal(beijingWeatherSpanId);
-          expect(wuhanWeatherParentId).to.not.equal(beijingWeatherParentId);
-          expect(wuhanWeatherParentId).to.not.equal(beijingWeatherSpanId);
 
           done();
         });
@@ -389,19 +378,16 @@ describe('axios instrumentation - integration test', () => {
     });
   });
 
-  it('should handle parallel requests', () => {
-    let promise;
+  it('should handle parallel requests', done => {
     tracer.scoped(() => {
       const client = getClient();
       const getBeijingWeather = client.get(`http://${apiHost}:${apiPort}/weather/beijing`);
       const getWuhanWeather = client.get(`http://${apiHost}:${apiPort}/weather/wuhan`);
-      promise = Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
+      Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
         const annotations = record.args.map(args => args[0]);
         let firstTraceId;
         let beijingWeatherSpanId;
-        let beijingWeatherParentId;
         let wuhanWeatherSpanId;
-        let wuhanWeatherParentId;
 
         annotations.forEach(annot => {
           if (firstTraceId) {
@@ -412,25 +398,19 @@ describe('axios instrumentation - integration test', () => {
 
           if (annot.annotation.value === '/weather/beijing') {
             beijingWeatherSpanId = annot.traceId.spanId;
-            beijingWeatherParentId = annot.traceId.parentId;
           }
           if (annot.annotation.value === '/weather/wuhan') {
             wuhanWeatherSpanId = annot.traceId.spanId;
-            wuhanWeatherParentId = annot.traceId.parentId;
           }
 
-          expect(annot.traceId.spanId).to.equal(annot.traceId.parentId);
-          expect(annot.traceId.parentId).to.equal(annot.traceId.spanId);
+          expect(annot.traceId.parentId).to.equal(None);
         });
 
         expect(beijingWeatherSpanId).to.not.equal(wuhanWeatherSpanId);
-        expect(beijingWeatherParentId).to.not.equal(wuhanWeatherParentId);
-        expect(beijingWeatherParentId).to.not.equal(wuhanWeatherSpanId);
         expect(wuhanWeatherSpanId).to.not.equal(beijingWeatherSpanId);
-        expect(wuhanWeatherParentId).to.not.equal(beijingWeatherParentId);
-        expect(wuhanWeatherParentId).to.not.equal(beijingWeatherSpanId);
+
+        done();
       });
     });
-    return promise;
   });
 });

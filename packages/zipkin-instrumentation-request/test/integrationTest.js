@@ -389,7 +389,7 @@ describe('request instrumentation - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId)
             .to.not.equal(rootId.traceId, 'the span id should not equal the root id'));
 
-          annotations.forEach(ann => expect(ann.traceId.parentId)
+          annotations.forEach(ann => expect(ann.traceId.parentId.getOrElse())
             .to.have.lengthOf(16).and
             .to.equal(rootId.traceId, 'all spans should have the root as their parent'));
 
@@ -436,7 +436,7 @@ describe('request instrumentation - integration test', () => {
               .to.have.lengthOf(16).and
               .to.not.equal(rootId.traceId));
 
-            annotations.forEach(ann => expect(ann.traceId.parentId)
+            annotations.forEach(ann => expect(ann.traceId.parentId.getOrElse())
               .to.have.lengthOf(16).and
               .to.equal(rootId.traceId, 'all spans should have the root as their parent'));
 

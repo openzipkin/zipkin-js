@@ -32,14 +32,14 @@ describe('Tracer', () => {
         tracer.setId(childId);
 
         expect(tracer.id.traceId).to.equal(parentId.traceId);
-        expect(tracer.id.parentId).to.equal(parentId.spanId);
+        expect(tracer.id.parentId.getOrElse()).to.equal(parentId.spanId);
 
         ctxImpl.scoped(() => {
           const grandChildId = tracer.createChildId();
           tracer.setId(grandChildId);
 
           expect(tracer.id.traceId).to.equal(childId.traceId);
-          expect(tracer.id.parentId).to.equal(childId.spanId);
+          expect(tracer.id.parentId.getOrElse()).to.equal(childId.spanId);
         });
       });
     });
@@ -401,7 +401,7 @@ describe('Tracer', () => {
 
     const newTraceId = tracer.join(rootTraceId);
     expect(newTraceId.traceId).to.eql(rootTraceId.traceId);
-    expect(newTraceId.parentId).to.eql(rootTraceId.spanId);
+    expect(newTraceId.parentId).to.eql(new Some(rootTraceId.spanId));
     expect(newTraceId.sampled).to.eql(rootTraceId.sampled);
     expect(newTraceId.flags).to.eql(rootTraceId.flags);
   });

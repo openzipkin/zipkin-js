@@ -105,7 +105,7 @@ describe('memcached interceptor', () => {
           ).not.to.equal(annotations[annotations.length / 2].traceId.spanId);
 
           annotations.forEach(ann => {
-            expect(ann.traceId.parentId).to.equal(firstAnn.traceId.traceId);
+            expect(ann.traceId.parentId.getOrElse()).to.equal(firstAnn.traceId.traceId);
             expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
             expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
           });

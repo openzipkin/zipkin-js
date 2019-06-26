@@ -5,7 +5,7 @@ const BatchRecorder = require('../src/batch-recorder');
 const TraceId = require('../src/tracer/TraceId');
 const Annotation = require('../src/annotation');
 const InetAddress = require('../src/InetAddress');
-const {Some, None} = require('../src/option');
+const {Some} = require('../src/option');
 const ExplicitContext = require('../src/explicit-context');
 
 describe('Batch Recorder', () => {
@@ -19,7 +19,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: None,
+        traceId: 'a',
         parentId: new Some('a'),
         spanId: 'c',
         sampled: new Some(true)
@@ -64,7 +64,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: None,
+        traceId: 'a',
         parentId: new Some('a'),
         spanId: 'c',
         sampled: new Some(true)
@@ -85,8 +85,7 @@ describe('Batch Recorder', () => {
     });
   });
 
-  // TODO: handle this when headers are extracted instead of guessing
-  it('should set non-root server span as shared', () => {
+  it('should copy shared flag from trace id', () => {
     const logSpan = sinon.spy();
 
     const ctxImpl = new ExplicitContext();
@@ -96,10 +95,11 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: None,
+        traceId: 'a',
         parentId: new Some('a'),
         spanId: 'c',
-        sampled: new Some(true)
+        sampled: new Some(true),
+        shared: true
       }));
 
       trace.recordServiceName('SmoothieStore');
@@ -124,7 +124,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: new Some('a'),
+        traceId: 'a',
         spanId: 'c',
         sampled: new Some(true)
       }));
@@ -158,7 +158,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: new Some('a'),
+        traceId: 'a',
         spanId: 'c',
         sampled: new Some(true)
       }));
@@ -185,7 +185,7 @@ describe('Batch Recorder', () => {
     const recorder = new BatchRecorder({logger});
     const trace = new Tracer({ctxImpl, recorder});
     const traceId = new TraceId({
-      traceId: None,
+      traceId: 'a',
       parentId: new Some('a'),
       spanId: 'c',
       sampled: new Some(true)
@@ -225,7 +225,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: None,
+        traceId: 'a',
         parentId: new Some('a'),
         spanId: 'c',
         sampled: new Some(true)
@@ -257,7 +257,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: None,
+        traceId: 'a',
         parentId: new Some('a'),
         spanId: 'c',
         sampled: new Some(true)
@@ -308,7 +308,7 @@ describe('Batch Recorder', () => {
 
     ctxImpl.scoped(() => {
       trace.setId(new TraceId({
-        traceId: None,
+        traceId: 'a',
         parentId: new Some('a'),
         spanId: 'c',
         sampled: new Some(true)

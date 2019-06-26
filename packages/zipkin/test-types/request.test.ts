@@ -6,7 +6,7 @@ describe('Request', () => {
     describe('addZipkinHeaders', () => {
         it('should have correct return types', () => {
             const traceId = new TraceId({
-                traceId: new Some('863ac35c9f6413ad48485a3953bb6124'),
+                traceId: '863ac35c9f6413ad48485a3953bb6124',
                 spanId: '48485a3953bb6124'
             });
 
@@ -21,7 +21,7 @@ describe('Request', () => {
 
         it('should have correct return types when using generic', () => {
             const traceId = new TraceId({
-                traceId: new Some('863ac35c9f6413ad48485a3953bb6124'),
+                traceId: '863ac35c9f6413ad48485a3953bb6124',
                 spanId: '48485a3953bb6124'
             });
 

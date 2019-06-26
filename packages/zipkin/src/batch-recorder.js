@@ -148,8 +148,7 @@ class BatchRecorder {
           span.delegate.setKind('SERVER');
           break;
         case 'ServerRecv':
-          // TODO: only set this to false when we know we in an existing trace
-          span.delegate.setShared(id.parentId !== id.spanId);
+          span.delegate.setShared(id.isShared());
           span.delegate.setKind('CLIENT');
           break;
         case 'ProducerStart':

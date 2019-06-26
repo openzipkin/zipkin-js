@@ -1,4 +1,4 @@
-const {None, Some, fromNullable} = require('../option');
+const {None, Some} = require('../option');
 const {Sampler, alwaysSample} = require('./sampler');
 
 const Annotation = require('../annotation');
@@ -68,8 +68,8 @@ class Tracer {
   createRootId(isSampled = None, isDebug = false) {
     const rootSpanId = randomTraceId();
     const traceId = this.traceId128Bit
-      ? new Some(randomTraceId() + rootSpanId)
-      : None;
+      ? randomTraceId() + rootSpanId
+      : rootSpanId;
     const id = new TraceId({
       traceId,
       parentId: None,
@@ -85,17 +85,26 @@ class Tracer {
     return id;
   }
 
-  createChildId() {
-    const currentId = fromNullable(
-      this._ctxImpl.getContext()
-    );
+  isUndefinedOrNull(obj) {
+    return typeof obj === 'undefined' || obj === null;
+  }
+
+  createChildId(parentId) {
+    if (this.isUndefinedOrNull(parentId)) {
+      /* eslint-disable no-param-reassign */
+      parentId = this._ctxImpl.getContext();
+    }
+
+    if (this.isUndefinedOrNull(parentId)) {
+      return this.createRootId();
+    }
 
     const childId = new TraceId({
-      traceId: currentId.map(id => id.traceId),
-      parentId: currentId.map(id => id.spanId),
+      traceId: parentId.traceId,
+      parentId: new Some(parentId.spanId),
       spanId: randomTraceId(),
-      sampled: currentId.flatMap(id => id.sampled),
-      flags: currentId.map(id => id.flags).getOrElse(0)
+      debug: parentId.isDebug(),
+      sampled: parentId.sampled,
     });
     if (childId.sampled.present === false) {
       childId._sampled = this.sampler.shouldSample(childId);
@@ -161,16 +170,18 @@ class Tracer {
       throw new Error('Must be valid TraceId instance');
     }
 
-    if (traceId._sampled === None) {
-      /* eslint-disable no-param-reassign */
-      traceId._sampled = this.sampler.shouldSample(traceId);
+    if (!this.supportsJoin) {
+      return this.createChildId(traceId);
     }
 
-    return !this.supportsJoin
-      ? this.letId(traceId, () =>
-          this.createChildId()
-        )
-      : traceId;
+    if (traceId.sampled === None) {
+      /* eslint-disable no-param-reassign */
+      traceId._sampled = this.sampler.shouldSample(traceId);
+    } else {
+      /* eslint-disable no-param-reassign */
+      traceId._shared = true;
+    }
+    return traceId;
   }
 
   setId(traceId) {

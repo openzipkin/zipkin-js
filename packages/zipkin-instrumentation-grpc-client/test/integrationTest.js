@@ -1,6 +1,6 @@
+const {option: {None}, Tracer} = require('zipkin');
 import uuid from 'uuid/v4';
 import CLSContext from 'zipkin-context-cls';
-import {Tracer} from 'zipkin';
 import sinon from 'sinon';
 import grpc from 'grpc';
 import grpcIntrumentation from '../src/grpcClientInterceptor';
@@ -110,9 +110,7 @@ describe('gRPC client instrumentation (integration test)', () => {
           const annotations = record.args.map(args => args[0]);
           let firstTraceId;
           let weatherSpanId;
-          let weatherParentId;
           let locationSpanId;
-          let locationParentId;
 
           annotations.forEach(annot => {
             if (firstTraceId) {
@@ -123,23 +121,15 @@ describe('gRPC client instrumentation (integration test)', () => {
 
             if (annot.annotation.name === '/weather.WeatherService/GetTemperature') {
               weatherSpanId = annot.traceId.spanId;
-              weatherParentId = annot.traceId.parentId;
             }
             if (annot.annotation.name === '/weather.WeatherService/GetLocations') {
               locationSpanId = annot.traceId.spanId;
-              locationParentId = annot.traceId.parentId;
             }
-
-            expect(annot.traceId.spanId).to.equal(annot.traceId.parentId);
-            expect(annot.traceId.parentId).to.equal(annot.traceId.spanId);
+            expect(annot.traceId.parentId).to.equal(None);
           });
 
           expect(weatherSpanId).to.not.equal(locationSpanId);
-          expect(weatherParentId).to.not.equal(locationParentId);
-          expect(weatherParentId).to.not.equal(locationSpanId);
           expect(locationSpanId).to.not.equal(weatherSpanId);
-          expect(locationParentId).to.not.equal(weatherParentId);
-          expect(locationParentId).to.not.equal(weatherSpanId);
 
           done();
         });
@@ -164,9 +154,7 @@ describe('gRPC client instrumentation (integration test)', () => {
         const annotations = record.args.map(args => args[0]);
         let firstTraceId;
         let weatherSpanId;
-        let weatherParentId;
         let locationSpanId;
-        let locationParentId;
 
         annotations.forEach(annot => {
           if (firstTraceId) {
@@ -177,23 +165,16 @@ describe('gRPC client instrumentation (integration test)', () => {
 
           if (annot.annotation.name === '/weather.WeatherService/GetTemperature') {
             weatherSpanId = annot.traceId.spanId;
-            weatherParentId = annot.traceId.parentId;
           }
           if (annot.annotation.name === '/weather.WeatherService/GetLocations') {
             locationSpanId = annot.traceId.spanId;
-            locationParentId = annot.traceId.parentId;
           }
 
-          expect(annot.traceId.spanId).to.equal(annot.traceId.parentId);
-          expect(annot.traceId.parentId).to.equal(annot.traceId.spanId);
+          expect(annot.traceId.parentId).to.equal(None);
         });
 
         expect(weatherSpanId).to.not.equal(locationSpanId);
-        expect(weatherParentId).to.not.equal(locationParentId);
-        expect(weatherParentId).to.not.equal(locationSpanId);
         expect(locationSpanId).to.not.equal(weatherSpanId);
-        expect(locationParentId).to.not.equal(weatherParentId);
-        expect(locationParentId).to.not.equal(weatherSpanId);
       });
     });
     return promise;

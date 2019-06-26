@@ -62,19 +62,20 @@ declare namespace zipkin {
 
   class TraceId {
     readonly traceId: string;
-    readonly parentId: string;
+    readonly parentId: option.IOption<string>;
     readonly spanId: string;
     readonly sampled: option.IOption<boolean>;
-    readonly flags: number;
 
     isDebug(): boolean;
+    isShared(): boolean;
 
     constructor(args?: {
-      traceId?: option.IOption<string>,
+      traceId?: string,
       parentId?: option.IOption<string>,
       spanId?: string,
       sampled?: option.IOption<boolean>,
-      flags?: number
+      debug?: boolean,
+      shared?: boolean
     });
 
     toString(): string;

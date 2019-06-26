@@ -33,6 +33,7 @@ describe('Http Client Instrumentation', () => {
     annotations.forEach(ann => expect(ann.traceId.traceId)
       .to.equal(initialTraceId).and
       .to.have.lengthOf(16));
+    annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
     expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
     expect(annotations[0].annotation.serviceName).to.equal('weather-app');
