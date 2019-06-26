@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import {option, Request, RequestZipkinHeaders, TraceId} from 'zipkin';
-import Some = option.Some;
 
 describe('Request', () => {
     describe('addZipkinHeaders', () => {

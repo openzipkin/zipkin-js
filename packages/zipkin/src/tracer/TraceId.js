@@ -2,7 +2,8 @@ const {
   Some,
   None,
   verifyIsOptional,
-  verifyIsNotOptional
+  verifyIsNotOptional,
+  isOptional
 } = require('../option');
 const T = new Some(true);
 
@@ -18,10 +19,18 @@ class TraceId {
       shared = false
     } = params;
     verifyIsNotOptional(spanId);
-    verifyIsNotOptional(traceId);
     verifyIsOptional(parentId);
     verifyIsOptional(sampled);
-    this._traceId = traceId;
+
+    // support old signatures which allowed traceId to be optional
+    if (isOptional(traceId)) {
+      this._traceId = traceId.getOrElse(spanId);
+    } else if (typeof traceId === 'undefined' || traceId === null) {
+      this._traceId = spanId;
+    } else {
+      this._traceId = traceId;
+    }
+
     this._parentId = parentId;
     this._spanId = spanId;
     this._sampled = debug ? T : sampled;
