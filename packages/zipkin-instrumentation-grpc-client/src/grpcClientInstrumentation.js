@@ -61,7 +61,7 @@ class GrpcClientInstrumentation {
     metadata.add(HttpHeaders.TraceId, traceId.traceId);
     metadata.add(HttpHeaders.SpanId, traceId.spanId);
 
-    traceId._parentId.ifPresent(psid => {
+    traceId.parentSpanId.ifPresent(psid => {
       metadata.add(HttpHeaders.ParentSpanId, psid);
     });
     traceId.sampled.ifPresent(sampled => {

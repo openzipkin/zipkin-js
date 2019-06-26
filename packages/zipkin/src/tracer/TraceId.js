@@ -1,49 +1,88 @@
-const {Some, None, verifyIsOptional, verifyIsNotOptional} = require('../option');
+const {
+  Some,
+  None,
+  verifyIsOptional,
+  verifyIsNotOptional,
+  isOptional
+} = require('../option');
+const T = new Some(true);
 
 class TraceId {
   constructor(params) {
-    const {traceId = None, parentId = None, spanId, sampled = None, flags = 0} = params;
-    verifyIsOptional(traceId);
-    verifyIsOptional(parentId);
+    const {
+      spanId,
+      traceId = spanId,
+      parentId = None,
+      flags = 0, // deprecated
+      debug = flags === 1,
+      sampled = None,
+      shared = false
+    } = params;
     verifyIsNotOptional(spanId);
+    verifyIsOptional(parentId);
     verifyIsOptional(sampled);
-    this._traceId = traceId;
+
+    // support old signatures which allowed traceId to be optional
+    if (isOptional(traceId)) {
+      this._traceId = traceId.getOrElse(spanId);
+    } else if (typeof traceId === 'undefined' || traceId === null) {
+      this._traceId = spanId;
+    } else {
+      this._traceId = traceId;
+    }
+
     this._parentId = parentId;
     this._spanId = spanId;
-    this._sampled = sampled;
-    this._flags = flags;
+    this._sampled = debug ? T : sampled;
+    this._debug = debug;
+    this._shared = shared;
+  }
+
+  get traceId() {
+    return this._traceId;
+  }
+
+  get parentSpanId() {
+    return this._parentId;
+  }
+
+  /**
+   * Please use parentSpanId instead as this can return confusing results (the span ID when absent).
+   *
+   * @deprecated since version v0.19
+   */
+  get parentId() {
+    return this._parentId.getOrElse(this._spanId);
   }
 
   get spanId() {
     return this._spanId;
   }
 
-  get parentId() {
-    return this._parentId.getOrElse(this.spanId);
-  }
-
-  get traceId() {
-    return this._traceId.getOrElse(this.parentId);
-  }
-
   get sampled() {
-    return this.isDebug() ? new Some(true) : this._sampled;
+    return this._sampled;
   }
 
+  /**
+   * Please use isDebug instead.
+   *
+   * @deprecated since version v0.19
+   */
   get flags() {
-    return this._flags;
+    return this._debug ? 1 : 0;
   }
 
   isDebug() {
-    // The jshint tool always complains about using bitwise operators,
-    // but in this case it's actually intentional, so we disable the warning:
-    // jshint bitwise: false
-    return (this._flags & 1) === 1;
+    return this._debug;
+  }
+
+  isShared() {
+    return this._shared;
   }
 
   toString() {
     return `TraceId(spanId=${this.spanId.toString()}` +
-      `, parentId=${this.parentId.toString()}` +
+      `, parentSpanId=${this.parentSpanId.toString()}` +
       `, traceId=${this.traceId.toString()})`;
   }
 }

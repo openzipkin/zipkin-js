@@ -1,21 +1,22 @@
-const {TraceId, option: {Some}, Annotation, HttpHeaders} = require('zipkin');
+const {TraceId, option: {fromNullable}, Annotation, HttpHeaders} = require('zipkin');
 
 const recordConsumeStart = (tracer, {topic, partition, message}) => {
+  const traceId = message.headers[HttpHeaders.TraceId];
   const spanId = message.headers[HttpHeaders.SpanId];
   let id;
 
-  if (spanId) {
+  if (traceId && spanId) {
     const parentId = message.headers[HttpHeaders.ParentSpanId];
-    const traceId = message.headers[HttpHeaders.TraceId];
     const sampled = message.headers[HttpHeaders.Sampled];
     const flags = message.headers[HttpHeaders.Flags];
 
+    // TODO: this should definitely note join. It should make a child
     id = tracer.join(new TraceId({
-      traceId: new Some(traceId ? traceId.toString() : null),
-      parentId: new Some(parentId ? parentId.toString() : null),
-      spanId: spanId.toString(),
-      sampled: new Some(sampled ? sampled.toString() : null),
-      flags: flags ? parseInt(flags) : 0
+      traceId,
+      parentId: fromNullable(parentId),
+      spanId,
+      sampled: fromNullable(sampled),
+      debug: flags ? parseInt(flags) === 1 : false
     }));
   } else {
     id = tracer.createRootId();

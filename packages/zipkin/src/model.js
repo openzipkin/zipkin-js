@@ -28,7 +28,7 @@ Annotation.prototype.toString = function toString() {
 
 function Span(traceId) {
   this.traceId = traceId.traceId;
-  traceId._parentId.ifPresent((id) => {
+  traceId.parentSpanId.ifPresent((id) => {
     this.parentId = id;
   });
   this.id = traceId.spanId;
@@ -41,7 +41,7 @@ function Span(traceId) {
   this.annotations = [];
   this.tags = {};
   this.debug = traceId.isDebug();
-  this.shared = false;
+  this.shared = traceId.isShared();
 }
 
 Span.prototype.setName = function setName(name) {

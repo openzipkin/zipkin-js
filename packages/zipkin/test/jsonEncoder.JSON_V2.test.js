@@ -1,14 +1,12 @@
 const TraceId = require('../src/tracer/TraceId');
 const {Span, Endpoint} = require('../src/model');
 const {JSON_V2} = require('../src/jsonEncoder');
-const {Some, None} = require('../src/option');
+const {Some} = require('../src/option');
 
 describe('JSON v2 Formatting', () => {
   it('should write minimum fields', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('000000000000162e'),
-      spanId: '000000000000162e',
-      sampled: None
+      spanId: '000000000000162e'
     }));
 
     expect(JSON_V2.encode(span)).to.equal(
@@ -18,10 +16,9 @@ describe('JSON v2 Formatting', () => {
 
   it('should write a parent ID when present', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('000000000000162e'),
+      traceId: '000000000000162e',
       parentId: new Some('000000000000abcd'),
-      spanId: '000000000000efgh',
-      sampled: None
+      spanId: '000000000000efgh'
     }));
 
     expect(JSON_V2.encode(span)).to.contain(
@@ -31,7 +28,7 @@ describe('JSON v2 Formatting', () => {
 
   it('should write a 128-bit trace ID', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('00000000000004d2000000000000162e'),
+      traceId: '00000000000004d2000000000000162e',
       spanId: '000000000000162e'
     }));
 
@@ -42,9 +39,9 @@ describe('JSON v2 Formatting', () => {
 
   it('should write a debug flag', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('00000000000004d2000000000000162e'),
+      traceId: '00000000000004d2000000000000162e',
       spanId: '000000000000162e',
-      flags: 1
+      debug: true
     }));
 
     expect(JSON_V2.encode(span)).to.contain(',"debug":true}');
@@ -52,10 +49,9 @@ describe('JSON v2 Formatting', () => {
 
   it('should transform correctly from Span to JSON representation', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
+      spanId: 'c'
     }));
     span.setName('GET');
     span.setLocalEndpoint(new Endpoint({
@@ -97,12 +93,11 @@ describe('JSON v2 Formatting', () => {
 
   it('should set shared', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
       spanId: 'c',
-      sampled: None
+      shared: true
     }));
-    span.setShared(true);
 
     const spanJson = JSON_V2.encode(span);
 
@@ -111,10 +106,9 @@ describe('JSON v2 Formatting', () => {
 
   it('should set timestamp and duration on client span', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
+      spanId: 'c'
     }));
     span.setName('GET');
     span.setKind('CLIENT');
@@ -126,10 +120,9 @@ describe('JSON v2 Formatting', () => {
 
   it('should set remoteEndpoint on client span', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
+      spanId: 'c'
     }));
     span.setName('GET');
     span.setKind('CLIENT');
@@ -148,10 +141,9 @@ describe('JSON v2 Formatting', () => {
   // make sure nothing strange happens like object interpretation of dots
   it('should serialize tags with dotted names', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
+      spanId: 'c'
     }));
     span.setName('GET');
     span.putTag('http.path', '/api');

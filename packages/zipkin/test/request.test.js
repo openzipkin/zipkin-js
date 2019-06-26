@@ -6,7 +6,6 @@ const TraceId = require('../src/tracer/TraceId');
 describe('Request', () => {
   it('should add trace/span and ignore parent span/sampled headers if they do not exist', () => {
     const traceId = new TraceId({
-      traceId: new Some('48485a3953bb6124'),
       spanId: '48485a3953bb6124'
     });
     const req = Request.addZipkinHeaders({}, traceId);
@@ -17,10 +16,10 @@ describe('Request', () => {
 
   it('should add trace, span, parent span, and sampled headers', () => {
     const traceId = new TraceId({
-      traceId: new Some('48485a3953bb6124'),
+      traceId: '48485a3953bb6124',
       spanId: '48485a3953bb6124',
       parentId: new Some('d56852c923dc9325'),
-      sampled: new Some('3598a2cc24dc8315')
+      sampled: new Some(true)
     });
     const req = Request.addZipkinHeaders({}, traceId);
 

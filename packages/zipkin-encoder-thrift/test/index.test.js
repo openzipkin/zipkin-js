@@ -8,7 +8,7 @@ const {
 const {
   TraceId,
   model: {Span, Endpoint},
-  option: {Some, None}
+  option: {Some}
 } = require('zipkin');
 
 function serialize(spanThrift) {
@@ -35,9 +35,7 @@ describe('Thrift v1 Formatting', () => {
   // v1 format requires an empty span name. v2 can leave it out
   it('should write minimum fields, notably an empty span name', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('000000000000162e'),
-      spanId: '000000000000162e',
-      sampled: None
+      spanId: '000000000000162e'
     }));
 
     const expected = new thriftTypes.Span();
@@ -50,10 +48,9 @@ describe('Thrift v1 Formatting', () => {
 
   it('should write a parent ID when present', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('000000000000162e'),
+      traceId: '000000000000162e',
       parentId: new Some('000000000000abcd'),
-      spanId: '000000000000efgh',
-      sampled: None
+      spanId: '000000000000efgh'
     }));
 
     const expected = new thriftTypes.Span();
@@ -67,7 +64,7 @@ describe('Thrift v1 Formatting', () => {
 
   it('should write trace ID high when input is a 128-bit trace ID', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('00000000000004d2000000000000162e'),
+      traceId: '00000000000004d2000000000000162e',
       spanId: '000000000000162e'
     }));
 
@@ -82,9 +79,9 @@ describe('Thrift v1 Formatting', () => {
 
   it('should write a debug flag', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('000000000000162e'),
+      traceId: '000000000000162e',
       spanId: '000000000000162e',
-      flags: 1
+      debug: true
     }));
 
     const expected = new thriftTypes.Span();
@@ -98,10 +95,9 @@ describe('Thrift v1 Formatting', () => {
 
   it('should transform correctly from Span to Thrift representation', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
+      spanId: 'c'
     }));
     span.setName('GET');
     span.setLocalEndpoint(new Endpoint({
@@ -152,10 +148,9 @@ describe('Thrift v1 Formatting', () => {
 
   it('should not set timestamp or duration on shared span', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
+      spanId: 'c'
     }));
     span.setName('GET');
     span.setKind('SERVER');
@@ -171,10 +166,9 @@ describe('Thrift v1 Formatting', () => {
 
   it('should set timestamp and duration on client span', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('a'),
+      traceId: 'a',
       parentId: new Some('b'),
-      spanId: 'c',
-      sampled: None
+      spanId: 'c'
     }));
     span.setName('GET');
     span.setKind('SERVER');
@@ -188,7 +182,6 @@ describe('Thrift v1 Formatting', () => {
 
   it('should set server address on client span', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('000000000000162e'),
       spanId: '000000000000162e'
     }));
     span.setName('GET');
@@ -222,7 +215,6 @@ describe('Thrift v1 Formatting', () => {
   // make sure nothing strange happens like object interpretation of dots
   it('should serialize tags with dotted names as binary annotations', () => {
     const span = new Span(new TraceId({
-      traceId: new Some('000000000000162e'),
       spanId: '000000000000162e'
     }));
     span.setName('GET');

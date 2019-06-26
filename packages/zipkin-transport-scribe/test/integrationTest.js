@@ -47,11 +47,10 @@ describe('Scribe transport - integration test', () => {
       const tracer = new Tracer({recorder, ctxImpl});
       ctxImpl.scoped(() => {
         const id = new TraceId({
-          traceId: new Some('abc'),
+          traceId: 'abc',
           parentId: new Some('def'),
           spanId: '123',
-          sampled: new Some(true),
-          flags: 0
+          sampled: new Some(true)
         });
         tracer.setId(id);
         tracer.recordAnnotation(new Annotation.ServerAddr({serviceName: 'test'}));

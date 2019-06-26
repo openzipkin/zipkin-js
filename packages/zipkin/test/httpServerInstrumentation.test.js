@@ -43,6 +43,7 @@ describe('Http Server Instrumentation', () => {
     annotations.forEach(ann => expect(ann.traceId.spanId)
       .to.have.lengthOf(16).and
       .to.equal(originalSpanId));
+    annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
     expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
     expect(annotations[0].annotation.serviceName).to.equal('service-a');
@@ -102,6 +103,7 @@ describe('Http Server Instrumentation', () => {
 
       annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
       annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
+      annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(true));
 
       expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
       expect(annotations[0].annotation.serviceName).to.equal('service-a');
@@ -152,8 +154,9 @@ describe('Http Server Instrumentation', () => {
       const annotations = record.args.map(args => args[0]);
 
       annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
-      annotations.forEach(ann => expect(ann.traceId.parentId).to.equal('bbb'));
+      annotations.forEach(ann => expect(ann.traceId.parentSpanId.getOrElse()).to.equal('bbb'));
       annotations.forEach(ann => expect(ann.traceId.spanId).to.not.equal('bbb'));
+      annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
       expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
       expect(annotations[0].annotation.serviceName).to.equal('service-a');
@@ -232,6 +235,7 @@ describe('Http Server Instrumentation', () => {
       if (hasAnnotations === true) {
         annotations.forEach(ann => expect(ann.traceId.traceId).to.not.be.empty);
         annotations.forEach(ann => expect(ann.traceId.spanId).to.not.be.empty);
+        annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
         expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
         expect(annotations[0].annotation.serviceName).to.equal('service-a');

@@ -119,7 +119,7 @@ describe('wrapGot', () => {
           const {parentId, traceId} = firstArg._zipkin;
           expect(parentId).to.equal(id);
           expect(traceId).to.not.be.undefined; // eslint-disable-line no-unused-expressions
-          expect(traceId.parentId).to.equal(id.traceId);
+          expect(traceId.parentSpanId.getOrElse()).to.equal(id.traceId);
           done();
         })
         .catch(done);

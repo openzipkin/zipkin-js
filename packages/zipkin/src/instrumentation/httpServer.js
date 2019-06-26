@@ -47,11 +47,11 @@ class HttpServerInstrumentation {
         const sampled = readHeader(Header.Sampled);
         const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
         return new TraceId({
-          traceId,
+          traceId: traceId.getOrElse(),
           parentId: parentSpanId,
           spanId: sid,
+          debug: flags === 1,
           sampled: sampled.map(stringToBoolean),
-          flags
         });
       });
 
