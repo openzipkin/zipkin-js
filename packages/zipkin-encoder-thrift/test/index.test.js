@@ -81,7 +81,7 @@ describe('Thrift v1 Formatting', () => {
     const span = new Span(new TraceId({
       traceId: '000000000000162e',
       spanId: '000000000000162e',
-      debug: 1
+      debug: true
     }));
 
     const expected = new thriftTypes.Span();
