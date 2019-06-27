@@ -158,7 +158,7 @@ To setup the development environment, run:
 yarn
 ```
 
-Running tests: `yarn test`
+### Running all tests: `yarn test`
 
 - Note that the memcached, redis and postgres integration tests requires you to have local instances running.
 - The Kafka transport integration test will start an embedded Kafka server for the test, which requires you to have
@@ -166,9 +166,23 @@ Java installed on your machine.
 - The KafkaJS instrumentation tests require `docker` and `docker-compose` and will start up a containerized Kafka
 instance to run against
 
-Running code style linting: `yarn lint`
+### Running tests for one module `npm run lerna-test -- --scope zipkin-instrumentation-foo`
 
-AppVeyor is currently broken and ignored. PR welcome from those with Windows boxes.
+Running yarn will execute all tests, which can be distracting if you are only attempting to change one module.
+Knowing that tests are managed with lerna underneath, you can use the `--scope` parameter to constrain what's run.
+
+Ex. to only run integration tests for postgres
+```bash
+npm run lerna-test -- --scope zipkin-instrumentation-postgres
+```
+
+### Running code style linting: `yarn lint`
+
+Before raising a pull request, make sure there are no lint problems, by running `yarn lint`. Otherwise, your pull request will be colored red.
+
+### Notes
+
+* AppVeyor is currently broken and ignored. PR welcome from those with Windows boxes.
 
 ## Publishing
 
