@@ -45,14 +45,17 @@ describe('axios instrumentation - integration test', () => {
 
       zipkinAxiosClient.get(url).then(response => {
         const annotations = record.args.map(args => args[0]);
-        const traceId = annotations[0].traceId
+        const traceId = annotations[0].traceId;
 
         const requestHeaders = response.data;
         expect(requestHeaders['x-b3-traceid']).to.equal(traceId.traceId);
-        expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
         expect(requestHeaders['x-b3-spanid']).to.equal(traceId.spanId);
         expect(requestHeaders['x-b3-sampled']).to.equal('1');
+
+        /* eslint-disable no-unused-expressions */
+        expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
         expect(requestHeaders['x-b3-flags']).to.not.exist;
+
         done();
       });
     });
