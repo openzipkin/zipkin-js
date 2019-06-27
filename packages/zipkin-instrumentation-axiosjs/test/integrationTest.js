@@ -14,6 +14,7 @@ describe('axios instrumentation - integration test', () => {
   let apiPort;
   let record;
   let tracer;
+
   before((done) => {
     mockServer().then(server => {
       apiServer = server;
@@ -22,53 +23,41 @@ describe('axios instrumentation - integration test', () => {
       done();
     });
   });
+
   after(() => {
     apiServer.close();
   });
-  const getClient = () => wrapAxios(axios, {tracer, serviceName, remoteServiceName});
+
   beforeEach(() => {
     record = sinon.spy();
-    const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    tracer = new Tracer({recorder, ctxImpl});
+    const recorder = {record};
+    tracer = new Tracer({ctxImpl, recorder});
   });
+
+  const getClient = () => wrapAxios(axios, {tracer, serviceName, remoteServiceName});
+
   it('should add headers to requests', done => {
     tracer.scoped(() => {
       const zipkinAxiosClient = getClient();
       const urlPath = '/weather/wuhan';
       const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
-      zipkinAxiosClient
-          .get(url)
-          .then(() => {
-            const annotations = record.args.map(args => args[0]);
-            const initialTraceId = annotations[0].traceId.traceId;
-            annotations.forEach(ann => expect(ann.traceId.traceId)
-              .to.equal(initialTraceId).and
-              .to.have.lengthOf(16));
 
-            expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-            expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+      zipkinAxiosClient.get(url).then(response => {
+        const annotations = record.args.map(args => args[0]);
+        const traceId = annotations[0].traceId
 
-            expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-            expect(annotations[1].annotation.name).to.equal('GET');
-
-            expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-            expect(annotations[2].annotation.key).to.equal('http.path');
-            expect(annotations[2].annotation.value).to.equal(urlPath);
-
-            expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-            expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-            expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-            expect(annotations[5].annotation.key).to.equal('http.status_code');
-            expect(annotations[5].annotation.value).to.equal('202');
-
-            expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-            done();
-          });
+        const requestHeaders = response.data;
+        expect(requestHeaders['x-b3-traceid']).to.equal(traceId.traceId);
+        expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
+        expect(requestHeaders['x-b3-spanid']).to.equal(traceId.spanId);
+        expect(requestHeaders['x-b3-sampled']).to.equal('1');
+        expect(requestHeaders['x-b3-flags']).to.not.exist;
+        done();
+      });
     });
   });
+
   it('should support request shorthand (defaults to GET)', done => {
     tracer.scoped(() => {
       const zipkinAxiosClient = getClient();
