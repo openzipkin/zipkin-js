@@ -8,8 +8,8 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "rollup -c",
-    "test": "tsc index.d.ts && mocha --require ../../test/helper.js --require @babel/register && karma start --single-run --browsers ChromeHeadless,FirefoxHeadless karma.conf.js",
-    "test-browser": "tsc index.d.ts && karma start --single-run --browsers ChromeHeadless karma.conf.js",
+    "test": "tsc index.d.ts && mocha --require ../../test/helper.js --require @babel/register && karma start --single-run --browsers ChromeHeadless,FirefoxHeadless ../../karma.conf.js",
+    "test-browser": "tsc index.d.ts && karma start --single-run --browsers ChromeHeadless ../../karma.conf.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
@@ -18,22 +18,5 @@
   "dependencies": {
     "base64-js": "^1.1.2",
     "is-promise": "^2.1.0"
-  },
-  "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
-    "@babel/preset-typescript": "7.1.0",
-    "bluebird": "^3.5.1",
-    "browserify": "^16.2.3",
-    "chai": "^4.2.0",
-    "karma": "^3.1.3",
-    "karma-browserify": "^6.0.0",
-    "karma-chai": "^0.1.0",
-    "karma-chrome-launcher": "^2.2.0",
-    "karma-firefox-launcher": "^1.1.0",
-    "karma-mocha": "^1.3.0",
-    "karma-source-map-support": "^1.3.0",
-    "mocha": "^5.2.0",
-    "typescript": "^2.4.2"
   }
 }

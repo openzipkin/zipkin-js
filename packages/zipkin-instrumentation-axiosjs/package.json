@@ -6,14 +6,13 @@
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha --exit --require ../../test/helper.js",
+    "test-browser": "karma start --single-run --browsers ChromeHeadless ../../karma.conf.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
     "axios": "^0.18.0",
     "express": "^4.16.4",
     "zipkin": "^0.18.3"

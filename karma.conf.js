@@ -1,3 +1,6 @@
+const path = require('path');
+const testMiddleware = require('./test/middleware');
+
 module.exports = function(config) {
   if (process.env.TEST_SUITE === 'nodejs') {
     /* eslint-disable no-console */
@@ -7,10 +10,20 @@ module.exports = function(config) {
   }
 
   config.set({
+    // resolve to the package not the location of this file
+    basePath: path.resolve('.'),
+    failOnEmptyTestSuite: true,
+    middleware: ['custom'],
     plugins: [
-      ...config.plugins,
+    {
+      'middleware:custom': ['factory', testMiddleware]
+    },
+      'karma-mocha',
       'karma-browserify',
       'karma-chai',
+      'karma-source-map-support',
+      'karma-chrome-launcher',
+      'karma-firefox-launcher',
     ],
     frameworks: ['mocha', 'browserify', 'chai', 'source-map-support'],
     preprocessors: {
@@ -23,7 +36,7 @@ module.exports = function(config) {
     reporters: ['progress'],
     port: 9876,
     colors: true,
-    logLevel: config.LOG_INFO,
+    logLevel: config.LOG_DEBUG,
     // see https://github.com/karma-runner/karma-firefox-launcher/issues/76
     customLaunchers: {
       FirefoxHeadless: {

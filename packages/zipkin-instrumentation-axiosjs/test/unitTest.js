@@ -1,8 +1,8 @@
-import {Tracer, ExplicitContext} from 'zipkin';
-import axios from 'axios';
-import sinon from 'sinon';
-import {expect} from 'chai';
-import wrapAxios from '../src/index';
+const {Tracer, ExplicitContext} = require('zipkin');
+const axios = require('axios');
+const sinon = require('sinon');
+const {expect} = require('chai');
+const wrapAxios = require('../src/index');
 
 describe('axios instrumentation - unit test', () => {
   const serviceName = 'weather-app';
