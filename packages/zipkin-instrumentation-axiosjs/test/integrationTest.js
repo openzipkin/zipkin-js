@@ -88,7 +88,7 @@ describe('axios instrumentation - integration test', () => {
     // doesn't make assumptions about a span in progress: there won't be if there was a config error
     getClient()(url)
       .then(response => {
-        done(new Error(`expected an invalid url parameter to error. status: ${response.status}`))
+        done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
       })
       .catch(error => {
         const message = error.message;
@@ -132,7 +132,7 @@ describe('axios instrumentation - integration test', () => {
     const badPath = '/pathno';
     getClient()({url: `${baseUrl}${badPath}`, timeout: errorTimeout})
       .then(response => {
-        done(new Error(`expected status 404 response to error. status: ${response.status}`))
+        done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
       .catch(() => {
         verifyGetSpan({
@@ -148,7 +148,7 @@ describe('axios instrumentation - integration test', () => {
     const badPath = '/weather/securedTown';
     getClient()({url: `${baseUrl}${badPath}`, timeout: errorTimeout})
       .then(response => {
-        done(new Error(`expected status 400 response to error. status: ${response.status}`))
+        done(new Error(`expected status 400 response to error. status: ${response.status}`));
       })
       .catch(() => {
         verifyGetSpan({
@@ -164,7 +164,7 @@ describe('axios instrumentation - integration test', () => {
     const badPath = '/weather/bagCity';
     getClient()({url: `${baseUrl}${badPath}`, timeout: errorTimeout})
       .then(response => {
-        done(new Error(`expected status 500 response to error. status: ${response.status}`))
+        done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
       .catch(() => {
         verifyGetSpan({
@@ -179,7 +179,7 @@ describe('axios instrumentation - integration test', () => {
   it('should report when endpoint doesnt exist in tags', done => {
     getClient()({url: `http://localhost:12345${path}`, timeout: errorTimeout})
       .then(response => {
-        done(new Error(`expected an invalid host to error. status: ${response.status}`))
+        done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
       .catch(error => {
         verifyGetSpan({
