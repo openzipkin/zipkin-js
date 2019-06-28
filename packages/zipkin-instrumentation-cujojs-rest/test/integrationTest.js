@@ -17,7 +17,6 @@ describe('CujoJS/rest instrumentation - integration test', () => {
 
   let server;
   let baseURL = ''; // default to relative path, for browser-based tests
-  let tracer;
 
   before((done) => {
     const middleware = maybeMiddleware();
@@ -36,6 +35,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   });
 
   let spans;
+  let tracer;
 
   beforeEach(() => {
     spans = [];

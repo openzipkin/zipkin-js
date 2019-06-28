@@ -140,12 +140,12 @@ class BatchRecorder {
           span.delegate.setKind('CLIENT');
           break;
         case 'ClientRecv':
-          span.finish();
           span.delegate.setKind('CLIENT');
+          span.finish();
           break;
         case 'ServerSend':
-          span.finish();
           span.delegate.setKind('SERVER');
+          span.finish();
           break;
         case 'ServerRecv':
           span.delegate.setShared(id.isShared());
@@ -155,15 +155,15 @@ class BatchRecorder {
           span.delegate.setKind('PRODUCER');
           break;
         case 'ProducerStop':
-          span.finish();
           span.delegate.setKind('PRODUCER');
+          span.finish();
           break;
         case 'ConsumerStart':
           span.delegate.setKind('CONSUMER');
           break;
         case 'ConsumerStop':
-          span.finish();
           span.delegate.setKind('CONSUMER');
+          span.finish();
           break;
         case 'MessageAddr':
           span.delegate.setRemoteEndpoint(new Endpoint({
