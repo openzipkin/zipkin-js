@@ -5,19 +5,18 @@ const wrapAxios = require('../src/index');
 const {maybeMiddleware, newSpanRecorder} = require('../../../test/testFixture');
 
 describe('axios instrumentation - integration test', () => {
-  const errorTimeout = 200; // this avoids flakes in CI
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
   let server;
-  let baseUrl = ''; // default to relative path, for browser-based tests
+  let baseURL = ''; // default to relative path, for browser-based tests
   let tracer;
 
   before((done) => {
     const middleware = maybeMiddleware();
     if (middleware !== null) {
       server = middleware.listen(0, () => {
-        baseUrl = `http://127.0.0.1:${server.address().port}`;
+        baseURL = `http://127.0.0.1:${server.address().port}`;
         done();
       });
     } else { // Inside a browser
@@ -36,10 +35,17 @@ describe('axios instrumentation - integration test', () => {
     tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
   });
 
-  const getClient = () => wrapAxios(axios, {tracer, serviceName, remoteServiceName});
+  function getClient() {
+    const instance = axios.create({
+      baseURL,
+      timeout: 200 // this avoids flakes in CI
+    });
+
+    return wrapAxios(instance, {tracer, serviceName, remoteServiceName});
+  }
 
   const path = '/weather/wuhan';
-  const url = () => `${baseUrl}${path}?index=10&count=300`; // defers access to baseUrl
+  const url = () => `${path}?index=10&count=300`; // defers access to baseURL
 
   function verifyGetSpan(tags) {
     const span = spans.pop();
@@ -104,33 +110,25 @@ describe('axios instrumentation - integration test', () => {
       });
   });
 
-  it('should support get request', done => {
+  it('should support get request', () =>
     getClient().get(url())
-      .then(() => {
-        verifyGetSpan({
-          'http.path': path,
-          'http.status_code': '202'
-        });
-        done();
-      })
-      .catch(error => done(error));
-  });
+      .then(() => verifyGetSpan({
+        'http.path': path,
+        'http.status_code': '202'
+      }))
+  );
 
-  it('should support config request', done => {
+  it('should support options request', () =>
     getClient()({url: url()})
-      .then(() => {
-        verifyGetSpan({
-          'http.path': path,
-          'http.status_code': '202'
-        });
-        done();
-      })
-      .catch(error => done(error));
-  });
+      .then(() => verifyGetSpan({
+        'http.path': path,
+        'http.status_code': '202'
+      }))
+  );
 
   it('should report 404 in tags', done => {
     const badPath = '/pathno';
-    getClient()({url: `${baseUrl}${badPath}`, timeout: errorTimeout})
+    getClient()({url: `${badPath}`})
       .then(response => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
@@ -146,7 +144,7 @@ describe('axios instrumentation - integration test', () => {
 
   it('should report 400 in tags', done => {
     const badPath = '/weather/securedTown';
-    getClient()({url: `${baseUrl}${badPath}`, timeout: errorTimeout})
+    getClient()({url: `${badPath}`})
       .then(response => {
         done(new Error(`expected status 400 response to error. status: ${response.status}`));
       })
@@ -162,7 +160,7 @@ describe('axios instrumentation - integration test', () => {
 
   it('should report 500 in tags', done => {
     const badPath = '/weather/bagCity';
-    getClient()({url: `${baseUrl}${badPath}`, timeout: errorTimeout})
+    getClient()({url: `${badPath}`})
       .then(response => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
@@ -177,7 +175,7 @@ describe('axios instrumentation - integration test', () => {
   });
 
   it('should report when endpoint doesnt exist in tags', done => {
-    getClient()({url: `http://localhost:12345${path}`, timeout: errorTimeout})
+    getClient()({url: `http://localhost:12345${path}`})
       .then(response => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
@@ -190,16 +188,16 @@ describe('axios instrumentation - integration test', () => {
       });
   });
 
-  it('should support nested get requests', done => {
+  it('should support nested get requests', () => {
     const client = getClient();
 
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client.get(`${baseUrl}${beijing}`);
-    const getWuhanWeather = client.get(`${baseUrl}${wuhan}`);
+    const getBeijingWeather = client.get(`${beijing}`);
+    const getWuhanWeather = client.get(`${wuhan}`);
 
-    getBeijingWeather.then(() => {
+    return getBeijingWeather.then(() => {
       getWuhanWeather.then(() => {
         // since these are sequential, we should have an expected order
         verifyGetSpan({
@@ -210,9 +208,8 @@ describe('axios instrumentation - integration test', () => {
           'http.path': beijing,
           'http.status_code': '202'
         });
-        done();
       });
-    }).catch(error => done(error));
+    });
   });
 
   it('should support parallel get requests', () => {
@@ -221,8 +218,8 @@ describe('axios instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client.get(`${baseUrl}${beijing}`);
-    const getWuhanWeather = client.get(`${baseUrl}${wuhan}`);
+    const getBeijingWeather = client.get(`${beijing}`);
+    const getWuhanWeather = client.get(`${wuhan}`);
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
