@@ -37,6 +37,7 @@ matrix:
         - CXX=clang-3.6
         - KAFKA_PLEASE_LOG=verbose
         - TEST_SUITE=nodejs
+        - PUBLISH_CANARY="true"
 
     - name: 'browser'
       node_js: 10
@@ -81,7 +82,7 @@ addons:
 
 after_success:
   - echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
-  - yarn lerna publish --canary minor --dist-tag canary --no-push --no-git-tag-version --yes
+  - if [[ ${PUBLISH_CANARY} == "true" ]]; then yarn lerna publish --canary minor --dist-tag canary --no-push --no-git-tag-version --yes; fi
 
 notifications:
   webhooks:
