@@ -21,4 +21,29 @@ function newSpanRecorder(spans) {
   }}});
 }
 
-module.exports = {maybeMiddleware, newSpanRecorder}
+function expectB3Headers(span, requestHeaders) {
+  expect(requestHeaders['x-b3-traceid']).to.equal(span.traceId);
+  expect(requestHeaders['x-b3-spanid']).to.equal(span.id);
+  expect(requestHeaders['x-b3-sampled']).to.equal('1');
+
+  /* eslint-disable no-unused-expressions */
+  expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
+  expect(requestHeaders['x-b3-flags']).to.not.exist;
+}
+
+function expectSpan(span, expected) {
+  expect(span.traceId)
+    .to.equal(span.id).and
+    .to.have.lengthOf(16);
+
+  const volatileProperties = {
+    traceId: span.traceId,
+    id: span.id,
+    timestamp: span.timestamp,
+    duration: span.duration
+  }
+
+  expect(span).to.deep.equal({...volatileProperties, ...expected});
+}
+
+module.exports = {maybeMiddleware, newSpanRecorder, expectB3Headers, expectSpan}

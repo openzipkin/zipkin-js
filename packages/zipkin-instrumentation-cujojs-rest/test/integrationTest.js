@@ -1,84 +1,130 @@
-const {Tracer, ExplicitContext} = require('zipkin');
-const express = require('express');
-const sinon = require('sinon');
+const {expect} = require('chai');
+const {
+  maybeMiddleware,
+  newSpanRecorder,
+  expectB3Headers,
+  expectSpan
+} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
 const rest = require('rest');
 const restInterceptor = require('../src/restInterceptor');
 
-describe('cujojs rest interceptor - integration test', () => {
-  it('should add headers to requests', done => {
-    const app = express();
-    app.get('/abc', (req, res) => {
-      res.status(202).json({
-        traceId: req.header('X-B3-TraceId'),
-        spanId: req.header('X-B3-SpanId')
+// NOTE: CujoJS/rest sends all http status to success callback
+describe('CujoJS/rest instrumentation - integration test', () => {
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
+
+  let server;
+  let baseURL = ''; // default to relative path, for browser-based tests
+  let tracer;
+
+  before((done) => {
+    const middleware = maybeMiddleware();
+    if (middleware !== null) {
+      server = middleware.listen(0, () => {
+        baseURL = `http://127.0.0.1:${server.address().port}`;
+        done();
       });
+    } else { // Inside a browser
+      done();
+    }
+  });
+
+  after(() => {
+    if (server) server.close();
+  });
+
+  let spans;
+
+  beforeEach(() => {
+    spans = [];
+    tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
+  });
+
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
+
+  function getClient() {
+    return rest.wrap(restInterceptor, {tracer, serviceName, remoteServiceName});
+  }
+
+  function url(path) {
+    return `${baseURL}${path}?index=10&count=300`;
+  }
+
+  function successSpan(path) {
+    return ({
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags: {
+        'http.path': path,
+        'http.status_code': '202'
+      }
     });
+  }
 
-    const server = app.listen(0, () => {
-      const record = sinon.spy();
-      const recorder = {record};
-      const ctxImpl = new ExplicitContext();
-      const tracer = new Tracer({recorder, ctxImpl});
+  it('should add headers to requests', () => {
+    const path = '/weather/wuhan';
+    return getClient()(url(path))
+      .then(response => expectB3Headers(popSpan(), JSON.parse(response.entity)));
+  });
 
-      tracer.scoped(() => {
-        const client = rest.wrap(restInterceptor, {
-          tracer,
-          serviceName: 'caller',
-          remoteServiceName: 'callee'
-        });
-        const port = server.address().port;
-        const host = '127.0.0.1';
-        const urlPath = '/abc';
-        const url = `http://${host}:${port}${urlPath}`;
-        client(url).then(successResponse => {
-          const responseData = JSON.parse(successResponse.entity);
-          server.close();
+  it('should support get request', () => {
+    const path = '/weather/wuhan';
+    return getClient()(url(path))
+      .then(() => expectSpan(popSpan(), successSpan(path)));
+  });
 
-          const annotations = record.args.map(args => args[0]);
+  it('should report 404 in tags', () => {
+    const path = '/pathno';
+    return getClient()(url(path))
+      .then(() => expectSpan(popSpan(), {
+        name: 'get',
+        kind: 'CLIENT',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'http.path': path,
+          'http.status_code': '404',
+          error: '404'
+        }
+      }));
+  });
 
-          // All annotations should have the same trace id and span id
-          const traceId = annotations[0].traceId.traceId;
-          const spanId = annotations[0].traceId.spanId;
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
-          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
+  it('should report 400 in tags', () => {
+    const path = '/weather/securedTown';
+    return getClient()(url(path))
+      .then(() => expectSpan(popSpan(), {
+        name: 'get',
+        kind: 'CLIENT',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'http.path': path,
+          'http.status_code': '400',
+          error: '400'
+        }
+      }));
+  });
 
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('caller');
-
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('GET');
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal(urlPath);
-
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('202');
-
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-
-          const traceIdOnServer = responseData.traceId;
-          expect(traceIdOnServer).to.equal(traceId);
-
-          const spanIdOnServer = responseData.spanId;
-          expect(spanIdOnServer).to.equal(spanId);
-
-          done();
-        }, errorResponse => {
-          if (errorResponse instanceof Error) {
-            done(errorResponse);
-          } else {
-            server.close();
-            done(new Error(`The request failed: ${errorResponse.error.toString()}`));
-          }
-        });
-      });
-    });
+  it('should report 500 in tags', () => {
+    const path = '/weather/bagCity';
+    return getClient()(url(path))
+      .then(() => expectSpan(popSpan(), {
+        name: 'get',
+        kind: 'CLIENT',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'http.path': path,
+          'http.status_code': '500',
+          error: '500'
+        }
+      }));
   });
 });
