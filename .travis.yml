@@ -82,7 +82,7 @@ addons:
 
 after_success:
   - echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
-  - if [[ ${PUBLISH_CANARY} == "true" ]]; then yarn lerna publish --canary beta --no-git-tag-version --yes; fi
+  - if [[ "${PUBLISH_CANARY}" == "true" ]]; then yarn lerna publish --canary minor --dist-tag canary --no-git-tag-version --yes; fi
 
 notifications:
   webhooks:
