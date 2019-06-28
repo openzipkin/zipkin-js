@@ -41,6 +41,7 @@ module.exports = function(config) {
       debug: true,
     },
     files: ['test/**/*.js'],
+    // unless you use the mocha reporter, you won't see test failure details.
     reporters: ['mocha'],
     port: 9876,
     colors: true,

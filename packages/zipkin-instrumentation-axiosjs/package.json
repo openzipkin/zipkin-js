@@ -13,8 +13,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "axios": "^0.18.0",
-    "express": "^4.16.4",
+    "axios": "^0.19.0",
     "zipkin": "^0.18.3"
   }
 }
