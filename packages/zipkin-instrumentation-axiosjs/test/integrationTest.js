@@ -1,9 +1,16 @@
-const {ExplicitContext, Tracer} = require('zipkin');
-const axios = require('axios');
 const {expect} = require('chai');
-const wrapAxios = require('../src/index');
-const {maybeMiddleware, newSpanRecorder} = require('../../../test/testFixture');
+const {
+  maybeMiddleware,
+  newSpanRecorder,
+  expectB3Headers,
+  expectSpan
+} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
 
+const axios = require('axios');
+const wrapAxios = require('../src/index');
+
+// NOTE: axiosjs raises an error on non 2xx status instead of passing to the normal callback.
 describe('axios instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
@@ -35,58 +42,40 @@ describe('axios instrumentation - integration test', () => {
     tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
   });
 
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
+
   function getClient() {
     const instance = axios.create({
-      baseURL,
       timeout: 200 // this avoids flakes in CI
     });
 
     return wrapAxios(instance, {tracer, serviceName, remoteServiceName});
   }
 
-  const path = '/weather/wuhan';
-  const url = () => `${path}?index=10&count=300`; // defers access to baseURL
+  function url(path) {
+    return `${baseURL}${path}?index=10&count=300`;
+  }
 
-  function verifyGetSpan(tags) {
-    const span = spans.pop();
-
-    expect(span.traceId)
-      .to.equal(span.id).and
-      .to.have.lengthOf(16);
-
-    expect(span).to.deep.equal({
-      // Just assert that the volatile fields exist
-      traceId: span.traceId,
-      id: span.id,
-      timestamp: span.timestamp,
-      duration: span.duration,
-
-      // Check the value of fields we expect instrumentation to control
+  function successSpan(path) {
+    return ({
       name: 'get',
       kind: 'CLIENT',
       localEndpoint: {serviceName},
       remoteEndpoint: {serviceName: remoteServiceName},
-      tags
+      tags: {
+        'http.path': path,
+        'http.status_code': '202'
+      }
     });
   }
 
-  it('should add headers to requests', done => {
-    getClient().get(url())
-      .then(response => {
-        expect(spans).to.have.length(1);
-
-        const requestHeaders = response.data;
-        expect(requestHeaders['x-b3-traceid']).to.equal(spans[0].traceId);
-        expect(requestHeaders['x-b3-spanid']).to.equal(spans[0].id);
-        expect(requestHeaders['x-b3-sampled']).to.equal('1');
-
-        /* eslint-disable no-unused-expressions */
-        expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
-        expect(requestHeaders['x-b3-flags']).to.not.exist;
-
-        return done();
-      })
-      .catch(error => done(error));
+  it('should add headers to requests', () => {
+    const path = '/weather/wuhan';
+    return getClient().get(url(path))
+      .then(response => expectB3Headers(popSpan(), response.data));
   });
 
   it('should not interfere with errors that precede a call', done => {
@@ -110,79 +99,101 @@ describe('axios instrumentation - integration test', () => {
       });
   });
 
-  it('should support get request', () =>
-    getClient().get(url())
-      .then(() => verifyGetSpan({
-        'http.path': path,
-        'http.status_code': '202'
-      }))
-  );
+  it('should support get request', () => {
+    const path = '/weather/wuhan';
+    return getClient().get(url(path))
+      .then(() => expectSpan(popSpan(), successSpan(path)));
+  });
 
-  it('should support options request', () =>
-    getClient()({url: url()})
-      .then(() => verifyGetSpan({
-        'http.path': path,
-        'http.status_code': '202'
-      }))
-  );
+  it('should support options request', () => {
+    const path = '/weather/wuhan';
+    return getClient()({url: url(path)})
+      .then(() => expectSpan(popSpan(), successSpan(path)));
+  });
 
   it('should report 404 in tags', done => {
-    const badPath = '/pathno';
-    getClient()({url: `${badPath}`})
+    const path = '/pathno';
+    getClient().get(url(path))
       .then(response => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        verifyGetSpan({
-          'http.path': badPath,
-          'http.status_code': '404',
-          error: '404'
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '404',
+            error: '404'
+          }
         });
         done();
       });
   });
 
   it('should report 400 in tags', done => {
-    const badPath = '/weather/securedTown';
-    getClient()({url: `${badPath}`})
+    const path = '/weather/securedTown';
+    getClient().get(url(path))
       .then(response => {
         done(new Error(`expected status 400 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        verifyGetSpan({
-          'http.path': badPath,
-          'http.status_code': '400',
-          error: '400'
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '400',
+            error: '400'
+          }
         });
         done();
       });
   });
 
   it('should report 500 in tags', done => {
-    const badPath = '/weather/bagCity';
-    getClient()({url: `${badPath}`})
+    const path = '/weather/bagCity';
+    getClient().get(url(path))
       .then(response => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        verifyGetSpan({
-          'http.path': badPath,
-          'http.status_code': '500',
-          error: '500'
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '500',
+            error: '500'
+          }
         });
         done();
       });
   });
 
   it('should report when endpoint doesnt exist in tags', done => {
-    getClient()({url: `http://localhost:12345${path}`})
+    const path = '/badHost';
+    const badUrl = `http://localhost:12345${path}`;
+    getClient().get(badUrl)
       .then(response => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
       .catch(error => {
-        verifyGetSpan({
-          'http.path': path,
-          error: error.toString()
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            error: error.toString()
+          }
         });
         done();
       });
@@ -194,20 +205,14 @@ describe('axios instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client.get(`${beijing}`);
-    const getWuhanWeather = client.get(`${wuhan}`);
+    const getBeijingWeather = client.get(url(beijing));
+    const getWuhanWeather = client.get(url(wuhan));
 
     return getBeijingWeather.then(() => {
       getWuhanWeather.then(() => {
         // since these are sequential, we should have an expected order
-        verifyGetSpan({
-          'http.path': wuhan,
-          'http.status_code': '202'
-        });
-        verifyGetSpan({
-          'http.path': beijing,
-          'http.status_code': '202'
-        });
+        expectSpan(popSpan(), successSpan(wuhan));
+        expectSpan(popSpan(), successSpan(beijing));
       });
     });
   });
@@ -218,20 +223,15 @@ describe('axios instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client.get(`${beijing}`);
-    const getWuhanWeather = client.get(`${wuhan}`);
+    const getBeijingWeather = client.get(url(beijing));
+    const getWuhanWeather = client.get(url(wuhan));
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
       const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
-      verifyGetSpan({
-        'http.path': firstPath,
-        'http.status_code': '202'
-      });
-      verifyGetSpan({
-        'http.path': firstPath === wuhan ? beijing : wuhan,
-        'http.status_code': '202'
-      });
+      const secondPath = firstPath === wuhan ? beijing : wuhan;
+      expectSpan(popSpan(), successSpan(firstPath));
+      expectSpan(popSpan(), successSpan(secondPath));
     });
   });
 });
