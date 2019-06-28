@@ -1,47 +1,38 @@
-const {BatchRecorder, ExplicitContext, Tracer, jsonEncoder: {JSON_V2}} = require('zipkin');
+const {ExplicitContext, Tracer} = require('zipkin');
 const axios = require('axios');
 const {expect} = require('chai');
 const wrapAxios = require('../src/index');
+const {maybeMiddleware, newSpanRecorder} = require('../../../test/testFixture');
 
 describe('axios instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
   let server;
-  let baseUrl;
+  let baseUrl = ''; // default to relative path, for browser-based tests
   let tracer;
 
   before((done) => {
-    if (typeof window !== 'undefined' && typeof window.__karma__ !== 'undefined') {
-      baseUrl = '';
-      done(); // inside karma we can't start a server!
-    }
-
-    // below intentionally defers loading to express middleware so that webpack doesn't bundle it
-
-    // eslint-disable-next-line global-require
-    const middleware = require('../../../test/middleware');
-    server = middleware().listen(0, () => {
-      baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const middleware = maybeMiddleware();
+    if (middleware !== null) {
+      server = middleware.listen(0, () => {
+        baseUrl = `http://127.0.0.1:${server.address().port}`;
+        done();
+      });
+    } else { // Inside a browser
       done();
-    });
+    }
   });
 
   after(() => {
-    if (server) {
-      server.close();
-    }
+    if (server) server.close();
   });
 
   let spans;
 
   beforeEach(() => {
     spans = [];
-    const ctxImpl = new ExplicitContext();
-    const recorder = new BatchRecorder({logger: {logSpan: (span) => {
-      spans.push(JSON.parse(JSON_V2.encode(span)));
-    }}});
-    tracer = new Tracer({ctxImpl, recorder});
+    tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
   });
 
   const getClient = () => wrapAxios(axios, {tracer, serviceName, remoteServiceName});
@@ -73,24 +64,47 @@ describe('axios instrumentation - integration test', () => {
   }
 
   it('should add headers to requests', done => {
-    getClient().get(url()).then(response => {
-      expect(spans).to.have.length(1);
+    getClient().get(url())
+      .then(response => {
+        expect(spans).to.have.length(1);
 
-      const requestHeaders = response.data;
-      expect(requestHeaders['x-b3-traceid']).to.equal(spans[0].traceId);
-      expect(requestHeaders['x-b3-spanid']).to.equal(spans[0].id);
-      expect(requestHeaders['x-b3-sampled']).to.equal('1');
+        const requestHeaders = response.data;
+        expect(requestHeaders['x-b3-traceid']).to.equal(spans[0].traceId);
+        expect(requestHeaders['x-b3-spanid']).to.equal(spans[0].id);
+        expect(requestHeaders['x-b3-sampled']).to.equal('1');
 
-      /* eslint-disable no-unused-expressions */
-      expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
-      expect(requestHeaders['x-b3-flags']).to.not.exist;
+        /* eslint-disable no-unused-expressions */
+        expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
+        expect(requestHeaders['x-b3-flags']).to.not.exist;
 
-      return done();
-    }).catch(error => done(error));
+        return done();
+      })
+      .catch(error => done(error));
+  });
+
+  it('should not interfere with errors that precede a call', done => {
+    // Here we are passing a function instead of the value of it. This ensures our error callback
+    // doesn't make assumptions about a span in progress: there won't be if there was a config error
+    getClient()(url)
+      .then(() => {
+        done(new Error('this shouldnt have been reached'));
+      })
+      .catch(error => {
+        const message = error.message;
+        const expected = [
+          'The "url" argument must be of type string', // node
+          'Parameter \'url\' must be a string' // browser
+        ];
+        if (message.indexOf(expected[0]) !== -1 || message.indexOf(expected[1]) !== -1) {
+          done();
+        } else {
+          done(new Error(`expected error message to match [${expected.toString()}]: ${message}`));
+        }
+      });
   });
 
   it('should support get request', done => {
-    getClient().get(url)
+    getClient().get(url())
       .then(() => {
         verifyGetSpan({
           'http.path': path,
@@ -101,7 +115,7 @@ describe('axios instrumentation - integration test', () => {
       .catch(error => done(error));
   });
 
-  it('should support options request', done => {
+  it('should support config request', done => {
     getClient()({url: url()})
       .then(() => {
         verifyGetSpan({
@@ -116,11 +130,11 @@ describe('axios instrumentation - integration test', () => {
   it('should report 404 in tags', done => {
     const badPath = '/pathno';
     getClient()({url: `${baseUrl}${badPath}`, timeout: 100})
-      .catch(error => {
+      .catch(() => {
         verifyGetSpan({
           'http.path': badPath,
           'http.status_code': '404',
-          'error': '404'
+          error: '404'
         });
         done();
       });
@@ -129,11 +143,11 @@ describe('axios instrumentation - integration test', () => {
   it('should report 400 in tags', done => {
     const badPath = '/weather/securedTown';
     getClient()({url: `${baseUrl}${badPath}`, timeout: 100})
-      .catch(error => {
+      .catch(() => {
         verifyGetSpan({
           'http.path': badPath,
           'http.status_code': '400',
-          'error': '400'
+          error: '400'
         });
         done();
       });
@@ -142,11 +156,11 @@ describe('axios instrumentation - integration test', () => {
   it('should report 500 in tags', done => {
     const badPath = '/weather/bagCity';
     getClient()({url: `${baseUrl}${badPath}`, timeout: 100})
-      .catch(error => {
+      .catch(() => {
         verifyGetSpan({
           'http.path': badPath,
           'http.status_code': '500',
-          'error': '500'
+          error: '500'
         });
         done();
       });
@@ -157,7 +171,7 @@ describe('axios instrumentation - integration test', () => {
       .catch(error => {
         verifyGetSpan({
           'http.path': path,
-          'error': error.toString()
+          error: error.toString()
         });
         done();
       });

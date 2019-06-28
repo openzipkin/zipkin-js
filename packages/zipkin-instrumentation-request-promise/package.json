@@ -14,26 +14,18 @@
   "peerDependencies": {
     "@types/request": "^2.0.8"
   },
-  "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
-    "@babel/polyfill": "7.0.0",
-    "@babel/preset-es2015": "7.0.0-beta.53",
-    "@types/request": "^2.0.8",
-    "chai": "^4.0.2",
-    "co": "^4.6.0",
-    "co-mocha": "^1.2.1",
-    "express": "^4.13.4",
-    "mocha": "^5.2.0",
-    "nock": "^9.0.14",
-    "sinon": "^2.3.8",
-    "uuid": "^3.2.1",
-    "zipkin-context-cls": "^0.18.0"
-  },
   "dependencies": {
     "asap": "^2.0.6",
     "request": "^2.83.0",
-    "request-promise": "^4.2.2",
-    "zipkin": "^0.18.3"
+    "request-promise": "^4.2.2"
+  },
+  "devDependencies": {
+    "@types/request": "^2.0.8",
+    "co": "^4.6.0",
+    "co-mocha": "^1.2.1",
+    "nock": "^9.0.14",
+    "uuid": "^3.2.1",
+    "zipkin": "^0.18.3",
+    "zipkin-context-cls": "^0.18.0"
   }
 }

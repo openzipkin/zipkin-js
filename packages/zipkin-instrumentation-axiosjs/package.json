@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --exit --require ../../test/helper.js",
+    "test": "mocha --require ../../test/helper.js --require @babel/register && karma start --single-run --browsers ChromeHeadless,FirefoxHeadless ../../karma.conf.js",
     "test-browser": "karma start --single-run --browsers ChromeHeadless ../../karma.conf.js",
     "prepublish": "npm run build"
   },

@@ -12,9 +12,6 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
-    "mocha": "^5.2.0",
     "pg": "^7.6.1",
     "zipkin": "^0.18.3"
   }

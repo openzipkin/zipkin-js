@@ -17,12 +17,14 @@ function wrapAxios(axios, options = {}) {
     return res;
   });
   const zipkinRecordError = error => tracer.scoped(() => {
-    const traceId = error.config.traceId;
-    if (error.response) {
-      instrumentation.recordResponse(traceId, error.response.status);
-    } else {
-      instrumentation.recordError(traceId, error);
-    }
+    if (error.config) {
+      const traceId = error.config.traceId;
+      if (error.response) {
+        instrumentation.recordResponse(traceId, error.response.status);
+      } else {
+        instrumentation.recordError(traceId, error);
+      }
+    } // otherwise the error preceded the request interceptor
     return Promise.reject(error);
   });
   let axiosInstance = axios;

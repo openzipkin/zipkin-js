@@ -12,12 +12,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
-    "express": "^4.13.4",
-    "mocha": "^5.2.0",
     "nock": "^9.0.14",
-    "sinon": "^2.3.8",
     "superagent": "^4.0.0",
     "zipkin": "^0.18.3"
   }

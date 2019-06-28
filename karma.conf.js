@@ -16,6 +16,13 @@ module.exports = function(config) {
     middleware: ['custom'],
     plugins: [
     {
+      // This allows http client tests that execute in the browser to be able to hit
+      // endpoint needed for functional testing such as status code parsing.
+      //
+      // Technically, this adds extra endpoints to the karma server (which serves the
+      // unit tests themselves). Http client tests call relative paths to access these
+      // endpoints. This is needed because unlike normal node.js tests, we can't start
+      // a server listener for test endpoints inside the web browser.
       'middleware:custom': ['factory', testMiddleware]
     },
       'karma-mocha',
@@ -24,6 +31,7 @@ module.exports = function(config) {
       'karma-source-map-support',
       'karma-chrome-launcher',
       'karma-firefox-launcher',
+      'karma-mocha-reporter',
     ],
     frameworks: ['mocha', 'browserify', 'chai', 'source-map-support'],
     preprocessors: {
@@ -33,10 +41,10 @@ module.exports = function(config) {
       debug: true,
     },
     files: ['test/**/*.js'],
-    reporters: ['progress'],
+    reporters: ['mocha'],
     port: 9876,
     colors: true,
-    logLevel: config.LOG_DEBUG,
+    logLevel: config.LOG_INFO,
     // see https://github.com/karma-runner/karma-firefox-launcher/issues/76
     customLaunchers: {
       FirefoxHeadless: {

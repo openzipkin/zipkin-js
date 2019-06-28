@@ -16,11 +16,7 @@
     "node-fetch": "^2.3.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
     "body-parser": "^1.15.2",
-    "express": "^4.13.4",
-    "mocha": "^5.2.0",
     "zipkin": "^0.18.3"
   }
 }

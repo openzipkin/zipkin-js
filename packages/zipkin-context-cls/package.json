@@ -13,10 +13,5 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
     "continuation-local-storage": "^3.1.7"
-  },
-  "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
-    "mocha": "^5.2.0"
   }
 }
