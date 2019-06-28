@@ -215,7 +215,7 @@ describe('axios instrumentation - integration test', () => {
     }).catch(error => done(error));
   });
 
-  it('should support parallel get requests', done => {
+  it('should support parallel get requests', () => {
     const client = getClient();
 
     const beijing = '/weather/beijing';
@@ -224,7 +224,7 @@ describe('axios instrumentation - integration test', () => {
     const getBeijingWeather = client.get(`${baseUrl}${beijing}`);
     const getWuhanWeather = client.get(`${baseUrl}${wuhan}`);
 
-    Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
+    return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
       const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
       verifyGetSpan({
@@ -235,7 +235,6 @@ describe('axios instrumentation - integration test', () => {
         'http.path': firstPath === wuhan ? beijing : wuhan,
         'http.status_code': '202'
       });
-      done();
-    }).catch(error => done(error));
+    });
   });
 });
