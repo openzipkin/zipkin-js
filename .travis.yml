@@ -79,17 +79,9 @@ addons:
       #- clang-3.7
       - clang
 
-# === This is setup for automatic deploy to npm when we push tags.
-# === It's commented out because it probably won't work too well with Lerna.
-# (TODO: make a lerna deployer for Travis? https://github.com/travis-ci/dpl)
-#deploy:
-#  provider: npm
-#  email: openzipkin.alt@gmail.com
-#  api_key:
-#    secure: ZhyMPXpZRnmGIojv9mV6AjZ95jg/1dBrvxTZusQFnO9gro51vGqOVm/DOXHIaR/8FUptkaFmVgy9d/KlQXLoYZROP1vkTiHAkr8ZfJUe+ZtatL646Nev1iAflClfT7QxeL+xT0ZHEPYWp2cVOWodLQIZV8+39az6RI6rur/bgYVShUnltjD/2PqrPT6ky9rtgW/KMPVmOZWyIo07os7TBOWvK3XaTC85P+ME/yx0hwx9eAqrZ8MUv7tY+QZ2lcFM26XzAXA76YCCbcGadPEWVxOwWCXBv1bGLbya+XYEC2JJifVElajMOUWfHtvRY5t69D4pEY3XZlA0PX6I/22zuIIi2pphCD10Ml0RpmdfExx/AUtH2zLReZQ5n0VI8I33A1B2OfgCVIDGve9T/3Tr6HKMizLwGHOQodbhpuaVy7h6NNWk1BvXpq1OfZr8TgYpnpqXao0AQ1J16RA00LPwlCCWf1K0cCkzbxEk5MiVDVLrsDjrTlMLyi+PVQ0CSvAwUOD88YPRPGt6Mv4uSPnzvB6mjjJsLyaEkV7t6cuH4rdxOs2QYBTAg33e3W741ZKZu3d9MnzjUDQtN6Q0AwuNwx5ByfvkjYPruamr+1EuFxJOqFktX3YsPDD0xZ3b9M1EDVwmFOBMfacSZ7B3PJxSWAHG1vdMCaBG29gQez6td8Y=
-#  on:
-#    tags: true
-#    repo: openzipkin/zipkin-js
+after_success:
+  - echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
+  - yarn lerna publish --canary minor --dist-tag canary --no-push --no-git-tag-version --yes
 
 notifications:
   webhooks:
