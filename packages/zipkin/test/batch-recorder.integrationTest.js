@@ -37,6 +37,7 @@ describe('Batch Recorder - integration test', () => {
       kind: 'CLIENT',
     });
 
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
     expect(recorder.partialSpans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
@@ -48,6 +49,7 @@ describe('Batch Recorder - integration test', () => {
       kind: 'SERVER',
     });
 
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
     expect(recorder.partialSpans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
@@ -59,6 +61,7 @@ describe('Batch Recorder - integration test', () => {
       kind: 'PRODUCER',
     });
 
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
     expect(recorder.partialSpans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
@@ -70,6 +73,7 @@ describe('Batch Recorder - integration test', () => {
       kind: 'CONSUMER',
     });
 
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
     expect(recorder.partialSpans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
@@ -81,6 +85,7 @@ describe('Batch Recorder - integration test', () => {
       name: 'foo',
     });
 
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
     expect(recorder.partialSpans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 });
