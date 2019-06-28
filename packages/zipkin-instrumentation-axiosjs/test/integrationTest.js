@@ -49,7 +49,7 @@ describe('axios instrumentation - integration test', () => {
 
   function getClient() {
     const instance = axios.create({
-      timeout: 200 // this avoids flakes in CI
+      timeout: 300 // this avoids flakes in CI
     });
 
     return wrapAxios(instance, {tracer, serviceName, remoteServiceName});
