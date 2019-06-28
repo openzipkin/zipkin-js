@@ -93,8 +93,8 @@ describe('axios instrumentation - integration test', () => {
       .catch(error => {
         const message = error.message;
         const expected = [
-          'The "url" argument must be of type string', // node
-          'Parameter \'url\' must be a string' // browser
+          'must be of type string', // node
+          'must be a string' // browser
         ];
         if (message.indexOf(expected[0]) !== -1 || message.indexOf(expected[1]) !== -1) {
           done();
