@@ -96,7 +96,7 @@ class BatchRecorder {
 
     // TODO(adriancole) refactor so this responsibility isn't in writeSpan
     if (span === undefined) {
-      // Span not found. Could have been expired.
+      // Span not found.  Could have been expired.
       return;
     }
 
@@ -128,10 +128,6 @@ class BatchRecorder {
   }
 
   _timedOut(span) {
-    if (span.startTimestamp === undefined) {
-      return false;
-    }
-
     return span.startTimestamp + this.timeout < now();
   }
 
