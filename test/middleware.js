@@ -1,6 +1,6 @@
-import express from 'express';
+const express = require('express');
 
-export const mockServer = () => new Promise(resolve => {
+function middleware() {
   const api = express();
   api.get('/weather/wuhan', (req, res) => {
     res.status(202).json(req.headers);
@@ -14,7 +14,6 @@ export const mockServer = () => new Promise(resolve => {
   api.get('/weather/bagCity', (req, res) => {
     res.status(500).json(req.headers);
   });
-  const apiServer = api.listen(0, () => {
-    resolve(apiServer);
-  });
-});
+  return api;
+}
+module.exports = middleware;

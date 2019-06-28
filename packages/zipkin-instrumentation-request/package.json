@@ -16,11 +16,7 @@
     "@types/request": "^2.0.8"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
     "@types/request": "^2.0.8",
-    "express": "^4.13.4",
-    "mocha": "^5.2.0",
     "request": "^2.88.0",
     "zipkin": "^0.18.3"
   }

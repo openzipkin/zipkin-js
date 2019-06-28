@@ -1,6 +1,6 @@
-import {Instrumentation} from 'zipkin';
+const {Instrumentation} = require('zipkin');
 
-export const wrapAxios = (axios, options = {}) => {
+function wrapAxios(axios, options = {}) {
   const {tracer} = options;
   const instrumentation = new Instrumentation.HttpClient(options);
   const zipkinRecordRequest = config => tracer.scoped(() => {
@@ -17,12 +17,14 @@ export const wrapAxios = (axios, options = {}) => {
     return res;
   });
   const zipkinRecordError = error => tracer.scoped(() => {
-    const traceId = error.config.traceId;
-    if (error.response) {
-      instrumentation.recordResponse(traceId, error.response.status);
-    } else {
-      instrumentation.recordError(traceId, error);
-    }
+    if (error.config) {
+      const traceId = error.config.traceId;
+      if (error.response) {
+        instrumentation.recordResponse(traceId, error.response.status);
+      } else {
+        instrumentation.recordError(traceId, error);
+      }
+    } // otherwise the error preceded the request interceptor
     return Promise.reject(error);
   });
   let axiosInstance = axios;
@@ -32,5 +34,6 @@ export const wrapAxios = (axios, options = {}) => {
   axiosInstance.interceptors.request.use(zipkinRecordRequest, zipkinRecordError);
   axiosInstance.interceptors.response.use(zipkinRecordResponse, zipkinRecordError);
   return axiosInstance;
-};
-export default wrapAxios;
+}
+
+module.exports = wrapAxios;

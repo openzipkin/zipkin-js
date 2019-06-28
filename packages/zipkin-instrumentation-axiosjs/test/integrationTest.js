@@ -1,407 +1,236 @@
-const {option: {None}, Tracer, ExplicitContext} = require('zipkin');
-import axios from 'axios';
-import sinon from 'sinon';
-import {expect} from 'chai';
-import wrapAxios from '../src/index';
-import {mockServer} from './utils';
+const {ExplicitContext, Tracer} = require('zipkin');
+const axios = require('axios');
+const {expect} = require('chai');
+const wrapAxios = require('../src/index');
+const {maybeMiddleware, newSpanRecorder} = require('../../../test/testFixture');
 
 describe('axios instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  let apiServer;
-  let apiHost;
-  let apiPort;
-  let record;
+  let server;
+  let baseURL = ''; // default to relative path, for browser-based tests
   let tracer;
 
   before((done) => {
-    mockServer().then(server => {
-      apiServer = server;
-      apiPort = apiServer.address().port;
-      apiHost = '127.0.0.1';
+    const middleware = maybeMiddleware();
+    if (middleware !== null) {
+      server = middleware.listen(0, () => {
+        baseURL = `http://127.0.0.1:${server.address().port}`;
+        done();
+      });
+    } else { // Inside a browser
       done();
-    });
+    }
   });
 
   after(() => {
-    apiServer.close();
+    if (server) server.close();
   });
+
+  let spans;
 
   beforeEach(() => {
-    record = sinon.spy();
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record};
-    tracer = new Tracer({ctxImpl, recorder});
+    spans = [];
+    tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
   });
 
-  const getClient = () => wrapAxios(axios, {tracer, serviceName, remoteServiceName});
+  function getClient() {
+    const instance = axios.create({
+      baseURL,
+      timeout: 200 // this avoids flakes in CI
+    });
+
+    return wrapAxios(instance, {tracer, serviceName, remoteServiceName});
+  }
+
+  const path = '/weather/wuhan';
+  const url = () => `${path}?index=10&count=300`; // defers access to baseURL
+
+  function verifyGetSpan(tags) {
+    const span = spans.pop();
+
+    expect(span.traceId)
+      .to.equal(span.id).and
+      .to.have.lengthOf(16);
+
+    expect(span).to.deep.equal({
+      // Just assert that the volatile fields exist
+      traceId: span.traceId,
+      id: span.id,
+      timestamp: span.timestamp,
+      duration: span.duration,
+
+      // Check the value of fields we expect instrumentation to control
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags
+    });
+  }
 
   it('should add headers to requests', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const urlPath = '/weather/wuhan';
-      const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
-
-      zipkinAxiosClient.get(url).then(response => {
-        const annotations = record.args.map(args => args[0]);
-        const traceId = annotations[0].traceId;
+    getClient().get(url())
+      .then(response => {
+        expect(spans).to.have.length(1);
 
         const requestHeaders = response.data;
-        expect(requestHeaders['x-b3-traceid']).to.equal(traceId.traceId);
-        expect(requestHeaders['x-b3-spanid']).to.equal(traceId.spanId);
+        expect(requestHeaders['x-b3-traceid']).to.equal(spans[0].traceId);
+        expect(requestHeaders['x-b3-spanid']).to.equal(spans[0].id);
         expect(requestHeaders['x-b3-sampled']).to.equal('1');
 
         /* eslint-disable no-unused-expressions */
         expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
         expect(requestHeaders['x-b3-flags']).to.not.exist;
 
-        done();
-      });
-    });
+        return done();
+      })
+      .catch(error => done(error));
   });
 
-  it('should support request shorthand (defaults to GET)', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const urlPath = '/weather/wuhan';
-      const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
-      zipkinAxiosClient.get(url).then(() => {
-        const annotations = record.args.map(args => args[0]);
-        const initialTraceId = annotations[0].traceId.traceId;
-        annotations.forEach(ann => expect(ann.traceId.traceId)
-            .to.equal(initialTraceId).and
-            .to.have.lengthOf(16));
-
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('GET');
-
-        expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.path');
-        expect(annotations[2].annotation.value).to.equal(urlPath);
-
-        expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-        expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('http.status_code');
-        expect(annotations[5].annotation.value).to.equal('202');
-
-        expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-        done();
-      });
-    });
-  });
-  it('should support both url and uri options', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const urlPath = '/weather/wuhan';
-      const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
-      zipkinAxiosClient({url})
-          .then(() => {
-            const annotations = record.args.map(args => args[0]);
-            const initialTraceId = annotations[0].traceId.traceId;
-            annotations.forEach(ann => expect(ann.traceId.traceId)
-              .to.equal(initialTraceId).and
-              .to.have.lengthOf(16));
-
-            expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-            expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-            expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-            expect(annotations[1].annotation.name).to.equal('GET');
-
-            expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-            expect(annotations[2].annotation.key).to.equal('http.path');
-            expect(annotations[2].annotation.value).to.equal(urlPath);
-
-            expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-            expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-            expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-            expect(annotations[5].annotation.key).to.equal('http.status_code');
-            expect(annotations[5].annotation.value).to.equal('202');
-
-            expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-            done();
-          });
-    });
-  });
-  it('should support promise callback', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const urlPath = '/weather/wuhan';
-      const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
-      zipkinAxiosClient({url}).then(() => {
-        const annotations = record.args.map(args => args[0]);
-        const initialTraceId = annotations[0].traceId.traceId;
-        annotations.forEach(ann => expect(ann.traceId.traceId)
-            .to.equal(initialTraceId).and
-            .to.have.lengthOf(16));
-
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('GET');
-
-        expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.path');
-        expect(annotations[2].annotation.value).to.equal(urlPath);
-
-        expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-        expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('http.status_code');
-        expect(annotations[5].annotation.value).to.equal('202');
-
-        expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-        done();
-      });
-    });
-  });
-
-  it('should report 404 when path does not exist', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const urlPath = '/doesNotExist';
-      const url = `http://${apiHost}:${apiPort}${urlPath}`;
-      zipkinAxiosClient({url, timeout: 100}).catch(() => {
-        const annotations = record.args.map(args => args[0]);
-        const initialTraceId = annotations[0].traceId.traceId;
-        annotations.forEach(ann => expect(ann.traceId.traceId)
-            .to.equal(initialTraceId).and
-            .to.have.lengthOf(16));
-
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('GET');
-
-        expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.path');
-        expect(annotations[2].annotation.value).to.equal(urlPath);
-
-        expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-        expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('http.status_code');
-        expect(annotations[5].annotation.value).to.equal('404');
-
-        expect(annotations[6].annotation.key).to.equal('error');
-        expect(annotations[6].annotation.value).to.equal('404');
-
-        expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
-
-        expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
-
-        done();
-      });
-    });
-  });
-
-  it('should report when service does not exist', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const host = 'localhost:12345';
-      const url = `http://${host}`;
-      zipkinAxiosClient({url, timeout: 200}).catch(() => {
-        const annotations = record.args.map(args => args[0]);
-        const initialTraceId = annotations[0].traceId.traceId;
-        annotations.forEach(ann => expect(ann.traceId.traceId)
-            .to.equal(initialTraceId).and
-            .to.have.lengthOf(16));
-
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('GET');
-
-        expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.path');
-        expect(annotations[2].annotation.value).to.equal('/');
-
-        expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-        expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('error');
-        expect(annotations[5].annotation.value)
-            .to.contain('Error: connect ECONNREFUSED 127.0.0.1:12345');
-
-        expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-
-        expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
-        done();
-      });
-    });
-  });
-
-  it('should report when service returns 400', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const urlPath = '/weather/securedTown';
-      const url = `http://${apiHost}:${apiPort}${urlPath}`;
-      zipkinAxiosClient({url, timeout: 100}).catch(() => {
-        const annotations = record.args.map(args => args[0]);
-        const initialTraceId = annotations[0].traceId.traceId;
-        annotations.forEach(ann => expect(ann.traceId.traceId)
-            .to.equal(initialTraceId).and
-            .to.have.lengthOf(16));
-
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('GET');
-
-        expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.path');
-        expect(annotations[2].annotation.value).to.equal(urlPath);
-
-        expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-        expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('http.status_code');
-        expect(annotations[5].annotation.value).to.equal('400');
-
-        expect(annotations[6].annotation.key).to.equal('error');
-        expect(annotations[6].annotation.value).to.equal('400');
-
-        expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
-
-        expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
-        done();
-      });
-    });
-  });
-
-  it('should report when service returns 500', done => {
-    tracer.scoped(() => {
-      const zipkinAxiosClient = getClient();
-      const urlPath = '/weather/bagCity';
-      const url = `http://${apiHost}:${apiPort}${urlPath}`;
-      zipkinAxiosClient({url, timeout: 100}).catch(() => {
-        const annotations = record.args.map(args => args[0]);
-        const initialTraceId = annotations[0].traceId.traceId;
-        annotations.forEach(ann => expect(ann.traceId.traceId)
-            .to.equal(initialTraceId).and
-            .to.have.lengthOf(16));
-
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('GET');
-
-        expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.path');
-        expect(annotations[2].annotation.value).to.equal(urlPath);
-
-        expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-        expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('http.status_code');
-        expect(annotations[5].annotation.value).to.equal('500');
-
-        expect(annotations[6].annotation.key).to.equal('error');
-        expect(annotations[6].annotation.value).to.equal('500');
-
-        expect(annotations[7].annotation.annotationType).to.equal('ClientRecv');
-
-        expect(annotations[8]).to.be.undefined; // eslint-disable-line no-unused-expressions
-        done();
-      });
-    });
-  });
-
-  it('should handle nested requests', done => {
-    tracer.scoped(() => {
-      const client = getClient();
-      const getBeijingWeather = client.get(`http://${apiHost}:${apiPort}/weather/beijing`);
-      const getWuhanWeather = client.get(`http://${apiHost}:${apiPort}/weather/wuhan`);
-
-      getBeijingWeather.then(() => {
-        getWuhanWeather.then(() => {
-          const annotations = record.args.map(args => args[0]);
-          let firstTraceId;
-          let beijingWeatherSpanId;
-          let wuhanWeatherSpanId;
-
-          annotations.forEach(annot => {
-            if (firstTraceId) {
-              expect(annot.traceId.traceId === firstTraceId);
-            } else {
-              firstTraceId = annot.traceId.traceId;
-            }
-
-            if (annot.annotation.value === '/weather/beijing') {
-              beijingWeatherSpanId = annot.traceId.spanId;
-            }
-            if (annot.annotation.value === '/weather/wuhan') {
-              wuhanWeatherSpanId = annot.traceId.spanId;
-            }
-
-            expect(annot.traceId.parentSpanId).to.equal(None);
-          });
-
-          expect(beijingWeatherSpanId).to.not.equal(wuhanWeatherSpanId);
-          expect(wuhanWeatherSpanId).to.not.equal(beijingWeatherSpanId);
-
+  it('should not interfere with errors that precede a call', done => {
+    // Here we are passing a function instead of the value of it. This ensures our error callback
+    // doesn't make assumptions about a span in progress: there won't be if there was a config error
+    getClient()(url)
+      .then(response => {
+        done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
+      })
+      .catch(error => {
+        const message = error.message;
+        const expected = [
+          'must be of type string', // node
+          'must be a string' // browser
+        ];
+        if (message.indexOf(expected[0]) !== -1 || message.indexOf(expected[1]) !== -1) {
           done();
+        } else {
+          done(new Error(`expected error message to match [${expected.toString()}]: ${message}`));
+        }
+      });
+  });
+
+  it('should support get request', () =>
+    getClient().get(url())
+      .then(() => verifyGetSpan({
+        'http.path': path,
+        'http.status_code': '202'
+      }))
+  );
+
+  it('should support options request', () =>
+    getClient()({url: url()})
+      .then(() => verifyGetSpan({
+        'http.path': path,
+        'http.status_code': '202'
+      }))
+  );
+
+  it('should report 404 in tags', done => {
+    const badPath = '/pathno';
+    getClient()({url: `${badPath}`})
+      .then(response => {
+        done(new Error(`expected status 404 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        verifyGetSpan({
+          'http.path': badPath,
+          'http.status_code': '404',
+          error: '404'
+        });
+        done();
+      });
+  });
+
+  it('should report 400 in tags', done => {
+    const badPath = '/weather/securedTown';
+    getClient()({url: `${badPath}`})
+      .then(response => {
+        done(new Error(`expected status 400 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        verifyGetSpan({
+          'http.path': badPath,
+          'http.status_code': '400',
+          error: '400'
+        });
+        done();
+      });
+  });
+
+  it('should report 500 in tags', done => {
+    const badPath = '/weather/bagCity';
+    getClient()({url: `${badPath}`})
+      .then(response => {
+        done(new Error(`expected status 500 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        verifyGetSpan({
+          'http.path': badPath,
+          'http.status_code': '500',
+          error: '500'
+        });
+        done();
+      });
+  });
+
+  it('should report when endpoint doesnt exist in tags', done => {
+    getClient()({url: `http://localhost:12345${path}`})
+      .then(response => {
+        done(new Error(`expected an invalid host to error. status: ${response.status}`));
+      })
+      .catch(error => {
+        verifyGetSpan({
+          'http.path': path,
+          error: error.toString()
+        });
+        done();
+      });
+  });
+
+  it('should support nested get requests', () => {
+    const client = getClient();
+
+    const beijing = '/weather/beijing';
+    const wuhan = '/weather/wuhan';
+
+    const getBeijingWeather = client.get(`${beijing}`);
+    const getWuhanWeather = client.get(`${wuhan}`);
+
+    return getBeijingWeather.then(() => {
+      getWuhanWeather.then(() => {
+        // since these are sequential, we should have an expected order
+        verifyGetSpan({
+          'http.path': wuhan,
+          'http.status_code': '202'
+        });
+        verifyGetSpan({
+          'http.path': beijing,
+          'http.status_code': '202'
         });
       });
     });
   });
 
-  it('should handle parallel requests', done => {
-    tracer.scoped(() => {
-      const client = getClient();
-      const getBeijingWeather = client.get(`http://${apiHost}:${apiPort}/weather/beijing`);
-      const getWuhanWeather = client.get(`http://${apiHost}:${apiPort}/weather/wuhan`);
-      Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
-        const annotations = record.args.map(args => args[0]);
-        let firstTraceId;
-        let beijingWeatherSpanId;
-        let wuhanWeatherSpanId;
+  it('should support parallel get requests', () => {
+    const client = getClient();
 
-        annotations.forEach(annot => {
-          if (firstTraceId) {
-            expect(annot.traceId.traceId === firstTraceId);
-          } else {
-            firstTraceId = annot.traceId.traceId;
-          }
+    const beijing = '/weather/beijing';
+    const wuhan = '/weather/wuhan';
 
-          if (annot.annotation.value === '/weather/beijing') {
-            beijingWeatherSpanId = annot.traceId.spanId;
-          }
-          if (annot.annotation.value === '/weather/wuhan') {
-            wuhanWeatherSpanId = annot.traceId.spanId;
-          }
+    const getBeijingWeather = client.get(`${beijing}`);
+    const getWuhanWeather = client.get(`${wuhan}`);
 
-          expect(annot.traceId.parentSpanId).to.equal(None);
-        });
-
-        expect(beijingWeatherSpanId).to.not.equal(wuhanWeatherSpanId);
-        expect(wuhanWeatherSpanId).to.not.equal(beijingWeatherSpanId);
-
-        done();
+    return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
+      // since these are parallel, we have an unexpected order
+      const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
+      verifyGetSpan({
+        'http.path': firstPath,
+        'http.status_code': '202'
+      });
+      verifyGetSpan({
+        'http.path': firstPath === wuhan ? beijing : wuhan,
+        'http.status_code': '202'
       });
     });
   });

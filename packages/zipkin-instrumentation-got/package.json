@@ -21,11 +21,7 @@
     "got": ">= 9.6.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
-    "express": "^4.13.4",
     "got": "^9.6.0",
-    "mocha": "^5.2.0",
     "zipkin": "^0.18.3"
   }
 }
