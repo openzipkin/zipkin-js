@@ -290,6 +290,7 @@ describe('Batch Recorder', () => {
 
     trace.recordServiceName('producer');
     trace.recordRpc('send-msg');
+    trace.recordAnnotation(new Annotation.LocalOperationStart());
     trace.recordAnnotation(new Annotation.LocalOperationStop());
 
     const loggedSpan = logSpan.getCall(0).args[0];
@@ -315,6 +316,7 @@ describe('Batch Recorder', () => {
       }));
       trace.recordServiceName('producer');
       trace.recordRpc('send-msg');
+      trace.recordAnnotation(new Annotation.LocalOperationStart());
       trace.recordAnnotation(new Annotation.LocalOperationStop());
 
       const loggedSpan = logSpan.getCall(0).args[0];
