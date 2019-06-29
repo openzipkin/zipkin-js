@@ -280,4 +280,31 @@ describe('Batch Recorder - integration test', () => {
 
     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
+
+  /* This shows that a single finish event can trigger a report after a flush */
+  it('should report sane minimal data even on timeout', () => {
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+    recorder._writeSpan(rootId, pendingSpan(rootId)); // simulate timeout
+    expect(pendingSpan(rootId)).to.not.exist; // eslint-disable-line no-unused-expressions
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      timestamp: 1
+    });
+
+    recorder.record(record(rootId, 3, new Annotation.ClientRecv()));
+    expect(pendingSpan(rootId)).to.not.exist; // eslint-disable-line no-unused-expressions
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      // there's no duration here as start timestamp was lost due to the flush
+      annotations: [{timestamp: 3, value: 'finish'}]
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
 });
