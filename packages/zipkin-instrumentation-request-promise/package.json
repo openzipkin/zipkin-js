@@ -6,6 +6,7 @@
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha --exit --require @babel/polyfill --require ../../test/helper.js",
+    "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
