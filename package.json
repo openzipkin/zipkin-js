@@ -17,6 +17,7 @@
     "test": "npm run test:es && npm run test:ts",
     "lerna-test": "lerna run test",
     "lerna-test-browser": "lerna run test-browser",
+    "lerna-test-debug": "lerna run test-debug",
     "lerna-clean": "lerna clean",
     "lerna-build": "lerna run build",
     "lerna-publish": "lerna publish",

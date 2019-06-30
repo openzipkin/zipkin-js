@@ -176,6 +176,11 @@ Ex. to only run integration tests for postgres
 npm run lerna-test -- --scope zipkin-instrumentation-postgres
 ```
 
+Ex. to only run a single integration test in the zipkin package
+```bash
+npm run lerna-test -- --scope zipkin -- test/batch-recorder.integrationTest.js
+```
+
 ### Running code style linting: `yarn lint`
 
 Before raising a pull request, make sure there are no lint problems, by running `yarn lint`. Otherwise, your pull request will be colored red.
@@ -189,3 +194,50 @@ Before raising a pull request, make sure there are no lint problems, by running 
 If you are a user waiting for a merged feature to get released, nag us on the related pull request or [gitter](https://gitter.im/openzipkin/zipkin).
 
 The actual publish process is easy: Log in to npm with the `openzipkin` user. Then, run `npm run lerna-publish`.
+
+### Debugging
+
+To debug tests, you'll need a recent version of chrome installed. You'll also need to add the
+`debugger` keyword where you want to pause.
+
+#### Add the word `debugger` to the code you are investigating
+
+Say you want to debug this test:
+
+```javascript
+  it('should handle overlapping server and client', () => {
+    recorder.record(newRecord(rootId, new Annotation.ServiceName('frontend')));
+```
+
+Literally insert the word debugger
+```javascript
+  it('should handle overlapping server and client', () => {
+  debugger
+    recorder.record(newRecord(rootId, new Annotation.ServiceName('frontend')));
+```
+
+#### Run `lerna-test-debug`
+
+Now, run `lerna-test-debug`, optionally scoping to the module and test you are working on.
+
+Ex.
+```bash
+npm run lerna-test-debug -- --scope zipkin -- test/batch-recorder.integrationTest.js
+```
+
+#### Start Chrome DevTools for Node
+
+In Chrome, open the url chrome://inspect/#devices and click "Open dedicated DevTools for Node"
+
+#### Skip the first breakpoint
+
+The first breakpoint is just mocha (the test runner), skip it by clicking the play button:
+
+<img width="664" alt="debugging" src="https://user-images.githubusercontent.com/64215/60378460-693cca00-9a55-11e9-9a6b-584907048ecc.png">
+
+#### Inspect your state!
+
+Now, you should be at a breakpoint. You can inspect the state of fields by looking at the first
+Closure scope like so:
+
+<img width="664" alt="debugging" src="https://user-images.githubusercontent.com/64215/60378478-9e491c80-9a55-11e9-9356-71e68ad21c51.png">

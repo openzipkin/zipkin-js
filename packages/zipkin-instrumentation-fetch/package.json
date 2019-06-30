@@ -6,13 +6,13 @@
   "scripts": {
     "build": "babel src -d lib",
     "test": "mocha --exit --require ../../test/helper.js",
+    "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "mocha": "^5.2.0",
     "node-fetch": "^1.5.3",
     "zipkin": "^0.18.3"
   }
