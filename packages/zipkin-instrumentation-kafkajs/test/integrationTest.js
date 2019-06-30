@@ -1,91 +1,76 @@
 require('promise.prototype.finally').shim();
-const {Tracer} = require('zipkin');
-const CLSContext = require('zipkin-context-cls');
+const {expect} = require('chai');
+const {
+  newSpanRecorder,
+  expectSpan
+} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
 const {Kafka} = require('kafkajs');
 const instrumentKafkaJs = require('../src/zipkin-instrumentation-kafkajs');
-const sinon = require('sinon');
 
-describe('Kafka js intrumentation test', () => {
-  const localServiceName = 'node-backend';
-  const remoteServiceName = 'consumer-backend';
+describe('KafkaJS instrumentation - integration test', () => {
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'kafka';
 
-  let record;
-  let recorder;
-  let ctxImpl;
+  let spans;
   let tracer;
+  let rawKafka;
   let kafka;
 
+  function newKafka() {
+    return new Kafka({clientId: serviceName, brokers: ['localhost:9092']});
+  }
+
   beforeEach(() => {
-    record = sinon.spy();
-    recorder = {record};
-    ctxImpl = new CLSContext('zipkin-test');
-    tracer = new Tracer({recorder, ctxImpl, localServiceName});
-    kafka = instrumentKafkaJs(new Kafka({
-      clientId: 'test-app',
-      brokers: ['localhost:9092']
-    }), {tracer, remoteServiceName});
+    spans = [];
+    tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
+    rawKafka = newKafka();
+    kafka = instrumentKafkaJs(newKafka(), {tracer, remoteServiceName});
   });
 
-  function verifyProduce(annotations, topic, isError) {
-    let i = 0;
-    expect(annotations[i].annotation.annotationType).to.equal('ServiceName');
-    expect(annotations[i++].annotation.serviceName).to.equal(remoteServiceName);
-    expect(annotations[i].annotation.annotationType).to.equal('Rpc');
-    expect(annotations[i++].annotation.name).to.equal('produce');
-    expect(annotations[i].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[i].annotation.key).to.equal('kafka.topic');
-    expect(annotations[i++].annotation.value).to.equal(topic);
-    expect(annotations[i++].annotation.annotationType).to.equal('ProducerStart');
-    expect(annotations[i++].annotation.annotationType).to.equal('ServerAddr');
-    if (isError) {
-      expect(annotations[i++].annotation.key).to.equal('error');
-    }
-    expect(annotations[i++].annotation.annotationType).to.equal('ProducerStop');
-    return annotations.slice(i);
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
   }
 
-  function verifyConsume(annotations, topic, partition, isError) {
-    const splicedAnnotations = verifyProduce(annotations, topic);
-    let i = 0;
-    expect(splicedAnnotations[i].annotation.annotationType).to.equal('ServiceName');
-    expect(splicedAnnotations[i++].annotation.serviceName).to.equal(localServiceName);
-    expect(splicedAnnotations[i].annotation.annotationType).to.equal('Rpc');
-    expect(splicedAnnotations[i++].annotation.name).to.equal('consume');
-    expect(splicedAnnotations[i].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(splicedAnnotations[i].annotation.key).to.equal('kafka.topic');
-    expect(splicedAnnotations[i++].annotation.value).to.equal(topic);
-    expect(splicedAnnotations[i].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(splicedAnnotations[i].annotation.key).to.equal('kafka.partition');
-    expect(splicedAnnotations[i++].annotation.value).to.equal(partition);
-    expect(splicedAnnotations[i++].annotation.annotationType).to.equal('ConsumerStart');
-    if (isError) {
-      expect(splicedAnnotations[i++].annotation.key).to.equal('error');
-    }
-    expect(splicedAnnotations[i++].annotation.annotationType).to.equal('ConsumerStop');
-  }
-
-  it('producer-should-be-instumented', function() {
+  it('should record a producer span on send', function() { // this.X doesn't work with =>
     this.slow(15 * 1000);
     this.timeout(30 * 1000);
-    const topic = this.test.title;
+
+    const testTopic = 'producer-send';
     const producer = kafka.producer();
 
     return producer.connect().then(() =>
       producer.send({
-        topic,
-        messages: [{key: 'test', value: 'test'}]
+        topic: testTopic,
+        messages: [{key: 'mykey', value: 'myvalue'}]
       }).then(() => {
-        const annotations = record.args.map(args => args[0]);
-        verifyProduce(annotations, topic);
+        expectSpan(popSpan(), {
+          kind: 'PRODUCER',
+          name: 'produce', // TODO: change to send!
+          localEndpoint: {
+            serviceName: remoteServiceName // TODO: bug!
+          },
+          remoteEndpoint: {
+            serviceName: remoteServiceName
+          },
+          tags: {
+            'kafka.topic': testTopic
+            // TODO: we also tag kafka.key
+          }
+        });
+        expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
       }).finally(() => producer.disconnect())
     );
   });
 
-  it('consumer-should-be-instumented', function(done) {
+  it('should record a consumer span on eachMessage', function(done) { // this.X doesn't work with =>
     this.slow(15 * 1000);
     this.timeout(30 * 1000);
-    const testTopic = this.test.title;
-    const producer = kafka.producer();
+
+    const testTopic = 'consumer-eachMessage';
+    const producer = rawKafka.producer();
     const consumer = kafka.consumer({groupId: 'test-group'});
 
     producer.connect().then(() =>
@@ -99,11 +84,24 @@ describe('Kafka js intrumentation test', () => {
          .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
          .then(() =>
            consumer.run({
-             eachMessage: ({topic, partition}) => {
+             eachMessage: ({partition}) => {
                setTimeout(() => {
                  consumer.disconnect().then(() => {
-                   const annotations = record.args.map(args => args[0]);
-                   verifyConsume(annotations, topic, partition);
+                   expectSpan(popSpan(), {
+                     kind: 'CONSUMER', // TODO: this should be a child of the consumer span
+                     name: 'consume', // TODO: change to eachMessage!
+                     localEndpoint: {
+                       serviceName: 'unknown' // TODO: bug!
+                     },
+   //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
+   //                    serviceName: remoteServiceName
+   //                  },
+                     tags: {
+                       'kafka.partition': partition.toString(), // NOTE: this isn't tagged in brave
+                       'kafka.topic': testTopic
+                     }
+                   });
+                   expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
                    done();
                  }).catch((err) => done(err));
                }, 0);
@@ -116,28 +114,46 @@ describe('Kafka js intrumentation test', () => {
     .catch((err) => done(err));
   });
 
-  it('consumer-error-should-be-instumented', function(done) {
+  it('should tag a consumer span with error', function(done) { // this.X doesn't work with =>
     this.slow(15 * 1000);
     this.timeout(30 * 1000);
-    const testTopic = this.test.title;
-    const producer = kafka.producer();
+
+    const testTopic = 'consumer-error';
+    const producer = rawKafka.producer();
     const consumer = kafka.consumer({groupId: 'test-group'});
 
-    producer.connect().then(() =>
-      producer.send({topic: testTopic, messages: [{key: 'test', value: 'test'}]})
+    const verifyErrorSpan = () => {
+      expectSpan(popSpan(), {
+        kind: 'CONSUMER', // TODO: this should be a child of the consumer span
+        name: 'consume', // TODO: change to eachMessage!
+        localEndpoint: {
+          serviceName: 'unknown' // TODO: bug!
+        },
+//                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
+//                    serviceName: remoteServiceName
+//                  },
+        tags: {
+          error: 'unknown', // TODO: incorrect
+          'kafka.partition': '0', // NOTE: this isn't tagged in brave
+          'kafka.topic': testTopic
+        }
+      });
+    };
+
+    producer.connect().then(() => producer
+      .send({topic: testTopic, messages: [{key: 'mykey', value: 'myvalue'}]})
       .finally(() => producer.disconnect())
       .finally(
         consumer.connect().then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
         .then(() => {
           let errorCount = 0;
           return consumer.run({
-            eachMessage: ({topic, partition}) => {
+            eachMessage: () => {
               const isError = errorCount === 0;
               setTimeout(() => {
                 consumer.disconnect().then(() => {
                   if (isError) {
-                    const annotations = record.args.map(args => args[0]);
-                    verifyConsume(annotations, topic, partition, isError);
+                    verifyErrorSpan();
                     done();
                   }
                 }).catch((err) => {

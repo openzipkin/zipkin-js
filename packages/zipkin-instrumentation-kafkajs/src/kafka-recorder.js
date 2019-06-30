@@ -1,5 +1,9 @@
 const {TraceId, option: {fromNullable}, Annotation, HttpHeaders} = require('zipkin');
 
+function bufferToAscii(maybeBuffer) { // TODO: backfill tests for this
+  return Buffer.isBuffer(maybeBuffer) ? maybeBuffer.toString('ascii') : maybeBuffer;
+}
+
 const recordConsumeStart = (tracer, {topic, partition, message}) => {
   const traceId = message.headers[HttpHeaders.TraceId];
   const spanId = message.headers[HttpHeaders.SpanId];
@@ -12,10 +16,10 @@ const recordConsumeStart = (tracer, {topic, partition, message}) => {
 
     // TODO: this should definitely note join. It should make a child
     id = tracer.join(new TraceId({
-      traceId,
-      parentId: fromNullable(parentId),
-      spanId,
-      sampled: fromNullable(sampled),
+      traceId: bufferToAscii(traceId),
+      parentId: fromNullable(parentId).map(bufferToAscii),
+      spanId: bufferToAscii(spanId),
+      sampled: fromNullable(sampled).map(bufferToAscii),
       debug: flags ? parseInt(flags) === 1 : false
     }));
   } else {

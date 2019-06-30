@@ -168,7 +168,7 @@ yarn
 - The Kafka transport integration test will start an embedded Kafka server for the test, which requires you to have
 Java installed on your machine.
 - The KafkaJS instrumentation tests require `docker` and `docker-compose` and will start up a containerized Kafka
-instance to run against
+instance to run against. Its NPM script uses commands that require a recent version of bash.
 
 ### Running tests for one module `npm run lerna-test -- --scope zipkin-instrumentation-foo`
 
