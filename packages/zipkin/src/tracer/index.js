@@ -112,6 +112,11 @@ class Tracer {
     return childId;
   }
 
+  // this allows you to avoid use of implicit trace ID and defer implicit timestamp derivation
+  _explicitRecord(traceId, annotation, timestamp = now(this._startTimestamp, this._startTick)) {
+    this.recorder.record(new Record({traceId, timestamp, annotation}));
+  }
+
   // creates a span, timing the given callable, adding any error as a tag
   // if the callable returns a promise, a span stops after the promise resolves
   local(operationName, callable) {
@@ -144,22 +149,17 @@ class Tracer {
       }
 
       // At this point we know we are sampled. Explicitly record against the ID
-      const explicitRecord = (annotation) => this.recorder.record(new Record({
-        traceId,
-        timestamp: now(this._startTimestamp, this._startTick),
-        annotation
-      }));
 
       // Ensure the span representing the promise completes
       return result
         .then((output) => {
-          explicitRecord(new Annotation.LocalOperationStop());
+          this._explicitRecord(traceId, new Annotation.LocalOperationStop());
           return output;
         })
         .catch((err) => {
           const message = err.message ? err.message : err.toString();
-          explicitRecord(new Annotation.BinaryAnnotation('error', message));
-          explicitRecord(new Annotation.LocalOperationStop());
+          this._explicitRecord(traceId, new Annotation.BinaryAnnotation('error', message));
+          this._explicitRecord(traceId, new Annotation.LocalOperationStop());
           throw err;
         });
     });
@@ -196,16 +196,10 @@ class Tracer {
     return this._localEndpoint;
   }
 
-  recordAnnotation(annotation, timestamp = now(this._startTimestamp, this._startTick)) {
-    this.id.sampled.ifPresent(sampled => {
-      if (!sampled) return;
-
-      this.recorder.record(new Record({
-        traceId: this.id,
-        timestamp,
-        annotation
-      }));
-    });
+  recordAnnotation(annotation, timestamp) {
+    if (this.id.sampled.getOrElse(false)) {
+      this._explicitRecord(this.id, annotation, timestamp);
+    }
   }
 
   recordMessage(message) {

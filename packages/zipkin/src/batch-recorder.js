@@ -1,4 +1,4 @@
-const {now, hrtime} = require('./time');
+const {now} = require('./time');
 const {Span, Endpoint} = require('./model');
 
 /**
@@ -20,44 +20,33 @@ class PartialSpan {
   /**
    * @constructor
    * @param {TraceId} traceId
+   * @param {timeoutTimestamp} after this moment, data should be forcibly flushed
    */
-  constructor(traceId) {
+  constructor(traceId, timeoutTimestamp) {
     this.traceId = traceId;
-    this.startTimestamp = now();
-    this.startTick = hrtime();
+    this.timeoutTimestamp = timeoutTimestamp;
     this.delegate = new Span(traceId);
     this.localEndpoint = new Endpoint({});
+    this.shouldFlush = false;
   }
 
   /**
-   * adds endTimestamp to span
-   * @return {void}
+   * Conditionally records the duration of the span, if it has a timestamp.
+   *
+   * @param {finishTimestamp} time to calculate the duration from
    */
-  finish() {
-    if (this.endTimestamp) {
-      return;
+  setDuration(finishTimestamp) {
+    if (this.shouldFlush) return;
+    this.shouldFlush = true; // even if we can't derive duration, we should report on finish
+
+    const startTimestamp = this.delegate.timestamp;
+    if (typeof startTimestamp === 'undefined') {
+      // We can't calculate duration without a start timestamp,
+      // but an annotation is better than nothing
+      this.delegate.addAnnotation(finishTimestamp, 'finish');
+    } else {
+      this.delegate.setDuration(finishTimestamp - startTimestamp);
     }
-    this.endTimestamp = now(this.startTimestamp, this.startTick);
-  }
-
-  /**
-   * factory: creates new span and set
-   * @static
-   * @param {TraceId} id
-   * @param {Object} defaultTags
-   * @return {PartialSpan}
-   */
-  static create(id, defaultTags = {}) {
-    const span = new PartialSpan(id);
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const tag in defaultTags) {
-      if (defaultTags.hasOwnProperty(tag)) {
-        span.delegate.putTag(tag, defaultTags[tag]);
-      }
-    }
-
-    return span;
   }
 }
 
@@ -82,7 +71,7 @@ class BatchRecorder {
     const timer = setInterval(() => {
       this.partialSpans.forEach((span, id) => {
         if (this._timedOut(span)) {
-          this._writeSpan(id);
+          this._writeSpan(id, span);
         }
       });
     }, 1000);
@@ -91,11 +80,21 @@ class BatchRecorder {
     }
   }
 
-  _writeSpan(id) {
-    const span = this.partialSpans.get(id);
+  _addDefaultTagsAndLocalEndpoint(span) {
+    const defaultTags = this[defaultTagsSymbol];
+    // eslint-disable-next-line no-restricted-syntax
+    for (const tag in defaultTags) {
+      if (defaultTags.hasOwnProperty(tag)) {
+        span.delegate.putTag(tag, defaultTags[tag]);
+      }
+    }
 
+    span.delegate.setLocalEndpoint(span.localEndpoint);
+  }
+
+  _writeSpan(id, span, isNew = false) {
     // TODO(adriancole) refactor so this responsibility isn't in writeSpan
-    if (span === undefined) {
+    if (!isNew && this.partialSpans.get(id) === 'undefined') {
       // Span not found.  Could have been expired.
       return;
     }
@@ -104,66 +103,71 @@ class BatchRecorder {
     this.partialSpans.delete(id);
 
     const spanToWrite = span.delegate;
-    spanToWrite.setLocalEndpoint(span.localEndpoint);
-    if (span.endTimestamp) {
-      spanToWrite.setTimestamp(span.startTimestamp);
-      spanToWrite.setDuration(span.endTimestamp - span.startTimestamp);
+    // Only add default tags and local endpoint on the first report of a span
+    if (span.delegate.timestamp) {
+      this._addDefaultTagsAndLocalEndpoint(span);
     }
     this.logger.logSpan(spanToWrite);
   }
 
-  _updateSpanMap(id, updater) {
+  _updateSpanMap(id, timestamp, updater) {
     let span;
+    let isNew = false; // we need to special case late finish annotations
     if (this.partialSpans.has(id)) {
       span = this.partialSpans.get(id);
     } else {
-      span = PartialSpan.create(id, this[defaultTagsSymbol]);
+      isNew = true;
+      span = new PartialSpan(id, timestamp + this.timeout);
     }
     updater(span);
-    if (span.endTimestamp) {
-      this._writeSpan(id);
+    if (span.shouldFlush) {
+      this._writeSpan(id, span, isNew);
     } else {
       this.partialSpans.set(id, span);
     }
   }
 
   _timedOut(span) {
-    return span.startTimestamp + this.timeout < now();
+    return span.timeoutTimestamp < now();
   }
 
   record(rec) {
     const id = rec.traceId;
 
-    this._updateSpanMap(id, span => {
+    this._updateSpanMap(id, rec.timestamp, span => {
       switch (rec.annotation.annotationType) {
         case 'ClientSend':
           span.delegate.setKind('CLIENT');
+          span.delegate.setTimestamp(rec.timestamp);
           break;
         case 'ClientRecv':
           span.delegate.setKind('CLIENT');
-          span.finish();
+          span.setDuration(rec.timestamp);
           break;
         case 'ServerSend':
           span.delegate.setKind('SERVER');
-          span.finish();
+          span.setDuration(rec.timestamp);
           break;
         case 'ServerRecv':
           span.delegate.setShared(id.isShared());
           span.delegate.setKind('CLIENT');
+          span.delegate.setTimestamp(rec.timestamp);
           break;
         case 'ProducerStart':
           span.delegate.setKind('PRODUCER');
+          span.delegate.setTimestamp(rec.timestamp);
           break;
         case 'ProducerStop':
           span.delegate.setKind('PRODUCER');
-          span.finish();
+          span.setDuration(rec.timestamp);
           break;
         case 'ConsumerStart':
           span.delegate.setKind('CONSUMER');
+          span.delegate.setTimestamp(rec.timestamp);
           break;
         case 'ConsumerStop':
           span.delegate.setKind('CONSUMER');
-          span.finish();
+          span.setDuration(rec.timestamp);
           break;
         case 'MessageAddr':
           span.delegate.setRemoteEndpoint(new Endpoint({
@@ -174,9 +178,10 @@ class BatchRecorder {
           break;
         case 'LocalOperationStart':
           span.delegate.setName(rec.annotation.name);
+          span.delegate.setTimestamp(rec.timestamp);
           break;
         case 'LocalOperationStop':
-          span.finish();
+          span.setDuration(rec.timestamp);
           break;
         case 'Message':
           span.delegate.addAnnotation(rec.timestamp, rec.annotation.message);
