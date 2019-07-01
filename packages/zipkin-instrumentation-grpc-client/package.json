@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-grpc-client",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "description": "Zipkin JS Interceptor for gRPC client",
   "main": "lib/grpcClientInterceptor.js",
   "scripts": {
@@ -15,6 +15,6 @@
   "devDependencies": {
     "@grpc/proto-loader": "^0.3.0",
     "grpc": "^1.16.0",
-    "zipkin": "^0.18.3"
+    "zipkin": "^0.18.4"
   }
 }

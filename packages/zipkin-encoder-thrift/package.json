@@ -1,6 +1,6 @@
 {
   "name": "zipkin-encoder-thrift",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "description": "Encode a zipkin span to thrift",
   "main": "lib/index.js",
   "scripts": {
@@ -24,6 +24,6 @@
     "thrift": "^0.11.0"
   },
   "devDependencies": {
-    "zipkin": "^0.18.3"
+    "zipkin": "^0.18.4"
   }
 }

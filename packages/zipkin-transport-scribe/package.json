@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-scribe",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "description": "Transports Zipkin trace data via Scribe to the collector",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -16,10 +16,10 @@
   "dependencies": {
     "base64-js": "^1.2.1",
     "scribe": "0.0.9",
-    "zipkin-encoder-thrift": "^0.18.3"
+    "zipkin-encoder-thrift": "^0.18.4"
   },
   "devDependencies": {
     "thrift": "^0.11.0",
-    "zipkin": "^0.18.3"
+    "zipkin": "^0.18.4"
   }
 }

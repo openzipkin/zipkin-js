@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-redis",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "description": "Interceptor for redis clients",
   "main": "lib/zipkinClient.js",
   "scripts": {
@@ -17,6 +17,6 @@
   },
   "devDependencies": {
     "redis": "^2.6.2",
-    "zipkin": "^0.18.3"
+    "zipkin": "^0.18.4"
   }
 }

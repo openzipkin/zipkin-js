@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-fetch",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "description": "Interceptor for HTTP clients using the 'fetch' API",
   "main": "lib/index.js",
   "scripts": {
@@ -14,6 +14,6 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "node-fetch": "^1.5.3",
-    "zipkin": "^0.18.3"
+    "zipkin": "^0.18.4"
   }
 }

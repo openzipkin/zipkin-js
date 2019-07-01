@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-request",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "description": "Instrumentation for request with Zipkin.js",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -19,6 +19,6 @@
   "devDependencies": {
     "@types/request": "^2.0.8",
     "request": "^2.88.0",
-    "zipkin": "^0.18.3"
+    "zipkin": "^0.18.4"
   }
 }

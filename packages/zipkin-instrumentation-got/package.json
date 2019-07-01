@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-gotjs",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "description": "Interceptor for HTTP clients using the Got library",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -23,6 +23,6 @@
   },
   "devDependencies": {
     "got": "^9.6.0",
-    "zipkin": "^0.18.3"
+    "zipkin": "^0.18.4"
   }
 }
