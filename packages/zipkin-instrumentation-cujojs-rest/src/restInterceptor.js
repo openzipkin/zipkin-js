@@ -2,7 +2,7 @@
 const interceptor = require('rest/interceptor');
 const {
   Instrumentation
-  } = require('zipkin');
+} = require('zipkin');
 
 function getRequestMethod(req) {
   let method = 'get';

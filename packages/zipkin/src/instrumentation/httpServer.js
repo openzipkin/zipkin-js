@@ -59,7 +59,7 @@ class HttpServerInstrumentation {
     } else {
       if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
         const sampled = readHeader(Header.Sampled) === None ?
-              None : readHeader(Header.Sampled).map(stringToBoolean);
+          None : readHeader(Header.Sampled).map(stringToBoolean);
         const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
         return new Some(this.tracer.createRootId(sampled, flags === 1));
       } else {

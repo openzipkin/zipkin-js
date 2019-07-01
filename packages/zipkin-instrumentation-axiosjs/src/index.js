@@ -5,10 +5,10 @@ function wrapAxios(axios, options = {}) {
   const instrumentation = new Instrumentation.HttpClient(options);
   const zipkinRecordRequest = config => tracer.scoped(() => {
     const newConfig = instrumentation.recordRequest(
-        config,
-        config.url,
-        config.method
-      );
+      config,
+      config.url,
+      config.method
+    );
     newConfig.traceId = tracer.id;
     return newConfig;
   });

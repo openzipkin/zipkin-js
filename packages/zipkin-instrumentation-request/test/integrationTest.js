@@ -252,7 +252,7 @@ describe('request instrumentation - integration test', () => {
 
           const currentSpan = tracer.id.spanId;
           expect(currentSpan).to.equal(rootId.spanId,
-              'Current span should\'ve been restored to the original parent');
+            'Current span should\'ve been restored to the original parent');
 
           done();
         });
@@ -303,7 +303,7 @@ describe('request instrumentation - integration test', () => {
 
           const currentSpan = tracer.id.spanId;
           expect(currentSpan).to.equal(rootId.spanId,
-              'Current span should\'ve been restored to the original parent');
+            'Current span should\'ve been restored to the original parent');
 
           done();
         });
@@ -350,7 +350,7 @@ describe('request instrumentation - integration test', () => {
 
           const currentSpan = tracer.id.spanId;
           expect(currentSpan).to.equal(rootId.spanId,
-              'Current span should\'ve been restored to the original parent');
+            'Current span should\'ve been restored to the original parent');
 
           done();
         });
@@ -395,7 +395,7 @@ describe('request instrumentation - integration test', () => {
 
           const currentSpan = tracer.id.spanId;
           expect(currentSpan).to.equal(rootId.spanId,
-              'Current span should\'ve been restored to the original parent');
+            'Current span should\'ve been restored to the original parent');
 
           done();
         });
@@ -502,7 +502,7 @@ describe('request instrumentation - integration test', () => {
 
             const currentSpan = tracer.id.spanId;
             expect(currentSpan).to.equal(rootId.spanId,
-                'Current span should\'ve been restored to the original parent');
+              'Current span should\'ve been restored to the original parent');
 
             done();
           });

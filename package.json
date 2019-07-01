@@ -10,6 +10,7 @@
     "audit": "lerna exec npm audit",
     "audit:fix": "lerna exec npm audit fix",
     "lint:es": "eslint packages",
+    "fix-lint": "eslint packages --fix",
     "lint:ts": "tslint -c tslint.json -e './packages/**/node_modules/**/*.ts' './packages/**/*.ts'",
     "lint": "npm-run-all --parallel lint:*",
     "test:es": "npm run lerna-test",

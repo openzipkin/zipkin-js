@@ -83,10 +83,10 @@ describe('restify middleware - integration test', () => {
 
           done();
         })
-        .catch(err => {
-          server.close();
-          done(err);
-        });
+          .catch(err => {
+            server.close();
+            done(err);
+          });
       });
     });
   });
@@ -127,10 +127,10 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
-        .catch(err => {
-          server.close();
-          done(err);
-        });
+          .catch(err => {
+            server.close();
+            done(err);
+          });
       });
     });
   });
@@ -202,10 +202,10 @@ describe('restify middleware - integration test', () => {
 
           done();
         })
-        .catch(err => {
-          server.close();
-          done(err);
-        });
+          .catch(err => {
+            server.close();
+            done(err);
+          });
       });
     });
   });

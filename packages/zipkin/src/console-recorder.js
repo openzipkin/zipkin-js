@@ -2,7 +2,7 @@
  * @class ConsoleRecorder
  */
 class ConsoleRecorder {
-   /* eslint-disable no-console */
+  /* eslint-disable no-console */
   constructor(logger = console.log) {
     this.logger = logger;
   }
@@ -18,7 +18,6 @@ class ConsoleRecorder {
   toString() {
     return 'consoleTracer';
   }
-
 }
 
 module.exports = ConsoleRecorder;
