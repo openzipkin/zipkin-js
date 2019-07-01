@@ -14,8 +14,7 @@ const recordConsumeStart = (tracer, {topic, partition, message}) => {
     const sampled = message.headers[HttpHeaders.Sampled];
     const flags = message.headers[HttpHeaders.Flags];
 
-    // TODO: this should definitely note join. It should make a child
-    id = tracer.join(new TraceId({
+    id = tracer.createChildId(new TraceId({
       traceId: bufferToAscii(traceId),
       parentId: fromNullable(parentId).map(bufferToAscii),
       spanId: bufferToAscii(spanId),

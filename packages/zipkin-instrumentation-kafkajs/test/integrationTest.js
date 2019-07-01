@@ -32,7 +32,11 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
 
   beforeEach(() => {
     spans = [];
-    tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
+    tracer = new Tracer({
+      localServiceName: serviceName,
+      ctxImpl: new ExplicitContext(),
+      recorder: newSpanRecorder(spans)
+    });
     rawKafka = newKafka();
     kafka = instrumentKafkaJs(newKafka(), {tracer, remoteServiceName});
   });
@@ -118,11 +122,9 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
                  setTimeout(() => {
                    consumer.disconnect().then(() => {
                      expectSpan(popSpan(), {
-                       kind: 'CONSUMER',
+                       kind: 'CONSUMER', // TODO: this should be a child of the consumer span
                        name: 'consume', // TODO: change to eachMessage!
-                       localEndpoint: {
-                         serviceName: 'unknown' // TODO: bug!
-                       },
+                       localEndpoint: {serviceName},
      //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
      //                    serviceName: remoteServiceName
      //                  },
@@ -174,14 +176,12 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
                    consumer.disconnect().then(() => {
                      const span = popSpan();
                      expect(span.traceId).to.equal(traceId);
-                     expect(span.id).to.equal(producerSpanId); // TODO: bug should be child
+                     expect(span.id).to.not.equal(producerSpanId);
                      expectSpan(span, {
-                       kind: 'CONSUMER', // TODO: this should be a child of the consumer span
-                       shared: true,     // ^^
+                       parentId: producerSpanId, // TODO: should be a child of the consumer span
+                       kind: 'CONSUMER',         // ^^
                        name: 'consume', // TODO: change to eachMessage!
-                       localEndpoint: {
-                         serviceName: 'unknown' // TODO: bug!
-                       },
+                       localEndpoint: {serviceName},
      //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
      //                    serviceName: remoteServiceName
      //                  },
@@ -210,11 +210,9 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
 
       const verifyErrorSpan = () => {
         expectSpan(popSpan(), {
-          kind: 'CONSUMER',
+          kind: 'CONSUMER', // TODO: this should be a child of the consumer span
           name: 'consume', // TODO: change to eachMessage!
-          localEndpoint: {
-            serviceName: 'unknown' // TODO: bug!
-          },
+          localEndpoint: {serviceName},
   //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
   //                    serviceName: remoteServiceName
   //                  },
