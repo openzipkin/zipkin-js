@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/openzipkin/zipkin-js.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-js)
 [![npm version](https://badge.fury.io/js/zipkin.svg)](https://badge.fury.io/js/zipkin)
+![npm](https://img.shields.io/npm/dm/zipkin.svg)
 [![Gitter chat](https://badges.gitter.im/openzipkin/zipkin.svg)](https://gitter.im/openzipkin/zipkin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This is a set of libraries for instrumenting Node.js and browser applications. The `zipkin` library can be run in both Node.js and the browser.
@@ -10,11 +11,13 @@ If you'd like to try this out right away, try our [example app](https://github.c
 how tracing services looks.
 
 
-## Installation:
+## Installation
 
-`npm install zipkin --save`
+```bash
+npm install zipkin --save
+```
 
-## Basic Setup:
+## Basic Setup
 
 ```javascript
 const {
@@ -136,11 +139,12 @@ Every package has its own README.md which describes how to use it.
 
 ## Clock precision
 
-Zipkin timestamps are microsecond, not millisecond granularity. When running in node.js,
+Zipkin timestamps are microsecond, not millisecond granularity. When running in **node.js**,
 [process.hrtime](https://nodejs.org/api/process.html#process_process_hrtime_time) is used to
 achieve this.
 
-In browsers, microsecond precision requires installing a shim like [browser-process-hrtime](https://github.com/kumavis/browser-process-hrtime):
+In **browsers**, microsecond precision requires installing a shim like [browser-process-hrtime](https://github.com/kumavis/browser-process-hrtime):
+
 ```javascript
 // use higher-precision time than milliseconds
 process.hrtime = require('browser-process-hrtime');
@@ -187,13 +191,7 @@ Before raising a pull request, make sure there are no lint problems, by running 
 
 ### Notes
 
-* AppVeyor is currently broken and ignored. PR welcome from those with Windows boxes.
-
-## Publishing
-
-If you are a user waiting for a merged feature to get released, nag us on the related pull request or [gitter](https://gitter.im/openzipkin/zipkin).
-
-The actual publish process is easy: Log in to npm with the `openzipkin` user. Then, run `npm run lerna-publish`.
+\* AppVeyor is currently broken and ignored. PR welcome from those with Windows boxes.
 
 ### Debugging
 
@@ -241,3 +239,9 @@ Now, you should be at a breakpoint. You can inspect the state of fields by looki
 Closure scope like so:
 
 <img width="664" alt="debugging" src="https://user-images.githubusercontent.com/64215/60378478-9e491c80-9a55-11e9-9356-71e68ad21c51.png">
+
+## Publishing
+
+If you are a user waiting for a merged feature to get released, nag us on the related pull request or [gitter](https://gitter.im/openzipkin/zipkin).
+
+The actual publish process is easy: Log in to npm with the `openzipkin` user. Then, run `npm run lerna-publish`.
