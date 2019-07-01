@@ -72,7 +72,7 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
     });
 
     it('should add B3 headers to the message on send', done => {
-      const testTopic = 'consumer-eachMessage';
+      const testTopic = 'producer-b3';
       const producer = kafka.producer();
       const consumer = rawKafka.consumer({groupId: 'test-group'});
 
@@ -118,7 +118,7 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
                  setTimeout(() => {
                    consumer.disconnect().then(() => {
                      expectSpan(popSpan(), {
-                       kind: 'CONSUMER', // TODO: this should be a child of the consumer span
+                       kind: 'CONSUMER',
                        name: 'consume', // TODO: change to eachMessage!
                        localEndpoint: {
                          serviceName: 'unknown' // TODO: bug!
@@ -144,6 +144,65 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
       .catch((err) => done(err));
     });
 
+    it('should resume trace from headers', done => {
+      const testTopic = 'consumer-b3';
+      const producer = rawKafka.producer();
+      const consumer = kafka.consumer({groupId: 'test-group'});
+
+      const traceId = '000000000000162e';
+      const producerSpanId = '000000000000abcd';
+      const message = {
+        key: 'mykey',
+        value: 'myvalue',
+        headers: {
+          'X-B3-TraceId': traceId,
+          'X-B3-SpanId': producerSpanId,
+          'X-B3-Sampled': '1'
+        }
+      };
+
+      producer.connect().then(() =>
+        producer.send({topic: testTopic, messages: [message]})
+        .finally(() => producer.disconnect())
+        .finally(
+           consumer.connect()
+           .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
+           .then(() =>
+             consumer.run({
+               eachMessage: ({partition}) => {
+                 setTimeout(() => {
+                   consumer.disconnect().then(() => {
+                     const span = popSpan();
+                     expect(span.traceId).to.equal(traceId);
+                     expect(span.id).to.equal(producerSpanId); // TODO: bug should be child
+                     expectSpan(span, {
+                       kind: 'CONSUMER', // TODO: this should be a child of the consumer span
+                       shared: true,     // ^^
+                       name: 'consume', // TODO: change to eachMessage!
+                       localEndpoint: {
+                         serviceName: 'unknown' // TODO: bug!
+                       },
+     //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
+     //                    serviceName: remoteServiceName
+     //                  },
+                       tags: {
+                         'kafka.partition': partition.toString(), // NOTE: isn't tagged in brave
+                         'kafka.topic': testTopic
+                       },
+                     });
+                     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+                     done();
+                   }).catch((err) => done(err));
+                 }, 0);
+                 return Promise.resolve();
+               }
+             })
+           )
+         )
+      )
+      .catch((err) => done(err));
+    });
+
     it('should tag a consumer span with error', done => {
       const testTopic = 'consumer-error';
       const producer = rawKafka.producer();
@@ -151,7 +210,7 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
 
       const verifyErrorSpan = () => {
         expectSpan(popSpan(), {
-          kind: 'CONSUMER', // TODO: this should be a child of the consumer span
+          kind: 'CONSUMER',
           name: 'consume', // TODO: change to eachMessage!
           localEndpoint: {
             serviceName: 'unknown' // TODO: bug!
