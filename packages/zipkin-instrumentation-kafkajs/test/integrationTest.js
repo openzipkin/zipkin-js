@@ -58,13 +58,9 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
         }).then(() => {
           expectSpan(popSpan(), {
             kind: 'PRODUCER',
-            name: 'produce', // TODO: change to send!
-            localEndpoint: {
-              serviceName: remoteServiceName // TODO: bug!
-            },
-            remoteEndpoint: {
-              serviceName: remoteServiceName
-            },
+            name: 'send',
+            localEndpoint: {serviceName},
+            remoteEndpoint: {serviceName: remoteServiceName},
             tags: {
               'kafka.topic': testTopic
               // TODO: we also tag kafka.key
@@ -123,11 +119,9 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
                    consumer.disconnect().then(() => {
                      expectSpan(popSpan(), {
                        kind: 'CONSUMER', // TODO: this should be a child of the consumer span
-                       name: 'consume', // TODO: change to eachMessage!
+                       name: 'each-message',
                        localEndpoint: {serviceName},
-     //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
-     //                    serviceName: remoteServiceName
-     //                  },
+                       remoteEndpoint: {serviceName: remoteServiceName},
                        tags: {
                          'kafka.partition': partition.toString(), // NOTE: isn't tagged in brave
                          'kafka.topic': testTopic
@@ -180,11 +174,9 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
                      expectSpan(span, {
                        parentId: producerSpanId, // TODO: should be a child of the consumer span
                        kind: 'CONSUMER',         // ^^
-                       name: 'consume', // TODO: change to eachMessage!
+                       name: 'each-message',
                        localEndpoint: {serviceName},
-     //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
-     //                    serviceName: remoteServiceName
-     //                  },
+                       remoteEndpoint: {serviceName: remoteServiceName},
                        tags: {
                          'kafka.partition': partition.toString(), // NOTE: isn't tagged in brave
                          'kafka.topic': testTopic
@@ -211,13 +203,11 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
       const verifyErrorSpan = () => {
         expectSpan(popSpan(), {
           kind: 'CONSUMER', // TODO: this should be a child of the consumer span
-          name: 'consume', // TODO: change to eachMessage!
+          name: 'each-message',
           localEndpoint: {serviceName},
-  //                  remoteEndpoint: { // TODO: we aren't tagging the remote endpoint
-  //                    serviceName: remoteServiceName
-  //                  },
+          remoteEndpoint: {serviceName: remoteServiceName},
           tags: {
-            error: 'unknown', // TODO: incorrect
+            error: '', // TODO: for some reason the actual cause isn't propagated
             'kafka.partition': '0', // NOTE: this isn't tagged in brave
             'kafka.topic': testTopic
           }

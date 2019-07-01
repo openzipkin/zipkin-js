@@ -4,7 +4,7 @@ function bufferToAscii(maybeBuffer) { // TODO: backfill tests for this
   return Buffer.isBuffer(maybeBuffer) ? maybeBuffer.asciiSlice(0) : maybeBuffer;
 }
 
-const recordConsumeStart = (tracer, {topic, partition, message}) => {
+const recordConsumeStart = (tracer, name, remoteServiceName, {topic, partition, message}) => {
   const traceId = message.headers[HttpHeaders.TraceId];
   const spanId = message.headers[HttpHeaders.SpanId];
   let id;
@@ -27,32 +27,35 @@ const recordConsumeStart = (tracer, {topic, partition, message}) => {
 
   tracer.setId(id);
   tracer.recordServiceName(tracer.localEndpoint.serviceName);
-  tracer.recordRpc('consume');
+  tracer.recordRpc(name);
   tracer.recordBinary('kafka.topic', topic);
   tracer.recordBinary('kafka.partition', partition);
+  if (typeof remoteServiceName !== 'undefined') {
+    tracer.recordAnnotation(new Annotation.ServerAddr({serviceName: remoteServiceName}));
+  }
   tracer.recordAnnotation(new Annotation.ConsumerStart());
   return id;
 };
 
 const recordConsumeStop = (tracer, id, error) => {
   tracer.letId(id, () => {
-    if (error) {
+    if (typeof error !== 'undefined') {
       tracer.recordBinary('error', error.toString());
     }
     tracer.recordAnnotation(new Annotation.ConsumerStop());
   });
 };
 
-const recordProducerStart = (tracer, remoteServiceName, {topic}) => {
+const recordProducerStart = (tracer, name, remoteServiceName, {topic}) => {
   tracer.setId(tracer.createChildId());
   const traceId = tracer.id;
-  tracer.recordServiceName(remoteServiceName);
-  tracer.recordRpc('produce');
+  tracer.recordServiceName(tracer.localEndpoint.serviceName);
+  tracer.recordRpc(name);
   tracer.recordBinary('kafka.topic', topic);
+  if (typeof remoteServiceName !== 'undefined') {
+    tracer.recordAnnotation(new Annotation.ServerAddr({serviceName: remoteServiceName}));
+  }
   tracer.recordAnnotation(new Annotation.ProducerStart());
-  tracer.recordAnnotation(new Annotation.ServerAddr({
-    serviceName: remoteServiceName
-  }));
   return traceId;
 };
 
