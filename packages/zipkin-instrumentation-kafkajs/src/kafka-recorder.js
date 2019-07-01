@@ -1,7 +1,7 @@
 const {TraceId, option: {fromNullable}, Annotation, HttpHeaders} = require('zipkin');
 
 function bufferToAscii(maybeBuffer) { // TODO: backfill tests for this
-  return Buffer.isBuffer(maybeBuffer) ? maybeBuffer.toString('ascii') : maybeBuffer;
+  return Buffer.isBuffer(maybeBuffer) ? maybeBuffer.asciiSlice(0) : maybeBuffer;
 }
 
 const recordConsumeStart = (tracer, {topic, partition, message}) => {
@@ -70,5 +70,6 @@ module.exports = {
   recordConsumeStart,
   recordConsumeStop,
   recordProducerStart,
-  recordProducerStop
+  recordProducerStop,
+  bufferToAscii
 };

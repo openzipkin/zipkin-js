@@ -2,9 +2,14 @@ require('promise.prototype.finally').shim();
 const {expect} = require('chai');
 const {
   newSpanRecorder,
+  expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
 const {ExplicitContext, Tracer} = require('zipkin');
+
+// In order to verify Kafka headers, which have buffer values
+const {bufferToAscii} = require('../src/kafka-recorder');
+const _ = require('lodash');
 
 const {Kafka} = require('kafkajs');
 const instrumentKafkaJs = require('../src/zipkin-instrumentation-kafkajs');
@@ -65,6 +70,37 @@ describe('KafkaJS instrumentation - integration test', () => {
     );
   });
 
+  it('should add B3 headers to the message on send', function(done) { // this.X doesn't work with =>
+    this.slow(15 * 1000);
+    this.timeout(30 * 1000);
+
+    const testTopic = 'consumer-eachMessage';
+    const producer = kafka.producer();
+    const consumer = rawKafka.consumer({groupId: 'test-group'});
+
+    producer.connect().then(() => producer
+      .send({topic: testTopic, messages: [{key: 'mykey', value: 'myvalue'}]})
+      .finally(() => producer.disconnect())
+      .finally(consumer.connect()
+        .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
+        .then(() => consumer.run({
+          eachMessage: ({message}) => {
+            setTimeout(() => {
+              consumer.disconnect().then(() => {
+                const headers = _.mapValues(message.headers, bufferToAscii);
+                expectB3Headers(popSpan(), headers, false);
+                expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+                done();
+              }).catch((err) => done(err));
+            }, 0);
+            return Promise.resolve();
+          }
+        }))
+      )
+    )
+    .catch((err) => done(err));
+  });
+
   it('should record a consumer span on eachMessage', function(done) { // this.X doesn't work with =>
     this.slow(15 * 1000);
     this.timeout(30 * 1000);
@@ -74,10 +110,7 @@ describe('KafkaJS instrumentation - integration test', () => {
     const consumer = kafka.consumer({groupId: 'test-group'});
 
     producer.connect().then(() =>
-      producer.send({
-        topic: testTopic,
-        messages: [{key: 'test', value: 'test'}]
-      })
+      producer.send({topic: testTopic, messages: [{key: 'mykey', value: 'myvalue'}]})
       .finally(() => producer.disconnect())
       .finally(
          consumer.connect()
@@ -154,6 +187,7 @@ describe('KafkaJS instrumentation - integration test', () => {
                 consumer.disconnect().then(() => {
                   if (isError) {
                     verifyErrorSpan();
+                    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
                     done();
                   }
                 }).catch((err) => {

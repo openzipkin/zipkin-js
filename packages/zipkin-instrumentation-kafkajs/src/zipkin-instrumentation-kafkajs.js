@@ -46,9 +46,12 @@ const instrumentKafkaJs = (kafkaJs, {tracer, remoteServiceName}) => {
           let promise;
           tracer.scoped(() => {
             id = recordProducerStart(tracer, remoteServiceName, {topic: params.topic});
-            const instrumentedMessages = params.messages.map((msg) =>
-              Request.addZipkinHeaders(msg, id));
-            promise = obj[prop](Object.assign({}, params, {messages: instrumentedMessages}));
+
+            const withTraceHeaders = Object.assign({}, params, {
+              messages: params.messages.map((msg) => Request.addZipkinHeaders(msg, id))
+            });
+
+            promise = obj[prop](withTraceHeaders);
           });
           promise.then(() => {
             recordProducerStop(tracer, id);
