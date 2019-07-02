@@ -120,7 +120,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [connect](packages/zipkin-instrumentation-connect) (zipkin-instrumentation-connect)
 - [superagent](packages/zipkin-instrumentation-superagent) (zipkin-instrumentation-superagent)
 - [grpc-client](packages/zipkin-instrumentation-grpc-client) (zipkin-instrumentation-grpc-client)
-- [axios](packages/zipkin-instrumentation-axios) (zipkin-instrumentation-axiosjs)
+- [axios](packages/zipkin-instrumentation-axiosjs) (zipkin-instrumentation-axiosjs)
 - [KafkaJS](packages/zipkin-instrumentation-kafkajs) (zipkin-instrumentation-kafkajs)
 
 Every module has a README.md file that describes how to use it.
