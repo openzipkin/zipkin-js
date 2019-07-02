@@ -25,7 +25,7 @@ describe('Http Server Instrumentation', () => {
   it('should create traceId', () => {
     const {record, recorder, ctxImpl} = setupTest();
     const tracer = new Tracer({recorder, ctxImpl});
-    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port: 80});
+    const instrumentation = new HttpServer({tracer, serviceName: 'weather-app', port: 80});
     const url = '/foo';
 
     ctxImpl.scoped(() => {
@@ -46,7 +46,7 @@ describe('Http Server Instrumentation', () => {
     annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
     expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-    expect(annotations[0].annotation.serviceName).to.equal('service-a');
+    expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
     expect(annotations[1].annotation.annotationType).to.equal('Rpc');
     expect(annotations[1].annotation.name).to.equal('POST');
@@ -89,7 +89,7 @@ describe('Http Server Instrumentation', () => {
       const tracer = new Tracer({recorder, ctxImpl});
 
       const {port, url} = setupServerUrl();
-      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+      const instrumentation = new HttpServer({tracer, serviceName: 'weather-app', port});
 
       const readHeader = function(name) {
         return headers[name] ? new Some(headers[name]) : None;
@@ -106,7 +106,7 @@ describe('Http Server Instrumentation', () => {
       annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(true));
 
       expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-      expect(annotations[0].annotation.serviceName).to.equal('service-a');
+      expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
       expect(annotations[1].annotation.annotationType).to.equal('Rpc');
       expect(annotations[1].annotation.name).to.equal('POST');
@@ -139,7 +139,7 @@ describe('Http Server Instrumentation', () => {
       const {port, url} = setupServerUrl();
       const instrumentation = new HttpServer({
         tracer,
-        serviceName: 'service-a',
+        serviceName: 'weather-app',
         port
       });
 
@@ -159,7 +159,7 @@ describe('Http Server Instrumentation', () => {
       annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
       expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-      expect(annotations[0].annotation.serviceName).to.equal('service-a');
+      expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
       expect(annotations[1].annotation.annotationType).to.equal('Rpc');
       expect(annotations[1].annotation.name).to.equal('POST');
@@ -217,7 +217,7 @@ describe('Http Server Instrumentation', () => {
       const tracer = new Tracer({recorder, ctxImpl});
 
       const {port, url} = setupServerUrl();
-      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+      const instrumentation = new HttpServer({tracer, serviceName: 'weather-app', port});
 
 
       const readHeader = function(name) {
@@ -238,7 +238,7 @@ describe('Http Server Instrumentation', () => {
         annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
 
         expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal('service-a');
+        expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
         expect(annotations[1].annotation.annotationType).to.equal('Rpc');
         expect(annotations[1].annotation.name).to.equal('POST');
@@ -274,7 +274,7 @@ describe('Http Server Instrumentation', () => {
     const port = 80;
     const host = '127.0.0.1';
     const urlPath = '/foo';
-    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+    const instrumentation = new HttpServer({tracer, serviceName: 'weather-app', port});
     const url = `http://${host}:${port}${urlPath}?abc=123`;
     ctxImpl.scoped(() => {
       const id = instrumentation.recordRequest('GET', url, () => None);
@@ -293,7 +293,7 @@ describe('Http Server Instrumentation', () => {
     const tracer = new Tracer({recorder, ctxImpl});
 
     const port = 80;
-    const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+    const instrumentation = new HttpServer({tracer, serviceName: 'weather-app', port});
     const url = `http://127.0.0.1:${port}`;
     const traceId = '863ac35c9f6413ad48485a3953bb6124';
     const headers = {
@@ -333,7 +333,7 @@ describe('Http Server Instrumentation', () => {
     headersCases.forEach(headers => {
       const port = 80;
       const url = `http://127.0.0.1:${port}`;
-      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+      const instrumentation = new HttpServer({tracer, serviceName: 'weather-app', port});
       const readHeader = function(name) {
         return headers[name] ? new Some(headers[name]) : None;
       };
@@ -360,7 +360,7 @@ describe('Http Server Instrumentation', () => {
       };
 
       const {port, url} = setupServerUrl();
-      const instrumentation = new HttpServer({tracer, serviceName: 'service-a', port});
+      const instrumentation = new HttpServer({tracer, serviceName: 'weather-app', port});
       const readHeader = function(name) {
         return headers[name] ? new Some(headers[name]) : None;
       };
@@ -376,7 +376,7 @@ describe('Http Server Instrumentation', () => {
     const tracer = new Tracer({recorder, ctxImpl});
     const instrumentation = new HttpServer({
       tracer,
-      serviceName: 'service-a',
+      serviceName: 'weather-app',
       host: '1.1.1.1',
       port: 80
     });
@@ -398,7 +398,7 @@ describe('Http Server Instrumentation', () => {
     const tracer = new Tracer({recorder, ctxImpl});
     const instrumentation = new HttpServer({
       tracer,
-      serviceName: 'service-a',
+      serviceName: 'weather-app',
       port: 80
     });
 

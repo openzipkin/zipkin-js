@@ -8,12 +8,12 @@ const middleware = require('../src/middleware');
 const https = require('https');
 const fs = require('fs');
 
-const serviceName = 'service-a';
+const serviceName = 'weather-app';
 const testSetup = () => {
   const record = sinon.spy();
   const recorder = {record};
   const ctxImpl = new ExplicitContext();
-  const tracer = new Tracer({recorder, ctxImpl});
+  const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
   return {record, recorder, ctxImpl, tracer};
 };
 
@@ -23,7 +23,7 @@ describe('restify middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = restify.createServer();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res, next) => {
         ctxImpl.scoped(() => {
           // Use setTimeout to test that the trace context is propagated into the callback
@@ -58,7 +58,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -96,7 +96,7 @@ describe('restify middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = restify.createServer();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -140,7 +140,7 @@ describe('restify middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = restify.createServer();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -173,7 +173,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -217,7 +217,7 @@ describe('express middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -246,7 +246,7 @@ describe('express middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -284,7 +284,7 @@ describe('express middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -327,7 +327,7 @@ describe('express middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -355,7 +355,7 @@ describe('express middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -399,7 +399,7 @@ describe('connect middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = connect();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.use('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -432,7 +432,7 @@ describe('connect middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -470,7 +470,7 @@ describe('connect middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = connect();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.use('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -514,7 +514,7 @@ describe('connect middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = connect();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.use('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -547,7 +547,7 @@ describe('connect middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -595,7 +595,7 @@ describe('connect middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = connect();
-      app.use(middleware({tracer, serviceName}));
+      app.use(middleware({tracer}));
       app.use('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();

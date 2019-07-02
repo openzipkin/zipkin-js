@@ -15,7 +15,7 @@ describe('restify middleware - integration test', () => {
       const app = restify.createServer();
       app.use(middleware({
         tracer,
-        serviceName: 'service-a'
+        serviceName: 'weather-app'
       }));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
@@ -49,7 +49,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -92,7 +92,7 @@ describe('restify middleware - integration test', () => {
       const app = restify.createServer();
       app.use(middleware({
         tracer,
-        serviceName: 'service-a'
+        serviceName: 'weather-app'
       }));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
@@ -142,7 +142,7 @@ describe('restify middleware - integration test', () => {
       const app = restify.createServer();
       app.use(middleware({
         tracer,
-        serviceName: 'service-a'
+        serviceName: 'weather-app'
       }));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
@@ -176,7 +176,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');

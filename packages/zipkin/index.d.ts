@@ -325,7 +325,7 @@ declare namespace zipkin {
     }
 
     class HttpClient {
-      constructor(args: { tracer: Tracer, serviceName: string, remoteServiceName?: string });
+      constructor(args: { tracer: Tracer, serviceName?: string, remoteServiceName?: string });
 
       recordRequest<T>(
         request: T,

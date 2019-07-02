@@ -39,7 +39,11 @@ describe('CujoJS/rest instrumentation - integration test', () => {
 
   beforeEach(() => {
     spans = [];
-    tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
+    tracer = new Tracer({
+      ctxImpl: new ExplicitContext(),
+      localServiceName: serviceName,
+      recorder: newSpanRecorder(spans)
+    });
   });
 
   function popSpan() {
@@ -48,7 +52,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   }
 
   function getClient() {
-    return rest.wrap(restInterceptor, {tracer, serviceName, remoteServiceName});
+    return rest.wrap(restInterceptor, {tracer, remoteServiceName});
   }
 
   function url(path) {

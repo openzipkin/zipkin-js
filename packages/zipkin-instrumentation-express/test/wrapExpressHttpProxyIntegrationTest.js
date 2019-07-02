@@ -8,6 +8,7 @@ const wrapProxy = require('../src/wrapExpressHttpProxy');
 const middleware = require('../src/expressMiddleware');
 
 describe('express http proxy instrumentation - integration test', () => {
+  const serviceName = 'weather-app';
   const api = express();
   api.use('/weather', (req, res) => {
     res.status(202).json({
@@ -20,10 +21,9 @@ describe('express http proxy instrumentation - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     tracer.scoped(() => {
-      const serviceName = 'weather-app';
       const remoteServiceName = 'weather-api';
 
       const apiServer = api.listen(0, () => {
@@ -31,7 +31,7 @@ describe('express http proxy instrumentation - integration test', () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
 
-        const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
+        const zipkinProxy = wrapProxy(proxy, {tracer, remoteServiceName});
 
         app.use(zipkinProxy(`${apiHost}:${apiPort}`, {
           decorateRequest: (proxyReq) => {
@@ -96,10 +96,9 @@ describe('express http proxy instrumentation - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     tracer.scoped(() => {
-      const serviceName = 'weather-app';
       const remoteServiceName = 'weather-api';
 
       const apiServer = api.listen(0, () => {
@@ -107,7 +106,7 @@ describe('express http proxy instrumentation - integration test', () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
 
-        const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
+        const zipkinProxy = wrapProxy(proxy, {tracer, remoteServiceName});
 
         app.use(zipkinProxy(`${apiHost}:${apiPort}`));
 
@@ -161,10 +160,9 @@ describe('express http proxy instrumentation - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new CLSContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     tracer.scoped(() => {
-      const serviceName = 'weather-app';
       const remoteServiceName = 'weather-api';
 
       const apiServer = api.listen(0, () => {
@@ -172,9 +170,9 @@ describe('express http proxy instrumentation - integration test', () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
 
-        const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
+        const zipkinProxy = wrapProxy(proxy, {tracer, remoteServiceName});
 
-        app.use(middleware({tracer, serviceName}), zipkinProxy(`${apiHost}:${apiPort}`, {
+        app.use(middleware({tracer}), zipkinProxy(`${apiHost}:${apiPort}`, {
           decorateRequest: (proxyReq) => {
             const modifiedReq = proxyReq;
             modifiedReq.method = 'POST';
