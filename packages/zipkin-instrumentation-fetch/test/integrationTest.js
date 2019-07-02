@@ -5,6 +5,8 @@ const sinon = require('sinon');
 const wrapFetch = require('../src/wrapFetch');
 
 describe('wrapFetch', () => {
+  const serviceName = 'weather-app';
+
   before(function(done) {
     const app = express();
     app.post('/user', (req, res) => res.status(202).json({
@@ -26,13 +28,9 @@ describe('wrapFetch', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
-    const fetch = wrapFetch(nodeFetch, {
-      tracer,
-      serviceName: 'caller',
-      remoteServiceName: 'callee'
-    });
+    const fetch = wrapFetch(nodeFetch, {tracer, remoteServiceName: 'callee'});
 
     ctxImpl.scoped(() => {
       const id = tracer.createChildId();
@@ -53,7 +51,7 @@ describe('wrapFetch', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('caller');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -86,7 +84,7 @@ describe('wrapFetch', () => {
 
   it('should not throw when using fetch without options', function(done) {
     const tracer = createNoopTracer();
-    const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service', tracer});
+    const fetch = wrapFetch(nodeFetch, {tracer});
 
     const path = `http://127.0.0.1:${this.port}/user`;
     fetch(path)
@@ -99,7 +97,7 @@ describe('wrapFetch', () => {
 
   it('should not throw when using fetch with a request object', function(done) {
     const tracer = createNoopTracer();
-    const fetch = wrapFetch(nodeFetch, {serviceName: 'user-service', tracer});
+    const fetch = wrapFetch(nodeFetch, {tracer});
 
     const path = `http://127.0.0.1:${this.port}/user`;
     const request = {url: path};
@@ -115,13 +113,9 @@ describe('wrapFetch', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
-    const fetch = wrapFetch(nodeFetch, {
-      tracer,
-      serviceName: 'caller',
-      remoteServiceName: 'callee'
-    });
+    const fetch = wrapFetch(nodeFetch, {tracer, remoteServiceName: 'callee'});
 
     ctxImpl.scoped(() => {
       const id = tracer.createChildId();
@@ -141,7 +135,7 @@ describe('wrapFetch', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('caller');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');

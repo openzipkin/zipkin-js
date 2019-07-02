@@ -58,7 +58,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -173,7 +173,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -246,7 +246,7 @@ describe('express middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -355,7 +355,7 @@ describe('express middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -432,7 +432,7 @@ describe('connect middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -547,7 +547,7 @@ describe('connect middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');

@@ -4,11 +4,13 @@ const Hapi = require('hapi');
 const middleware = require('../src/hapiMiddleware');
 
 describe('hapi middleware - integration test', () => {
+  const serviceName = 'weather-app';
+
   it('should receive trace info from the client', done => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: 'weather-app', ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const server = new Hapi.Server();
@@ -39,7 +41,7 @@ describe('hapi middleware - integration test', () => {
           annotations.forEach((ann) => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -70,7 +72,7 @@ describe('hapi middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: 'weather-app', ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const server = new Hapi.Server();
@@ -100,7 +102,7 @@ describe('hapi middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: 'weather-app', ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const server = new Hapi.Server();
@@ -140,7 +142,7 @@ describe('hapi middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: 'weather-app', ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
     const PAUSE_TIME_MILLIS = 100;
 
     ctxImpl.scoped(() => {

@@ -63,7 +63,7 @@ describe('express http proxy instrumentation - integration test', () => {
                   .to.have.lengthOf(16));
 
               expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-              expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+              expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
               expect(annotations[1].annotation.annotationType).to.equal('Rpc');
               expect(annotations[1].annotation.name).to.equal('POST');
@@ -127,7 +127,7 @@ describe('express http proxy instrumentation - integration test', () => {
                   .to.have.lengthOf(16));
 
               expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-              expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+              expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
               expect(annotations[1].annotation.annotationType).to.equal('Rpc');
               expect(annotations[1].annotation.name).to.equal('GET');
@@ -206,7 +206,7 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations.map(ann => ann.traceId.spanId)).to.contain('bbb');
 
               expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-              expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+              expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
               expect(annotations[1].annotation.annotationType).to.equal('Rpc');
               expect(annotations[1].annotation.name).to.equal('PUT');
@@ -220,7 +220,7 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
 
               expect(annotations[5].annotation.annotationType).to.equal('ServiceName');
-              expect(annotations[5].annotation.serviceName).to.equal('weather-app');
+              expect(annotations[5].annotation.serviceName).to.equal(serviceName);
 
               expect(annotations[6].annotation.annotationType).to.equal('Rpc');
               expect(annotations[6].annotation.name).to.equal('POST');

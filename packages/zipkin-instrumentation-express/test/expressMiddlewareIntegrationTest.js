@@ -49,7 +49,7 @@ describe('express middleware - integration test', () => {
               .to.equal(originalSpanId));
 
             expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-            expect(annotations[0].annotation.serviceName).to.equal('weather-app');
+            expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
             expect(annotations[1].annotation.annotationType).to.equal('Rpc');
             expect(annotations[1].annotation.name).to.equal('POST');
@@ -134,7 +134,7 @@ describe('express middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: 'weather-app', ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
@@ -181,7 +181,7 @@ describe('express middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: 'weather-app', ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     function step(num) {
       return new Promise((resolve) => {
@@ -263,7 +263,7 @@ describe('express middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: 'weather-app', ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
