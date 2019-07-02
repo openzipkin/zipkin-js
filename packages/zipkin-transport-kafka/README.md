@@ -8,8 +8,8 @@ This is a module that sends Zipkin trace data from zipkin-js to Kafka.
 
 ```javascript
 const {
-  Tracer, 
-  BatchRecorder, 
+  Tracer,
+  BatchRecorder,
   jsonEncoder: {JSON_V2}
 } = require('zipkin');
 const {KafkaLogger} = require('zipkin-transport-kafka');

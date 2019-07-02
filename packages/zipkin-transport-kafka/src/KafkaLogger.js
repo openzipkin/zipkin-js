@@ -1,5 +1,6 @@
 const kafka = require('kafka-node');
 const THRIFT = require('zipkin-encoder-thrift');
+const {jsonEncoder: {JSON_V2}} = require('zipkin');
 
 module.exports = class KafkaLogger {
   constructor(options) {
@@ -17,7 +18,16 @@ module.exports = class KafkaLogger {
     this.onError = options.onError || function(err) {
       log.error(err);
     };
-    this.encoder = options.encoder || THRIFT;
+
+    if (typeof options.encoder === 'undefined' || options.encoder === THRIFT) {
+      this.encoder = THRIFT;
+    } else if (options.encoder === JSON_V2) {
+      // Temporarily do singleton list messages until logic from the http logger is extracted
+      this.encoder = {encode: (span) => `[${JSON_V2.encode(span)}]`};
+    } else {
+      throw new Error('Unsupported encoder. Valid choices are THRIFT and JSON_V2.');
+    }
+
     this.topic = options.topic || 'zipkin';
 
     if (clientOpts.connectionString) {
