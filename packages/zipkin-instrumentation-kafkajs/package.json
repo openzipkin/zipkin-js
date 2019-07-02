@@ -5,18 +5,19 @@
   "main": "lib/zipkin-instrumentation-kafkajs.js",
   "scripts": {
     "build": "babel src -d lib",
-    "pretest": "docker-compose up -d; timeout 60 bash -c 'until echo > /dev/tcp/localhost/9092; do sleep 1; done'",
-    "test": "mocha --require ../../test/helper.js",
+    "pretest": "(docker kill kafkajs-test; docker rm kafkajs-test) 2>&-; docker run -d -p 9092:9092 --name kafkajs-test --hostname localhost openzipkin/zipkin-kafka && timeout 60 bash -c 'until echo > /dev/tcp/localhost/9092; do sleep 1; done'",
+    "test": "mocha --require ../../test/helper.js --require @babel/register",
     "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
-    "posttest": "docker-compose down",
+    "posttest": "docker kill kafkajs-test && docker rm kafkajs-test",
     "prepublish": "npm run build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
-    "kafkajs": "^1.6.0",
+    "kafkajs": "^1.9.3",
+    "zipkin": "^0.18.4",
     "promise.prototype.finally": "3.1.0",
-    "zipkin": "^0.18.4"
+    "lodash": "^4.17.11"
   }
 }

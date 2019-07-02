@@ -12,13 +12,14 @@ const instrumentKafkaJs = (kafkaJs, {tracer, remoteServiceName}) => {
           let id;
           let promise;
           tracer.scoped(() => {
-            id = recordConsumeStart(tracer, params);
+            id = recordConsumeStart(tracer, 'each-message', remoteServiceName, params);
             promise = obj[prop](params);
           });
           promise.then(() => {
             recordConsumeStop(tracer, id);
           }).catch((error) => {
-            recordConsumeStop(tracer, id, error || 'unknown');
+            // for some reason, the actual error isn't propagated and instead just undefined
+            recordConsumeStop(tracer, id, error || '');
           });
           return promise;
         };
@@ -45,15 +46,19 @@ const instrumentKafkaJs = (kafkaJs, {tracer, remoteServiceName}) => {
           let id;
           let promise;
           tracer.scoped(() => {
-            id = recordProducerStart(tracer, remoteServiceName, {topic: params.topic});
-            const instrumentedMessages = params.messages.map((msg) =>
-              Request.addZipkinHeaders(msg, id));
-            promise = obj[prop](Object.assign({}, params, {messages: instrumentedMessages}));
+            id = recordProducerStart(tracer, 'send', remoteServiceName, {topic: params.topic});
+
+            const withTraceHeaders = Object.assign({}, params, {
+              messages: params.messages.map((msg) => Request.addZipkinHeaders(msg, id))
+            });
+
+            promise = obj[prop](withTraceHeaders);
           });
           promise.then(() => {
             recordProducerStop(tracer, id);
           }).catch((error) => {
-            recordProducerStop(tracer, id, error || 'unknown');
+            // for some reason, the actual error isn't propagated and instead just undefined
+            recordProducerStop(tracer, id, error || '');
           });
           return promise;
         };

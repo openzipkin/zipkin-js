@@ -6024,10 +6024,10 @@ kafka-please@^1.0.1:
     properties-parser "^0.3.1"
     tmp "0.0.28"
 
-kafkajs@^1.6.0:
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/kafkajs/-/kafkajs-1.9.2.tgz#ea5726dfb6f30330cbb56e60727c70725f887b4d"
-  integrity sha512-HtANhCeDaT8vXycsHLJodCUxWO6r0pM0dgrVMeAgQpPGA52p+b3SkjH+m4WZUGEL+ql2GYBYXrIXUC92TGNwuQ==
+kafkajs@^1.9.3:
+  version "1.9.3"
+  resolved "https://registry.yarnpkg.com/kafkajs/-/kafkajs-1.9.3.tgz#5b1031a6e5ac43ed60fb6a7774f5d11df25910a9"
+  integrity sha512-NYLCXyC2AYqbdfNp8z/YV+e/oq25+KzHcrA9I0PZwiMcjKPasVs/D5DycWB0mR8HQZuL8+5xQcMz+BC7Ypn9rg==
   dependencies:
     long "^4.0.0"
 

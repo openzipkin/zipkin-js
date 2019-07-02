@@ -21,14 +21,14 @@ function newSpanRecorder(spans) {
   }}});
 }
 
-function expectB3Headers(span, requestHeaders) {
-  expect(requestHeaders['x-b3-traceid']).to.equal(span.traceId);
-  expect(requestHeaders['x-b3-spanid']).to.equal(span.id);
-  expect(requestHeaders['x-b3-sampled']).to.equal('1');
+function expectB3Headers(span, headers, caseInsensitive = true) {
+  expect(headers[caseInsensitive ? 'x-b3-traceid' : 'X-B3-TraceId']).to.equal(span.traceId);
+  expect(headers[caseInsensitive ? 'x-b3-spanid' : 'X-B3-SpanId']).to.equal(span.id);
+  expect(headers[caseInsensitive ? 'x-b3-sampled' : 'X-B3-Sampled']).to.equal('1');
 
   /* eslint-disable no-unused-expressions */
-  expect(requestHeaders['x-b3-parentspanid']).to.not.exist;
-  expect(requestHeaders['x-b3-flags']).to.not.exist;
+  expect(headers[caseInsensitive ? 'x-b3-parentspanid' : 'X-B3-ParentSpanId']).to.not.exist;
+  expect(headers[caseInsensitive ? 'x-b3-flags' : 'X-B3-Flags']).to.not.exist;
 }
 
 function expectSpan(span, expected) {

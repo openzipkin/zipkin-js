@@ -24,8 +24,8 @@ const kafka = instrumentKafkaJs(new Kafka({
   clientId: 'my-app',
   brokers: ['localhost:9092']
 }), {
-    tracer, //Your zipkin tracer instance
-    remoteServiceName : 'node-backend' //When using producer, the remote endpoint
+    tracer, // Your zipkin tracer instance
+    remoteServiceName : 'kafka' // This should be the symbolic name of the broker, not a consumer.
 });
 
 //Use KafkaJS as usual, single message handling will use tracing
