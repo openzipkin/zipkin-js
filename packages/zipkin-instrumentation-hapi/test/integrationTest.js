@@ -78,21 +78,21 @@ describe('hapi middleware - integration test', () => {
         plugin: middleware,
         options: {tracer, serviceName: 'service-a'}
       })
-      .then(() => {
-        const method = 'POST';
-        const url = '/foo';
-        return server.inject({method, url});
-      })
-      .then(() => {
-        const annotations = record.args.map((args) => args[0]);
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('http.status_code');
-        expect(annotations[5].annotation.value).to.equal('404');
-        done();
-      })
-      .catch((err) => {
-        done(err);
-      });
+        .then(() => {
+          const method = 'POST';
+          const url = '/foo';
+          return server.inject({method, url});
+        })
+        .then(() => {
+          const annotations = record.args.map((args) => args[0]);
+          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[5].annotation.key).to.equal('http.status_code');
+          expect(annotations[5].annotation.value).to.equal('404');
+          done();
+        })
+        .catch((err) => {
+          done(err);
+        });
     });
   });
 
@@ -116,23 +116,23 @@ describe('hapi middleware - integration test', () => {
         plugin: middleware,
         options: {tracer, serviceName: 'service-a'}
       })
-      .then(() => {
-        const method = 'GET';
-        const url = '/foo?abc=123';
-        return server.inject({method, url});
-      })
-      .then(() => {
-        const annotations = record.args.map(args => args[0]);
+        .then(() => {
+          const method = 'GET';
+          const url = '/foo?abc=123';
+          return server.inject({method, url});
+        })
+        .then(() => {
+          const annotations = record.args.map(args => args[0]);
 
-        expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[2].annotation.key).to.equal('http.path');
-        expect(annotations[2].annotation.value).to.equal(path);
+          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
+          expect(annotations[2].annotation.key).to.equal('http.path');
+          expect(annotations[2].annotation.value).to.equal(path);
 
-        done();
-      })
-      .catch((err) => {
-        done(err);
-      });
+          done();
+        })
+        .catch((err) => {
+          done(err);
+        });
     });
   });
 
@@ -162,22 +162,22 @@ describe('hapi middleware - integration test', () => {
         plugin: middleware,
         options: {tracer, serviceName: 'service-a'}
       })
-      .then(() => {
-        const method = 'POST';
-        const url = '/foo';
-        return server.inject({method, url});
-      })
-      .then(() => {
-        const annotations = record.args.map((args) => args[0]);
-        const serverRecvTs = annotations[3].timestamp / 1000.0;
-        const serverSendTs = annotations[6].timestamp / 1000.0;
-        const durationMillis = (serverSendTs - serverRecvTs);
-        expect(durationMillis).to.be.greaterThan(PAUSE_TIME_MILLIS);
-        done();
-      })
-      .catch((err) => {
-        done(err);
-      });
+        .then(() => {
+          const method = 'POST';
+          const url = '/foo';
+          return server.inject({method, url});
+        })
+        .then(() => {
+          const annotations = record.args.map((args) => args[0]);
+          const serverRecvTs = annotations[3].timestamp / 1000.0;
+          const serverSendTs = annotations[6].timestamp / 1000.0;
+          const durationMillis = (serverSendTs - serverRecvTs);
+          expect(durationMillis).to.be.greaterThan(PAUSE_TIME_MILLIS);
+          done();
+        })
+        .catch((err) => {
+          done(err);
+        });
     });
   });
 });

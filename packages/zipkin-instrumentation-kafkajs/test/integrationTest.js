@@ -14,7 +14,7 @@ const _ = require('lodash');
 const {Kafka} = require('kafkajs');
 const instrumentKafkaJs = require('../src/zipkin-instrumentation-kafkajs');
 
-describe('KafkaJS instrumentation - integration test', function() { // this.X doesn't work with =>
+describe('KafkaJS instrumentation - integration test', function() { // => doesn't allow this.X
   this.slow(15 * 1000);
   this.timeout(30 * 1000);
 
@@ -25,6 +25,7 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
   let tracer;
   let rawKafka;
   let kafka;
+  let testMessage;
 
   function newKafka() {
     return new Kafka({clientId: serviceName, brokers: ['localhost:9092']});
@@ -39,6 +40,7 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
     });
     rawKafka = newKafka();
     kafka = instrumentKafkaJs(newKafka(), {tracer, remoteServiceName});
+    testMessage = {key: 'mykey', value: 'myvalue'};
   });
 
   function popSpan() {
@@ -46,108 +48,100 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
     return spans.pop();
   }
 
-  describe('Producer', () => {
-    it('should record a producer span on send', () => {
-      const testTopic = 'producer-send';
-      const producer = kafka.producer();
+  function getTestTopic(ref) {
+    return ref.test.title.replace(/\s+/g, '-').toLowerCase();
+  }
 
-      return producer.connect().then(() =>
-        producer.send({
-          topic: testTopic,
-          messages: [{key: 'mykey', value: 'myvalue'}]
-        }).then(() => {
-          expectSpan(popSpan(), {
-            kind: 'PRODUCER',
-            name: 'send',
-            localEndpoint: {serviceName},
-            remoteEndpoint: {serviceName: remoteServiceName},
-            tags: {
-              'kafka.topic': testTopic
-              // TODO: we also tag kafka.key
-            }
-          });
-          expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
-        }).finally(() => producer.disconnect())
-      );
+  function send(producer, topic, message) {
+    return producer.connect()
+      .then(() => producer.send({topic, messages: [message]}))
+      .finally(() => producer.disconnect());
+  }
+
+  describe('Producer', () => {
+    it('should record a producer span on send', function() { // => doesn't allow this.X
+      const testTopic = getTestTopic(this);
+
+      return send(kafka.producer(), testTopic, testMessage).then(() => {
+        expectSpan(popSpan(), {
+          kind: 'PRODUCER',
+          name: 'send',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'kafka.topic': testTopic
+            // TODO: we also tag kafka.key
+          }
+        });
+        expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+      });
     });
 
-    it('should add B3 headers to the message on send', done => {
-      const testTopic = 'producer-b3';
+    it('should add B3 headers to the message on send', function(done) { // => doesn't allow this.X
+      const testTopic = getTestTopic(this);
       const producer = kafka.producer();
-      const consumer = rawKafka.consumer({groupId: 'test-group'});
+      const consumer = rawKafka.consumer({groupId: testTopic});
 
-      producer.connect().then(() => producer
-        .send({topic: testTopic, messages: [{key: 'mykey', value: 'myvalue'}]})
-        .finally(() => producer.disconnect())
-        .finally(consumer.connect()
-          .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
-          .then(() => consumer.run({
-            eachMessage: ({message}) => {
-              setTimeout(() => {
-                consumer.disconnect().then(() => {
-                  const headers = _.mapValues(message.headers, bufferToAscii);
-                  expectB3Headers(popSpan(), headers, false);
-                  expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
-                  done();
-                }).catch((err) => done(err));
-              }, 0);
-              return Promise.resolve();
-            }
-          }))
-        )
-      )
-      .catch((err) => done(err));
+      send(producer, testTopic, testMessage)
+        .then(() => consumer.connect())
+        .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
+        .then(() => consumer.run({
+          eachMessage: ({message}) => {
+            setTimeout(() => { // TODO: why?
+              consumer.disconnect().then(() => { // TODO: why?
+                const headers = _.mapValues(message.headers, bufferToAscii);
+                expectB3Headers(popSpan(), headers, false);
+                done();
+              }).catch((err) => done(err));
+            }, 0);
+            return Promise.resolve(); // TODO: why?
+          }
+        }))
+        .catch((err) => done(err));
     });
   });
 
   describe('Consumer', () => {
-    it('should record a consumer span on eachMessage', done => {
-      const testTopic = 'consumer-eachMessage';
+    it('should record a consumer span on eachMessage', function(done) { // => doesn't allow this.X
+      const testTopic = getTestTopic(this);
       const producer = rawKafka.producer();
-      const consumer = kafka.consumer({groupId: 'test-group'});
+      const consumer = kafka.consumer({groupId: testTopic});
 
-      producer.connect().then(() =>
-        producer.send({topic: testTopic, messages: [{key: 'mykey', value: 'myvalue'}]})
-        .finally(() => producer.disconnect())
-        .finally(
-           consumer.connect()
-           .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
-           .then(() =>
-             consumer.run({
-               eachMessage: ({partition}) => {
-                 setTimeout(() => {
-                   consumer.disconnect().then(() => {
-                     expectSpan(popSpan(), {
-                       kind: 'CONSUMER', // TODO: this should be a child of the consumer span
-                       name: 'each-message',
-                       localEndpoint: {serviceName},
-                       remoteEndpoint: {serviceName: remoteServiceName},
-                       tags: {
-                         'kafka.partition': partition.toString(), // NOTE: isn't tagged in brave
-                         'kafka.topic': testTopic
-                       }
-                     });
-                     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
-                     done();
-                   }).catch((err) => done(err));
-                 }, 0);
-                 return Promise.resolve();
-               }
-             })
-           )
-         )
-      )
-      .catch((err) => done(err));
+      send(producer, testTopic, testMessage)
+        .then(() => consumer.connect())
+        .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
+        .then(() => consumer.run({
+          eachMessage: ({partition}) => {
+            setTimeout(() => {
+              consumer.disconnect().then(() => {
+                expectSpan(popSpan(), {
+                  kind: 'CONSUMER', // TODO: this should be a child of the consumer span
+                  name: 'each-message',
+                  localEndpoint: {serviceName},
+                  remoteEndpoint: {serviceName: remoteServiceName},
+                  tags: {
+                    'kafka.partition': partition.toString(), // NOTE: isn't tagged in brave
+                    'kafka.topic': testTopic
+                  }
+                });
+                expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+                done();
+              }).catch((err) => done(err));
+            }, 0);
+            return Promise.resolve();
+          }
+        }))
+        .catch((err) => done(err));
     });
 
-    it('should resume trace from headers', done => {
-      const testTopic = 'consumer-b3';
+    it('should resume trace from headers', function(done) { // => doesn't allow this.X
+      const testTopic = getTestTopic(this);
       const producer = rawKafka.producer();
-      const consumer = kafka.consumer({groupId: 'test-group'});
+      const consumer = kafka.consumer({groupId: testTopic});
 
       const traceId = '000000000000162e';
       const producerSpanId = '000000000000abcd';
-      const message = {
+      testMessage = {
         key: 'mykey',
         value: 'myvalue',
         headers: {
@@ -157,48 +151,41 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
         }
       };
 
-      producer.connect().then(() =>
-        producer.send({topic: testTopic, messages: [message]})
-        .finally(() => producer.disconnect())
-        .finally(
-           consumer.connect()
-           .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
-           .then(() =>
-             consumer.run({
-               eachMessage: ({partition}) => {
-                 setTimeout(() => {
-                   consumer.disconnect().then(() => {
-                     const span = popSpan();
-                     expect(span.traceId).to.equal(traceId);
-                     expect(span.id).to.not.equal(producerSpanId);
-                     expectSpan(span, {
-                       parentId: producerSpanId, // TODO: should be a child of the consumer span
-                       kind: 'CONSUMER',         // ^^
-                       name: 'each-message',
-                       localEndpoint: {serviceName},
-                       remoteEndpoint: {serviceName: remoteServiceName},
-                       tags: {
-                         'kafka.partition': partition.toString(), // NOTE: isn't tagged in brave
-                         'kafka.topic': testTopic
-                       },
-                     });
-                     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
-                     done();
-                   }).catch((err) => done(err));
-                 }, 0);
-                 return Promise.resolve();
-               }
-             })
-           )
-         )
-      )
-      .catch((err) => done(err));
+      send(producer, testTopic, testMessage)
+        .then(() => consumer.connect())
+        .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
+        .then(() => consumer.run({
+          eachMessage: ({partition}) => {
+            setTimeout(() => {
+              consumer.disconnect().then(() => {
+                const span = popSpan();
+                expect(span.traceId).to.equal(traceId);
+                expect(span.id).to.not.equal(producerSpanId);
+                expectSpan(span, {
+                  parentId: producerSpanId,
+                  kind: 'CONSUMER', // TODO: should be a child of the consumer span
+                  name: 'each-message',
+                  localEndpoint: {serviceName},
+                  remoteEndpoint: {serviceName: remoteServiceName},
+                  tags: {
+                    'kafka.partition': partition.toString(), // NOTE: isn't tagged in brave
+                    'kafka.topic': testTopic
+                  },
+                });
+                expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+                done();
+              }).catch((err) => done(err));
+            }, 0);
+            return Promise.resolve();
+          }
+        }))
+        .catch((err) => done(err));
     });
 
-    it('should tag a consumer span with error', done => {
-      const testTopic = 'consumer-error';
+    it('should tag a consumer span with error', function(done) { // => doesn't allow this.X
+      const testTopic = getTestTopic(this);
       const producer = rawKafka.producer();
-      const consumer = kafka.consumer({groupId: 'test-group'});
+      const consumer = kafka.consumer({groupId: testTopic});
 
       const verifyErrorSpan = () => {
         expectSpan(popSpan(), {
@@ -214,41 +201,37 @@ describe('KafkaJS instrumentation - integration test', function() { // this.X do
         });
       };
 
-      producer.connect().then(() => producer
-        .send({topic: testTopic, messages: [{key: 'mykey', value: 'myvalue'}]})
-        .finally(() => producer.disconnect())
-        .finally(
-          consumer.connect().then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
-          .then(() => {
-            let errorCount = 0;
-            return consumer.run({
-              eachMessage: () => {
-                const isError = errorCount === 0;
-                setTimeout(() => {
-                  consumer.disconnect().then(() => {
-                    if (isError) {
-                      verifyErrorSpan();
-                      expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
-                      done();
-                    }
-                  }).catch((err) => {
-                    if (isError) {
-                      done(err);
-                    }
-                  });
-                }, 0);
+      send(producer, testTopic, testMessage)
+        .then(() => consumer.connect())
+        .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
+        .then(() => {
+          let errorCount = 0;
+          return consumer.run({
+            eachMessage: () => {
+              const isError = errorCount === 0;
+              setTimeout(() => {
+                consumer.disconnect().then(() => {
+                  if (isError) {
+                    verifyErrorSpan();
+                    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+                    done();
+                  }
+                }).catch((err) => {
+                  if (isError) {
+                    done(err);
+                  }
+                });
+              }, 0);
 
-                if (isError) {
-                  errorCount++;
-                  return Promise.reject();
-                }
-                return Promise.resolve();
+              if (isError) {
+                errorCount++;
+                return Promise.reject();
               }
-            });
-          })
-        )
-      )
-      .catch((err) => done(err));
+              return Promise.resolve();
+            }
+          });
+        })
+        .catch((err) => done(err));
     });
   });
 });

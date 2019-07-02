@@ -4,7 +4,7 @@ const os = require('os');
 function pickInterface(interfaces, family) {
   /*eslint-disable */
   for (const i in interfaces) {
-    /*eslint-enable */
+    /* eslint-enable */
     for (let j = interfaces[i].length - 1; j >= 0; j--) {
       const face = interfaces[i][j];
       const reachable = family === 'IPv4' || face.scopeid === 0;
@@ -18,7 +18,7 @@ function reduceInterfaces(interfaces, iface) {
   const ifaces = {};
   /*eslint-disable */
   for (const i in interfaces) {
-    /*eslint-enable */
+    /* eslint-enable */
     if (i === iface) ifaces[i] = interfaces[i];
   }
   return ifaces;

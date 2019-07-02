@@ -162,7 +162,7 @@ describe('Tracer', () => {
     ctxImpl.scoped(() => {
       const promise = trace.local('buy-smoothie', () =>
         Promise.delay(10)
-               .then(() => 'smoothie')
+          .then(() => 'smoothie')
       );
 
       expect(isPromise(promise)).to.eql(true);
@@ -197,7 +197,7 @@ describe('Tracer', () => {
     ctxImpl.scoped(() => {
       const promise = trace.local('buy-smoothie', () =>
         Promise.delay(10)
-               .then(() => 'smoothie')
+          .then(() => 'smoothie')
       );
 
       expect(isPromise(promise)).to.eql(true);
@@ -225,10 +225,10 @@ describe('Tracer', () => {
     ctxImpl.scoped(() => {
       const promise = trace.local('buy-smoothie', () =>
         Promise.delay(10)
-               .then(() => {
-                 trace.recordBinary('taste', 'banana');
-                 return 'smoothie';
-               })
+          .then(() => {
+            trace.recordBinary('taste', 'banana');
+            return 'smoothie';
+          })
       );
 
       expect(isPromise(promise)).to.eql(true);

@@ -185,16 +185,16 @@ describe('Http Server Instrumentation', () => {
   });
 
   const samplingFlagCases = [
-        {headers: {'X-B3-Flags': '0'}, hasAnnotations: null},
-        {headers: {'X-B3-Flags': '1'}, hasAnnotations: true},
-        {headers: {'X-B3-Sampled': '0'}, hasAnnotations: false},
-        {headers: {'X-B3-Sampled': '1'}, hasAnnotations: true},
-        {headers: {'X-B3-Sampled': 'true'}, hasAnnotations: true},
-        {headers: {'X-B3-Sampled': 'false'}, hasAnnotations: false},
-        {headers: {'X-B3-Sampled': '0', 'X-B3-Flags': '0'}, hasAnnotations: false},
-        {headers: {'X-B3-Sampled': '0', 'X-B3-Flags': '1'}, hasAnnotations: true},
-        {headers: {'X-B3-Sampled': '1', 'X-B3-Flags': '0'}, hasAnnotations: true},
-        {headers: {'X-B3-Sampled': '1', 'X-B3-Flags': '1'}, hasAnnotations: true},
+    {headers: {'X-B3-Flags': '0'}, hasAnnotations: null},
+    {headers: {'X-B3-Flags': '1'}, hasAnnotations: true},
+    {headers: {'X-B3-Sampled': '0'}, hasAnnotations: false},
+    {headers: {'X-B3-Sampled': '1'}, hasAnnotations: true},
+    {headers: {'X-B3-Sampled': 'true'}, hasAnnotations: true},
+    {headers: {'X-B3-Sampled': 'false'}, hasAnnotations: false},
+    {headers: {'X-B3-Sampled': '0', 'X-B3-Flags': '0'}, hasAnnotations: false},
+    {headers: {'X-B3-Sampled': '0', 'X-B3-Flags': '1'}, hasAnnotations: true},
+    {headers: {'X-B3-Sampled': '1', 'X-B3-Flags': '0'}, hasAnnotations: true},
+    {headers: {'X-B3-Sampled': '1', 'X-B3-Flags': '1'}, hasAnnotations: true},
   ];
 
   samplingFlagCases.forEach(({headers, hasAnnotations}) => {
@@ -387,8 +387,8 @@ describe('Http Server Instrumentation', () => {
     });
 
     const localAddr = record.args
-                              .map(args => args[0].annotation)
-                              .find(annotation => annotation.annotationType === 'LocalAddr');
+      .map(args => args[0].annotation)
+      .find(annotation => annotation.annotationType === 'LocalAddr');
 
     expect(localAddr.host.addr).to.equal('1.1.1.1');
   });
@@ -408,8 +408,8 @@ describe('Http Server Instrumentation', () => {
     });
 
     const localAddr = record.args
-                              .map(args => args[0].annotation)
-                              .find(annotation => annotation.annotationType === 'LocalAddr');
+      .map(args => args[0].annotation)
+      .find(annotation => annotation.annotationType === 'LocalAddr');
 
     expect(localAddr.host.addr).not.to.equal(undefined);
   });

@@ -206,9 +206,9 @@ describe('express middleware - integration test', () => {
       }));
 
       app.get('/foo', (req, res) => step(1)
-          .then(() => step(2))
-          .then(() => step(3))
-          .then(() => res.status(202).json({status: 'OK'})));
+        .then(() => step(2))
+        .then(() => step(3))
+        .then(() => res.status(202).json({status: 'OK'})));
 
       const server = app.listen(0, () => {
         const port = server.address().port;
@@ -301,10 +301,10 @@ describe('express middleware - integration test', () => {
 
           done();
         })
-        .catch(err => {
-          server.close();
-          done(err);
-        });
+          .catch(err => {
+            server.close();
+            done(err);
+          });
       });
     });
   });
