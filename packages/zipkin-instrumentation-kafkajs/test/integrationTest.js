@@ -87,9 +87,14 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
         .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
         .then(() => consumer.run({
           eachMessage: ({message}) => {
-            const headers = _.mapValues(message.headers, bufferToAscii);
-            expectB3Headers(popSpan(), headers, false);
-            done();
+            setTimeout(() => { // TODO: why?
+              consumer.disconnect().then(() => { // TODO: why?
+                const headers = _.mapValues(message.headers, bufferToAscii);
+                expectB3Headers(popSpan(), headers, false);
+                done();
+              }).catch((err) => done(err));
+            }, 0);
+            return Promise.resolve(); // TODO: why?
           }
         }))
         .catch((err) => done(err));
