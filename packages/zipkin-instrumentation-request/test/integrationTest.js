@@ -32,7 +32,7 @@ describe('request instrumentation - integration test', () => {
     record = sinon.spy();
     recorder = {record};
     ctxImpl = new ExplicitContext();
-    tracer = new Tracer({recorder, ctxImpl});
+    tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
     rootId = tracer.createRootId();
     tracer.setId(rootId);
   });
@@ -42,7 +42,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest.get(url, () => {
@@ -86,7 +86,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest(url, () => {
@@ -130,7 +130,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest({url}, () => {
@@ -174,7 +174,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest({
@@ -220,7 +220,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300`;
         zipkinRequest({url}).on('response', () => {
@@ -265,7 +265,7 @@ describe('request instrumentation - integration test', () => {
       const apiServer = api.listen(0, () => {
         const apiPort = apiServer.address().port;
         const apiHost = '127.0.0.1';
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
         const urlPath = '/doesNotExist';
         const url = `http://${apiHost}:${apiPort}${urlPath}`;
         zipkinRequest({url, timeout: 100}).on('response', () => {
@@ -315,7 +315,7 @@ describe('request instrumentation - integration test', () => {
   it('should report request.error when service does not exist', done => {
     tracer.scoped(() => {
       api.listen(0, () => {
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
         const host = 'bad.invalid.url';
         const url = `http://${host}`;
         zipkinRequest({url, timeout: 5000}).on('error', () => {
@@ -371,7 +371,7 @@ describe('request instrumentation - integration test', () => {
         const urlPath = '/weather';
         const url = `http://${apiHost}:${apiPort}${urlPath}?index=10&count=300&delay=10`;
 
-        const wrapped = promisify(wrapRequest(request, {tracer, serviceName, remoteServiceName}));
+        const wrapped = promisify(wrapRequest(request, {tracer, remoteServiceName}));
 
         const promise1 = wrapped(url);
         const promise2 = wrapped(url);
@@ -419,7 +419,7 @@ describe('request instrumentation - integration test', () => {
         const urlpathDoesNotExist = '/doesNotExist';
         const urlDoesNotExist = `http://${apiHost}:${apiPort}${urlpathDoesNotExist}?index=10&count=300`;
 
-        const zipkinRequest = wrapRequest(request, {tracer, serviceName, remoteServiceName});
+        const zipkinRequest = wrapRequest(request, {tracer, remoteServiceName});
 
         zipkinRequest.get(url, () => {
           zipkinRequest.get(urlDoesNotExist, () => {

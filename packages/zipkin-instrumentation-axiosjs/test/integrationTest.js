@@ -39,7 +39,11 @@ describe('axios instrumentation - integration test', () => {
 
   beforeEach(() => {
     spans = [];
-    tracer = new Tracer({ctxImpl: new ExplicitContext(), recorder: newSpanRecorder(spans)});
+    tracer = new Tracer({
+      ctxImpl: new ExplicitContext(),
+      localServiceName: serviceName,
+      recorder: newSpanRecorder(spans)
+    });
   });
 
   function popSpan() {
@@ -52,7 +56,7 @@ describe('axios instrumentation - integration test', () => {
       timeout: 300 // this avoids flakes in CI
     });
 
-    return wrapAxios(instance, {tracer, serviceName, remoteServiceName});
+    return wrapAxios(instance, {tracer, remoteServiceName});
   }
 
   function url(path) {

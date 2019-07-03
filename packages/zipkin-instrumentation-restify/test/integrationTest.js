@@ -5,18 +5,17 @@ const restify = require('restify');
 const middleware = require('../src/restifyMiddleware');
 
 describe('restify middleware - integration test', () => {
+  const serviceName = 'weather-app';
+
   it('should receive trace info from the client', done => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = restify.createServer();
-      app.use(middleware({
-        tracer,
-        serviceName: 'service-a'
-      }));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -49,7 +48,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -86,14 +85,11 @@ describe('restify middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = restify.createServer();
-      app.use(middleware({
-        tracer,
-        serviceName: 'service-a'
-      }));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -136,14 +132,11 @@ describe('restify middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = restify.createServer();
-      app.use(middleware({
-        tracer,
-        serviceName: 'service-a'
-      }));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res, next) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -176,7 +169,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('service-a');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');

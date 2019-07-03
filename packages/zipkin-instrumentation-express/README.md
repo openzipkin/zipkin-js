@@ -31,11 +31,10 @@ const proxy = require('express-http-proxy');
 
 const ctxImpl = new ExplicitContext();
 const recorder = new ConsoleRecorder();
-const tracer = new Tracer({ctxImpl, recorder});
-const serviceName = 'weather-app';
+const tracer = new Tracer({ctxImpl, localServiceName: 'weather-app', recorder});
 const remoteServiceName = 'weather-api';
 
-const zipkinProxy = wrapExpressHttpProxy(proxy, {tracer, serviceName, remoteServiceName});
+const zipkinProxy = wrapExpressHttpProxy(proxy, {tracer, remoteServiceName});
 
 app.use('/api/weather', zipkinProxy('http://api.weather.com', {
   decorateRequest: (proxyReq, originalReq) => proxyReq.method = 'POST' // You can use express-http-proxy options as usual
@@ -50,11 +49,10 @@ const proxy = require('express-http-proxy');
 
 const ctxImpl = new CLSContext();
 const recorder = new ConsoleRecorder();
-const tracer = new Tracer({ctxImpl, recorder});
-const serviceName = 'weather-app';
+const tracer = new Tracer({ctxImpl, localServiceName: 'weather-app', recorder});
 const remoteServiceName = 'weather-api';
 
-const zipkinProxy = wrapExpressHttpProxy(proxy, {tracer, serviceName, remoteServiceName});
+const zipkinProxy = wrapExpressHttpProxy(proxy, {tracer, remoteServiceName});
 
-app.use('/api/weather', expressMiddleware({tracer, serviceName}), zipkinProxy('http://api.weather.com'));
+app.use('/api/weather', expressMiddleware({tracer}), zipkinProxy('http://api.weather.com'));
 ```

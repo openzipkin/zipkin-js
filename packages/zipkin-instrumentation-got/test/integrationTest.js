@@ -5,6 +5,8 @@ const sinon = require('sinon');
 const wrapGot = require('../src/wrapGot');
 
 describe('wrapGot', () => {
+  const serviceName = 'weather-app';
+
   before(function(done) {
     const app = express();
     app.post('/user', (req, res) => res.status(202).json({
@@ -26,13 +28,9 @@ describe('wrapGot', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
-    const got = wrapGot(baseGot, {
-      tracer,
-      serviceName: 'caller',
-      remoteServiceName: 'callee'
-    });
+    const got = wrapGot(baseGot, {tracer, remoteServiceName: 'callee'});
 
     ctxImpl.scoped(() => {
       const id = tracer.createChildId();
@@ -53,7 +51,7 @@ describe('wrapGot', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('caller');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');
@@ -86,16 +84,11 @@ describe('wrapGot', () => {
 
   it('should add a context property to the options', function(done) {
     const record = sinon.spy();
-    const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({ctxImpl, recorder: {record}});
 
     const requestSpy = sinon.spy();
-    const got = wrapGot(baseGot, {
-      tracer,
-      serviceName: 'caller',
-      remoteServiceName: 'callee'
-    }).extend({
+    const got = wrapGot(baseGot, {tracer}).extend({
       hooks: {
         beforeRequest: [
           requestSpy
@@ -127,8 +120,7 @@ describe('wrapGot', () => {
   });
 
   it('should not throw when using got without options', function(done) {
-    const tracer = createNoopTracer();
-    const got = wrapGot(baseGot, {serviceName: 'user-service', tracer});
+    const got = wrapGot(baseGot, {tracer: createNoopTracer()});
 
     const path = `http://127.0.0.1:${this.port}/user`;
     got(path)
@@ -139,8 +131,7 @@ describe('wrapGot', () => {
   });
 
   it('should not throw when using got with a request object', function(done) {
-    const tracer = createNoopTracer();
-    const got = wrapGot(baseGot, {serviceName: 'user-service', tracer});
+    const got = wrapGot(baseGot, {tracer: createNoopTracer()});
 
     const path = `http://127.0.0.1:${this.port}/user`;
     const request = {url: path};
@@ -155,13 +146,9 @@ describe('wrapGot', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
-    const got = wrapGot(baseGot, {
-      tracer,
-      serviceName: 'caller',
-      remoteServiceName: 'callee'
-    });
+    const got = wrapGot(baseGot, {tracer, remoteServiceName: 'callee'});
 
     ctxImpl.scoped(() => {
       const id = tracer.createChildId();
@@ -181,7 +168,7 @@ describe('wrapGot', () => {
           annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal('caller');
+          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
           expect(annotations[1].annotation.annotationType).to.equal('Rpc');
           expect(annotations[1].annotation.name).to.equal('POST');

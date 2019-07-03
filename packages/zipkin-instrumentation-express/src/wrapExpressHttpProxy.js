@@ -7,7 +7,7 @@ function getPathnameFromPath(path) {
 }
 
 class ExpressHttpProxyInstrumentation {
-  constructor({tracer, serviceName, remoteServiceName}) {
+  constructor({tracer, serviceName = tracer.localEndpoint.serviceName, remoteServiceName}) {
     this.tracer = tracer;
     this.serviceName = serviceName;
     this.remoteServiceName = remoteServiceName;
@@ -79,11 +79,8 @@ function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
       };
     }
 
-    const instrumentation = new ExpressHttpProxyInstrumentation({
-      tracer,
-      serviceName,
-      remoteServiceName
-    });
+    const instrumentation =
+      new ExpressHttpProxyInstrumentation({tracer, serviceName, remoteServiceName});
 
     const wrappedOptions = options;
 

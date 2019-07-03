@@ -5,18 +5,17 @@ const express = require('express');
 const middleware = require('../src/expressMiddleware');
 
 describe('express middleware - integration test', () => {
+  const serviceName = 'weather-app';
+
   it('should record request & response annotations', done => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({
-        tracer,
-        serviceName: 'service-a'
-      }));
+      app.use(middleware({tracer}));
       app.post('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -50,7 +49,7 @@ describe('express middleware - integration test', () => {
               .to.equal(originalSpanId));
 
             expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-            expect(annotations[0].annotation.serviceName).to.equal('service-a');
+            expect(annotations[0].annotation.serviceName).to.equal(serviceName);
 
             expect(annotations[1].annotation.annotationType).to.equal('Rpc');
             expect(annotations[1].annotation.name).to.equal('POST');
@@ -93,10 +92,7 @@ describe('express middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({
-        tracer,
-        serviceName: 'service-a'
-      }));
+      app.use(middleware({tracer}));
       app.get('/foo', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
         const ctx = ctxImpl.getContext();
@@ -138,11 +134,11 @@ describe('express middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({tracer, serviceName: 'service-a'}));
+      app.use(middleware({tracer}));
 
       app.get('/foo/:id', (req, res) => {
         // Use setTimeout to test that the trace context is propagated into the callback
@@ -185,7 +181,7 @@ describe('express middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     function step(num) {
       return new Promise((resolve) => {
@@ -200,10 +196,7 @@ describe('express middleware - integration test', () => {
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({
-        tracer,
-        serviceName: 'service-a'
-      }));
+      app.use(middleware({tracer}));
 
       app.get('/foo', (req, res) => step(1)
         .then(() => step(2))
@@ -270,11 +263,11 @@ describe('express middleware - integration test', () => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, ctxImpl});
+    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
 
     ctxImpl.scoped(() => {
       const app = express();
-      app.use(middleware({tracer, serviceName: 'service-a'}));
+      app.use(middleware({tracer}));
 
       app.get('/error', (req, res) => {
         tracer.recordBinary('message', 'hello from within app');
