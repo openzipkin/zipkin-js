@@ -8,7 +8,8 @@
     "build": "babel src -d lib",
     "test": "mocha --exit --require ../../test/helper.js",
     "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
-    "prepublish": "npm run build"
+    "prepublish": "npm run snyk-protect; npm run build",
+    "snyk-protect": "snyk protect"
   },
   "author": "Openzipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
@@ -16,10 +17,12 @@
   "dependencies": {
     "@types/kafka-node": "^2.0.3",
     "kafka-node": "^2.6.1",
-    "zipkin-encoder-thrift": "^0.18.4"
+    "zipkin-encoder-thrift": "^0.18.4",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "kafka-please": "^1.0.1",
     "zipkin": "^0.18.4"
-  }
+  },
+  "snyk": true
 }
