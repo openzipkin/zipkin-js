@@ -7,7 +7,11 @@ This is a module that sends Zipkin trace data from zipkin-js to Kafka.
 `npm install zipkin-transport-kafka --save`
 
 ```javascript
-const {Tracer, BatchRecorder} = require('zipkin');
+const {
+  Tracer,
+  BatchRecorder,
+  jsonEncoder: {JSON_V2}
+} = require('zipkin');
 const {KafkaLogger} = require('zipkin-transport-kafka');
 const noop = require('noop-logger');
 
@@ -16,6 +20,7 @@ const kafkaRecorder = new BatchRecorder({
     clientOpts: {
       connectionString: 'localhost:2181'
     },
+    encoder: JSON_V2, // optional (defaults to THRIFT)
     log: noop // optional (defaults to console)
   })
 });

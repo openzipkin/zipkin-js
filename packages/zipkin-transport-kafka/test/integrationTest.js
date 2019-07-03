@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const kafka = require('kafka-node');
-const {Tracer, BatchRecorder, Annotation, ExplicitContext} = require('zipkin');
+const THRIFT = require('zipkin-encoder-thrift');
+const {Annotation, BatchRecorder, jsonEncoder: {JSON_V2}, option, TraceId} = require('zipkin');
 const KafkaLogger = require('../src/KafkaLogger');
 const makeKafkaServer = require('kafka-please');
 
@@ -12,11 +13,48 @@ function waitPromise(length) {
   });
 }
 
-describe('Kafka transport - integration test', () => {
-  it('should send trace data to Kafka', function(done) {
-    this.slow(10 * 1000);
-    this.timeout(60 * 1000);
+const traceId = new TraceId({
+  traceId: '5c7d31940cb80828',
+  spanId: 'cb37670e772e86e2',
+  sampled: new option.Some(true)
+});
 
+function record(timestamp, annotation) { // tracer.Record is not exported, so we fake it
+  return {traceId, timestamp, annotation};
+}
+
+function createSpan(recorder) {
+  recorder.record(record(1, new Annotation.ServiceName('my-service')));
+  recorder.record(record(1, new Annotation.Rpc('GET')));
+  recorder.record(record(1, new Annotation.BinaryAnnotation('http.path', '/api')));
+  recorder.record(record(1, new Annotation.ServerRecv()));
+  recorder.record(record(3, new Annotation.BinaryAnnotation('http.status_code', '200')));
+  recorder.record(record(3, new Annotation.ServerSend()));
+}
+
+function verifyThrift(message) {
+  expect(message.value).to.contain('/api');
+}
+
+function verifyJsonV2(message) {
+  // verifies this is a singleton list message in v2 format
+  expect(JSON.parse(message.value)).to.deep.equal([{
+    traceId: traceId.traceId,
+    id: traceId.spanId,
+    name: 'get',
+    kind: 'SERVER',
+    timestamp: 1,
+    duration: 2,
+    localEndpoint: {serviceName: 'my-service'},
+    tags: {
+      'http.path': '/api',
+      'http.status_code': '200'
+    }
+  }]);
+}
+
+describe('Kafka transport - integration test', () => {
+  function shouldSendTraceDataToKafka(encoder, verifySerialized, done) {
     makeKafkaServer().then(kafkaServer => {
       const producerClient = new kafka.Client(
         `localhost:${kafkaServer.zookeeperPort}`,
@@ -75,7 +113,7 @@ describe('Kafka transport - integration test', () => {
         consumer.on('message', message => {
           console.log('Received Zipkin data from Kafka');
           expect(message.topic).to.equal('zipkin');
-          expect(message.value).to.contain('http://example.com');
+          verifySerialized(message);
           consumer.close(true, finish);
         });
 
@@ -89,28 +127,32 @@ describe('Kafka transport - integration test', () => {
         });
 
         kafkaLogger = new KafkaLogger({
+          encoder,
           clientOpts: {
             connectionString: `localhost:${kafkaServer.zookeeperPort}`
           }
         });
 
-        const ctxImpl = new ExplicitContext();
-        const recorder = new BatchRecorder({logger: kafkaLogger});
-        const tracer = new Tracer({recorder, ctxImpl});
-
-        ctxImpl.scoped(() => {
-          tracer.recordAnnotation(new Annotation.ServerRecv());
-          tracer.recordServiceName('my-service');
-          tracer.recordRpc('GET');
-          tracer.recordBinary('http.url', 'http://example.com');
-          tracer.recordBinary('http.response_code', '200');
-          tracer.recordAnnotation(new Annotation.ServerSend());
-        });
+        createSpan(new BatchRecorder({logger: kafkaLogger}));
       });
     }).catch(err => {
       console.error('Big err', err);
       done(err);
     });
+  }
+
+  it('should send trace data to Kafka: THRIFT', function(done) {
+    this.slow(10 * 1000);
+    this.timeout(60 * 1000);
+
+    shouldSendTraceDataToKafka(THRIFT, verifyThrift, done);
+  });
+
+  it('should send trace data to Kafka: JSON_V2', function(done) {
+    this.slow(10 * 1000);
+    this.timeout(60 * 1000);
+
+    shouldSendTraceDataToKafka(JSON_V2, verifyJsonV2, done);
   });
 
   it('should send trace data to Kafka without zookeeper', function(done) {
@@ -175,7 +217,7 @@ describe('Kafka transport - integration test', () => {
         consumer.on('message', message => {
           console.log('Received Zipkin data from Kafka');
           expect(message.topic).to.equal('zipkin');
-          expect(message.value).to.contain('http://example.com');
+          verifyThrift(message);
           consumer.close(true, finish);
         });
 
@@ -194,18 +236,7 @@ describe('Kafka transport - integration test', () => {
           }
         });
 
-        const ctxImpl = new ExplicitContext();
-        const recorder = new BatchRecorder({logger: kafkaLogger});
-        const tracer = new Tracer({recorder, ctxImpl});
-
-        ctxImpl.scoped(() => {
-          tracer.recordAnnotation(new Annotation.ServerRecv());
-          tracer.recordServiceName('my-service');
-          tracer.recordRpc('GET');
-          tracer.recordBinary('http.url', 'http://example.com');
-          tracer.recordBinary('http.response_code', '200');
-          tracer.recordAnnotation(new Annotation.ServerSend());
-        });
+        createSpan(new BatchRecorder({logger: kafkaLogger}));
       });
     }).catch(err => {
       console.error('Big err', err);
