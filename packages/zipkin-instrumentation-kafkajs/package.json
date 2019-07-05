@@ -17,7 +17,6 @@
   "devDependencies": {
     "kafkajs": "^1.9.3",
     "zipkin": "^0.18.4",
-    "promise.prototype.finally": "3.1.0",
-    "lodash": "^4.17.11"
+    "promise.prototype.finally": "3.1.0"
   }
 }

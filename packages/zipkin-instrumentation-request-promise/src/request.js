@@ -1,5 +1,4 @@
 import request from 'request-promise';
-import _ from 'lodash';
 import {Instrumentation} from 'zipkin';
 import {Deferred} from './promise';
 
@@ -92,13 +91,13 @@ const Request = class {
      * breaks zipkin scope
      */
     let cb = callback;
-    if (_.isFunction(callback)) {
+    if (typeof callback === 'function') {
       cb = this.tracer._ctxImpl._session.bind(callback);
     }
 
     const instance = this.httpRequest(options, cb);
 
-    if (_.isFunction(cb)) {
+    if (typeof cb === 'function') {
       return instance;
     }
     instance.then(defer.resolve, defer.reject);

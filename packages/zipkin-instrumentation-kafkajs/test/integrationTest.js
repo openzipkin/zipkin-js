@@ -9,7 +9,6 @@ const {ExplicitContext, Tracer} = require('zipkin');
 
 // In order to verify Kafka headers, which have buffer values
 const {bufferToAscii} = require('../src/kafka-recorder');
-const _ = require('lodash');
 
 const {Kafka} = require('kafkajs');
 const instrumentKafkaJs = require('../src/zipkin-instrumentation-kafkajs');
@@ -87,14 +86,18 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
         .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
         .then(() => consumer.run({
           eachMessage: ({message}) => {
-            setTimeout(() => { // TODO: why?
-              consumer.disconnect().then(() => { // TODO: why?
-                const headers = _.mapValues(message.headers, bufferToAscii);
+            setTimeout(() => { // TODO: what does the timeout of zero provide?
+              consumer.disconnect().then(() => { // TODO: why disconnect before reading?
+                // Kafka header values are buffers, but our assertions work on strings
+                const headers = Object.assign({}, ...Array.from(
+                  Object.entries(message.headers),
+                  ([k, buffer]) => ({[k]: bufferToAscii(buffer)})
+                ));
                 expectB3Headers(popSpan(), headers, false);
                 done();
               }).catch((err) => done(err));
             }, 0);
-            return Promise.resolve(); // TODO: why?
+            return Promise.resolve(); // TODO: why do we return a resolved promise here?
           }
         }))
         .catch((err) => done(err));
