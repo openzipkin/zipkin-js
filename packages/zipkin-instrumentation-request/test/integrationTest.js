@@ -15,18 +15,13 @@ describe('request instrumentation - integration test', () => {
   const remoteServiceName = 'weather-api';
 
   let server;
-  let baseURL = ''; // default to relative path, for browser-based tests
+  let baseURL;
 
   before((done) => {
-    const middleware = maybeMiddleware();
-    if (middleware !== null) {
-      server = middleware.listen(0, () => {
-        baseURL = `http://127.0.0.1:${server.address().port}`;
-        done();
-      });
-    } else { // Inside a browser
+    server = maybeMiddleware().listen(0, () => {
+      baseURL = `http://127.0.0.1:${server.address().port}`;
       done();
-    }
+    });
   });
 
   after(() => {
