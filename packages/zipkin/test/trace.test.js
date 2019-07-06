@@ -45,6 +45,22 @@ describe('Tracer', () => {
     });
   });
 
+  it('should consider sentinel id as root', () => {
+    const ctxImpl = new ExplicitContext();
+    const tracer = new Tracer({ctxImpl, recorder});
+
+    // There's currently no api to tell if there is a trace in progress or not.
+    // The only exposed mechanism is Tracer.id, which can return a sentinel value.
+    const sentinel = tracer.id;
+
+    ctxImpl.scoped(() => {
+      tracer.setId(sentinel);
+      const shouldBeRoot = tracer.createChildId();
+      // When createChildId is called with the sentinel, we expect a new root span
+      expect(shouldBeRoot.parentSpanId.getOrElse(true)).to.equal(true);
+    });
+  });
+
   it('should clear scope after letId', () => {
     const ctxImpl = new ExplicitContext();
     const tracer = new Tracer({ctxImpl, recorder});
