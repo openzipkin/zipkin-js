@@ -46,6 +46,7 @@ function wrapGot(got, {tracer, serviceName, remoteServiceName}) {
       ],
       beforeError: [
         err => {
+          if (!err.gotOptions) return err;
           const ctx = getZipkinContext(err.gotOptions);
           tracer.scoped(() => {
             instrumentation.recordError(ctx.traceId, err);
