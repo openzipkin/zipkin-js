@@ -41,11 +41,13 @@ declare namespace zipkin {
       log?: Console
     });
 
+    /** Returns the current trace ID or a sentinel value indicating its absence. */
     id: TraceId;
 
     scoped<V>(callback: () => V): V;
     local<V>(name: string, callback: () => V): V;
     createRootId(isSampled?: option.IOption<boolean>, isDebug?: boolean): TraceId;
+    /** Creates a child of the current trace ID or a new root span. */
     createChildId(): TraceId;
     letId<V>(traceId: TraceId, callback: () => V): V;
     setId(traceId: TraceId): void;

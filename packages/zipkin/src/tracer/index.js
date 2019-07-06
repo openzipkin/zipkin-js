@@ -48,7 +48,9 @@ class Tracer {
       });
     }
     this._ctxImpl = ctxImpl;
-    this._defaultTraceId = this.createRootId();
+    // The sentinel is used until there's a trace ID in scope.
+    // Technically, this ID should have been unsampled, but it can break code to change that now.
+    this._sentinelTraceId = this.createRootId();
     this._startTimestamp = now();
     this._startTick = hrtime();
     // only set defaultTags in recorders which know about it
@@ -95,7 +97,7 @@ class Tracer {
       parentId = this._ctxImpl.getContext();
     }
 
-    if (this.isUndefinedOrNull(parentId)) {
+    if (parentId === this._sentinelTraceId || this.isUndefinedOrNull(parentId)) {
       return this.createRootId();
     }
 
@@ -169,7 +171,6 @@ class Tracer {
     if (!(traceId instanceof TraceId)) {
       throw new Error('Must be valid TraceId instance');
     }
-
     if (!this.supportsJoin) {
       return this.createChildId(traceId);
     }
@@ -188,8 +189,9 @@ class Tracer {
     this._ctxImpl.setContext(traceId);
   }
 
+  // Returns the current trace ID or a sentinel value indicating its absence.
   get id() {
-    return this._ctxImpl.getContext() || this._defaultTraceId;
+    return this._ctxImpl.getContext() || this._sentinelTraceId;
   }
 
   get localEndpoint() {
