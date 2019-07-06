@@ -57,7 +57,7 @@ describe('Tracer', () => {
       tracer.setId(sentinel);
       const shouldBeRoot = tracer.createChildId();
       // When createChildId is called with the sentinel, we expect a new root span
-      expect(shouldBeRoot.parentSpanId.getOrElse(true)).to.equal(true);
+      expect(shouldBeRoot.parentSpanId.getOrElse(null)).to.equal(null);
     });
   });
 

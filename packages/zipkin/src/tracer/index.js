@@ -48,7 +48,9 @@ class Tracer {
       });
     }
     this._ctxImpl = ctxImpl;
-    this._sentinelTraceId = this.createRootId(false);
+    // The sentinel is used until there's a trace ID in scope.
+    // Technically, this ID should have been unsampled, but it can break code to change that now.
+    this._sentinelTraceId = this.createRootId();
     this._startTimestamp = now();
     this._startTick = hrtime();
     // only set defaultTags in recorders which know about it
