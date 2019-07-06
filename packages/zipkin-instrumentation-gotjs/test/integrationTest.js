@@ -7,26 +7,21 @@ const {
 } = require('../../../test/testFixture');
 const {ExplicitContext, Tracer} = require('zipkin');
 
-// defer lookup of node fetch until we know if we are node
-const wrapFetch = require('../src/wrapFetch');
+const got = require('got');
+const wrapGot = require('../src/wrapGot');
 
-describe('fetch instrumentation - integration test', () => {
+describe('got instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
   let server;
-  let baseURL = ''; // default to relative path, for browser-based tests
+  let baseURL;
 
   before((done) => {
-    const middleware = maybeMiddleware();
-    if (middleware !== null) {
-      server = middleware.listen(0, () => {
-        baseURL = `http://127.0.0.1:${server.address().port}`;
-        done();
-      });
-    } else { // Inside a browser
+    server = maybeMiddleware().listen(0, () => {
+      baseURL = `http://127.0.0.1:${server.address().port}`;
       done();
-    }
+    });
   });
 
   after(() => {
@@ -50,14 +45,8 @@ describe('fetch instrumentation - integration test', () => {
     return spans.pop();
   }
 
-  function wrappedFetch() {
-    let fetch;
-    if (server) { // defer loading node-fetch
-      fetch = require('node-fetch'); // eslint-disable-line global-require
-    } else {
-      fetch = window.fetch;
-    }
-    return wrapFetch(fetch, {tracer, remoteServiceName});
+  function wrappedGot() {
+    return wrapGot(got, {tracer, remoteServiceName});
   }
 
   function url(path) {
@@ -80,7 +69,7 @@ describe('fetch instrumentation - integration test', () => {
   it('should not interfere with errors that precede a call', done => {
     // Here we are passing a function instead of the value of it. This ensures our error callback
     // doesn't make assumptions about a span in progress: there won't be if there was a config error
-    wrappedFetch()(url)
+    wrappedGot()(url)
       .then(response => {
         done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
       })
@@ -97,76 +86,92 @@ describe('fetch instrumentation - integration test', () => {
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
-    return wrappedFetch()(url(path))
-      .then(response => response.json()) // json() returns a promise
-      .then(json => expectB3Headers(popSpan(), json));
+    return wrappedGot()(url(path))
+      .then(response => expectB3Headers(popSpan(), JSON.parse(response.body)));
   });
-
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return wrappedFetch()(url(path))
+    return wrappedGot()(url(path))
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should support options request', () => {
     const path = '/weather/wuhan';
-    return wrappedFetch()({url: url(path), method: 'GET'})
+    return wrappedGot()({url: url(path), method: 'GET'})
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
-  it('should report 404 in tags', () => {
+  it('should report 404 in tags', done => {
     const path = '/pathno';
-    return wrappedFetch()(url(path))
-      .then(() => expectSpan(popSpan(), {
-        name: 'get',
-        kind: 'CLIENT',
-        localEndpoint: {serviceName},
-        remoteEndpoint: {serviceName: remoteServiceName},
-        tags: {
-          'http.path': path,
-          'http.status_code': '404',
-          error: '404'
-        }
-      }));
+    wrappedGot()(url(path))
+      .then(response => {
+        done(new Error(`expected status 404 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '404',
+            error: '404'
+          }
+        });
+        done();
+      });
   });
 
-  it('should report 400 in tags', () => {
+  it('should report 400 in tags', done => {
     const path = '/weather/securedTown';
-    return wrappedFetch()(url(path))
-      .then(() => expectSpan(popSpan(), {
-        name: 'get',
-        kind: 'CLIENT',
-        localEndpoint: {serviceName},
-        remoteEndpoint: {serviceName: remoteServiceName},
-        tags: {
-          'http.path': path,
-          'http.status_code': '400',
-          error: '400'
-        }
-      }));
+    wrappedGot()(url(path))
+      .then(response => {
+        done(new Error(`expected status 400 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '400',
+            error: '400'
+          }
+        });
+        done();
+      });
   });
 
-  it('should report 500 in tags', () => {
+  it('should report 500 in tags', done => {
     const path = '/weather/bagCity';
-    return wrappedFetch()(url(path))
-      .then(() => expectSpan(popSpan(), {
-        name: 'get',
-        kind: 'CLIENT',
-        localEndpoint: {serviceName},
-        remoteEndpoint: {serviceName: remoteServiceName},
-        tags: {
-          'http.path': path,
-          'http.status_code': '500',
-          error: '500'
-        }
-      }));
+    wrappedGot()(url(path), {retry: 0})
+      .then(response => {
+        done(new Error(`expected status 500 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '500',
+            error: '500'
+          }
+        });
+        done();
+      });
   });
 
   it('should report when endpoint doesnt exist in tags', done => {
     const path = '/badHost';
     const badUrl = `http://localhost:12345${path}`;
-    wrappedFetch()(badUrl)
+    wrappedGot()(badUrl, {retry: 0})
       .then(response => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
@@ -186,7 +191,7 @@ describe('fetch instrumentation - integration test', () => {
   });
 
   it('should support nested get requests', () => {
-    const client = wrappedFetch();
+    const client = wrappedGot();
 
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
@@ -204,7 +209,7 @@ describe('fetch instrumentation - integration test', () => {
   });
 
   it('should support parallel get requests', () => {
-    const client = wrappedFetch();
+    const client = wrappedGot();
 
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
@@ -221,4 +226,3 @@ describe('fetch instrumentation - integration test', () => {
     });
   });
 });
-

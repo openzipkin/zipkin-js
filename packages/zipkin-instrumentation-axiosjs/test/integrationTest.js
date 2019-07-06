@@ -91,10 +91,7 @@ describe('axios instrumentation - integration test', () => {
       })
       .catch(error => {
         const message = error.message;
-        const expected = [
-          'must be of type string', // node
-          'must be a string' // browser
-        ];
+        const expected = ['must be of type string', 'must be a string']; // messages can vary in CI
         if (message.indexOf(expected[0]) !== -1 || message.indexOf(expected[1]) !== -1) {
           done();
         } else {
