@@ -1,164 +1,227 @@
-const {Tracer, ExplicitContext, createNoopTracer} = require('zipkin');
-const express = require('express');
-const nodeFetch = require('node-fetch');
-const sinon = require('sinon');
+const {expect} = require('chai');
+const {
+  maybeMiddleware,
+  newSpanRecorder,
+  expectB3Headers,
+  expectSpan
+} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
+// defer lookup of node fetch until we know if we are node
 const wrapFetch = require('../src/wrapFetch');
 
-describe('wrapFetch', () => {
+describe('fetch instrumentation - integration test', () => {
   const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
 
-  before(function(done) {
-    const app = express();
-    app.post('/user', (req, res) => res.status(202).json({
-      traceId: req.header('X-B3-TraceId') || '?',
-      spanId: req.header('X-B3-SpanId') || '?'
-    }));
-    app.get('/user', (req, res) => res.status(202).json({}));
-    this.server = app.listen(0, () => {
-      this.port = this.server.address().port;
+  let server;
+  let baseURL = ''; // default to relative path, for browser-based tests
+
+  before((done) => {
+    const middleware = maybeMiddleware();
+    if (middleware !== null) {
+      server = middleware.listen(0, () => {
+        baseURL = `http://127.0.0.1:${server.address().port}`;
+        done();
+      });
+    } else { // Inside a browser
       done();
+    }
+  });
+
+  after(() => {
+    if (server) server.close();
+  });
+
+  let spans;
+  let tracer;
+
+  beforeEach(() => {
+    spans = [];
+    tracer = new Tracer({
+      ctxImpl: new ExplicitContext(),
+      localServiceName: serviceName,
+      recorder: newSpanRecorder(spans)
     });
   });
 
-  after(function(done) {
-    this.server.close(done);
-  });
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
 
-  it('should add instrumentation to "fetch"', function(done) {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
+  function wrappedFetch() {
+    let fetch;
+    if (server) { // defer loading node-fetch
+      fetch = require('node-fetch'); // eslint-disable-line global-require
+    } else {
+      fetch = window.fetch;
+    }
+    return wrapFetch(fetch, {tracer, remoteServiceName});
+  }
 
-    const fetch = wrapFetch(nodeFetch, {tracer, remoteServiceName: 'callee'});
+  function url(path) {
+    return `${baseURL}${path}?index=10&count=300`;
+  }
 
-    ctxImpl.scoped(() => {
-      const id = tracer.createChildId();
-      tracer.setId(id);
-
-      const host = '127.0.0.1';
-      const urlPath = '/user';
-      const url = `http://${host}:${this.port}${urlPath}`;
-      fetch(url, {method: 'post'})
-        .then(res => res.json())
-        .then(data => {
-          const annotations = record.args.map(args => args[0]);
-
-          // All annotations should have the same trace id and span id
-          const traceId = annotations[0].traceId.traceId;
-          const spanId = annotations[0].traceId.spanId;
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
-          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
-
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
-
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('POST');
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal(urlPath);
-
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('202');
-
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-
-          const traceIdOnServer = data.traceId;
-          expect(traceIdOnServer).to.equal(traceId);
-
-          const spanIdOnServer = data.spanId;
-          expect(spanIdOnServer).to.equal(spanId);
-        })
-        .then(done)
-        .catch(done);
+  function successSpan(path) {
+    return ({
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags: {
+        'http.path': path,
+        'http.status_code': '202'
+      }
     });
-  });
+  }
 
-  it('should not throw when using fetch without options', function(done) {
-    const tracer = createNoopTracer();
-    const fetch = wrapFetch(nodeFetch, {tracer});
-
-    const path = `http://127.0.0.1:${this.port}/user`;
-    fetch(path)
-      .then(res => res.json())
-      .then(() => {
-        done();
+  it('should not interfere with errors that precede a call', done => {
+    // Here we are passing a function instead of the value of it. This ensures our error callback
+    // doesn't make assumptions about a span in progress: there won't be if there was a config error
+    wrappedFetch()(url)
+      .then(response => {
+        done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
       })
-      .catch(done);
-  });
-
-  it('should not throw when using fetch with a request object', function(done) {
-    const tracer = createNoopTracer();
-    const fetch = wrapFetch(nodeFetch, {tracer});
-
-    const path = `http://127.0.0.1:${this.port}/user`;
-    const request = {url: path};
-    fetch(request)
-      .then(res => res.json())
-      .then(() => {
-        done();
-      })
-      .catch(done);
-  });
-
-  it('should record error', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
-
-    const fetch = wrapFetch(nodeFetch, {tracer, remoteServiceName: 'callee'});
-
-    ctxImpl.scoped(() => {
-      const id = tracer.createChildId();
-      tracer.setId(id);
-
-      const host = 'domain.invalid';
-      const url = `http://${host}`;
-      fetch(url, {method: 'post'})
-        .then(() => expect.fail())
-        .catch(() => {
-          const annotations = record.args.map(args => args[0]);
-
-          // All annotations should have the same trace id and span id
-          const traceId = annotations[0].traceId.traceId;
-          const spanId = annotations[0].traceId.spanId;
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
-          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal(spanId));
-
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
-
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('POST');
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal('/');
-
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-          expect(annotations[4].annotation.serviceName).to.equal('callee');
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('error');
-          expect(annotations[5].annotation.value)
-            .to.contain('getaddrinfo ENOTFOUND domain.invalid');
-
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-
-          expect(annotations[7]).to.be.undefined; // eslint-disable-line no-unused-expressions
+      .catch(error => {
+        const message = error.message;
+        const expected = [
+          'must be of type string', // node
+          'must be a string' // browser
+        ];
+        if (message.indexOf(expected[0]) !== -1 || message.indexOf(expected[1]) !== -1) {
           done();
+        } else {
+          done(new Error(`expected error message to match [${expected.toString()}]: ${message}`));
+        }
+      });
+  });
+
+  it('should add headers to requests', () => {
+    const path = '/weather/wuhan';
+    return wrappedFetch()(url(path))
+      .then(response => response.json()) // json() returns a promise
+      .then(json => expectB3Headers(popSpan(), json));
+  });
+
+
+  it('should support get request', () => {
+    const path = '/weather/wuhan';
+    return wrappedFetch()(url(path))
+      .then(() => expectSpan(popSpan(), successSpan(path)));
+  });
+
+  it('should support options request', () => {
+    const path = '/weather/wuhan';
+    return wrappedFetch()({url: url(path), method: 'GET'})
+      .then(() => expectSpan(popSpan(), successSpan(path)));
+  });
+
+  it('should report 404 in tags', () => {
+    const path = '/pathno';
+    return wrappedFetch()(url(path))
+      .then(() => expectSpan(popSpan(), {
+        name: 'get',
+        kind: 'CLIENT',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'http.path': path,
+          'http.status_code': '404',
+          error: '404'
+        }
+      }));
+  });
+
+  it('should report 400 in tags', () => {
+    const path = '/weather/securedTown';
+    return wrappedFetch()(url(path))
+      .then(() => expectSpan(popSpan(), {
+        name: 'get',
+        kind: 'CLIENT',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'http.path': path,
+          'http.status_code': '400',
+          error: '400'
+        }
+      }));
+  });
+
+  it('should report 500 in tags', () => {
+    const path = '/weather/bagCity';
+    return wrappedFetch()(url(path))
+      .then(() => expectSpan(popSpan(), {
+        name: 'get',
+        kind: 'CLIENT',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'http.path': path,
+          'http.status_code': '500',
+          error: '500'
+        }
+      }));
+  });
+
+  it('should report when endpoint doesnt exist in tags', done => {
+    const path = '/badHost';
+    const badUrl = `http://localhost:12345${path}`;
+    wrappedFetch()(badUrl)
+      .then(response => {
+        done(new Error(`expected an invalid host to error. status: ${response.status}`));
+      })
+      .catch(error => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            error: error.toString()
+          }
         });
+        done();
+      });
+  });
+
+  it('should support nested get requests', () => {
+    const client = wrappedFetch();
+
+    const beijing = '/weather/beijing';
+    const wuhan = '/weather/wuhan';
+
+    const getBeijingWeather = client(url(beijing));
+    const getWuhanWeather = client(url(wuhan));
+
+    return getBeijingWeather.then(() => {
+      getWuhanWeather.then(() => {
+        // since these are sequential, we should have an expected order
+        expectSpan(popSpan(), successSpan(wuhan));
+        expectSpan(popSpan(), successSpan(beijing));
+      });
+    });
+  });
+
+  it('should support parallel get requests', () => {
+    const client = wrappedFetch();
+
+    const beijing = '/weather/beijing';
+    const wuhan = '/weather/wuhan';
+
+    const getBeijingWeather = client(url(beijing));
+    const getWuhanWeather = client(url(wuhan));
+
+    return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
+      // since these are parallel, we have an unexpected order
+      const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
+      const secondPath = firstPath === wuhan ? beijing : wuhan;
+      expectSpan(popSpan(), successSpan(firstPath));
+      expectSpan(popSpan(), successSpan(secondPath));
     });
   });
 });
+
