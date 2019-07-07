@@ -19,26 +19,38 @@ const {Instrumentation} = require('zipkin');
 const plugin = ({tracer, serviceName, remoteServiceName}) => {
   const instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
 
-  return (req) => tracer.scoped(() => {
+  return (req) => {
     const {method, url} = req;
-    const {headers} = instrumentation.recordRequest(req, url, method);
-    // must get id ONLY AFTER recordRequest
-    const traceId = tracer.id;
 
-    const recordResponse = (res) => {
+    // capture the trace ID from recording the start of the request
+    let traceId;
+    const {headers} = tracer.scoped(() => {
+      const injected = instrumentation.recordRequest(req, url, method);
+      traceId = tracer.id;
+      return injected;
+    });
+
+    // We can't use end() as the caller might be using it.
+    // The following avoids double-recording on error as 4xx and 5xx are treated as errors.
+    let done = false;
+    const recordResponse = (res) => tracer.scoped(() => {
+      if (done) return;
+      done = true;
       instrumentation.recordResponse(traceId, res.statusCode);
-    };
+    });
 
-    const recordError = (error) => {
+    const recordError = (error) => tracer.scoped(() => {
+      if (done) return;
+      done = true;
       instrumentation.recordError(traceId, error);
-    };
+    });
 
     req.set(headers);
     req.on('response', recordResponse);
     req.on('error', recordError);
 
     return req;
-  });
+  };
 };
 
 module.exports = plugin;
