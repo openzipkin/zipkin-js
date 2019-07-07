@@ -103,11 +103,11 @@ class GrpcClientInstrumentation {
    * @param {grpc.Status} status
    */
   onReceiveStatus(traceId, status) {
-    const {code} = status;
+    const {code} = status; // TODO: In brave this is a string like UNKNOWN not a number
     this.tracer.letId(traceId, () => {
       if (code !== this.grpc.status.OK) {
         this.tracer.recordBinary('grpc.status_code', String(code));
-        this.tracer.recordBinary('error', String(code));
+        this.tracer.recordBinary('error', status.details || String(code));
       }
       this.tracer.recordAnnotation(new Annotation.ClientRecv());
     });
