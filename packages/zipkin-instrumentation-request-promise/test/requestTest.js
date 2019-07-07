@@ -4,8 +4,6 @@ import nock from 'nock';
 import {Request, wrapRequest} from '../src/request';
 import {makeTracer, makeTraceId} from './utils';
 
-const {log} = console;
-
 let server;
 const setup = () => {
   server = nock(/disneyland\.test/);
@@ -29,7 +27,6 @@ describe(__filename, () => {
         return req.send({
           uri: 'http://disneyland.test/accounts/1100',
         }).then((body) => {
-          log(body);
           assert.equal(body, 'ok');
           assert.equal(tracer.id.traceId, id1.traceId);
           // alter traceId
@@ -42,27 +39,20 @@ describe(__filename, () => {
       it('Should tracerId = id2 after yield', function* fn() {
         const id1 = makeTraceId();
         const id2 = makeTraceId();
-        log('current id:', tracer.id.traceId);
-        log('traceId id1:', id1.traceId);
-        log('traceId id2:', id2.traceId);
         tracer.setId(id1);
         const req = new Request(tracer);
-        const resolvedId = yield tracer.letId(id2, () => {
-          log('mm:', tracer.id.traceId);
-          return req.send({
+        const resolvedId = yield tracer.letId(id2, () =>
+          req.send({
             uri: 'http://disneyland.test/students',
             json: true,
           }).then((body) => {
-            log('response body: ', body);
             assert.equal(body[0], 'me');
           }).then(() => {
-            log('Callback2');
             assert.equal(tracer.id.traceId, id2.traceId);
             return tracer.id.traceId;
-          });
-        });
-        log('Data: ', resolvedId);
-        log('traceId should be restore to id2:', id2.traceId);
+          })
+        );
+        // traceId should be restored to id2
         assert.equal(tracer.id.traceId, id2.traceId);
         assert.equal(resolvedId, id2.traceId);
       });
@@ -70,9 +60,6 @@ describe(__filename, () => {
       it('Should restore after callback ', (done) => {
         const id1 = makeTraceId();
         const id2 = makeTraceId();
-        log('current id:', tracer.id.traceId);
-        log('traceId id1:', id1.traceId);
-        log('traceId id2:', id2.traceId);
         tracer.setId(id1);
         const req = new Request(tracer);
         tracer.letId(id2, () => {
@@ -80,16 +67,14 @@ describe(__filename, () => {
             uri: 'http://disneyland.test/food',
             json: true,
           }).catch((err) => {
-            log('response body: ', JSON.stringify(err));
             assert.equal(err.statusCode, '300');
             assert.equal(err.body[0], 'sushi');
           }).catch(() => {
-            log('Callback2');
             assert.equal(tracer.id.traceId, id2.traceId);
             done();
           });
         });
-        log('traceId should be restore to id1:', id1.traceId);
+        // traceId should be restored to id1
         assert.equal(tracer.id.traceId, id1.traceId);
       });
 
@@ -101,14 +86,12 @@ describe(__filename, () => {
           resolveWithFullResponse: true,
           simple: false,
         }).then((resp) => {
-          log('Callack1:', resp.request.path);
           assert.equal(resp.body.name, 'Martin');
           return Promise.resolve(30);
         }).then((data) => {
           assert.equal(data, 30);
           return data;
         });
-        log('Data: ', resolvedData);
         assert.equal(resolvedData, 30);
       });
     });
@@ -126,7 +109,6 @@ describe(__filename, () => {
       return request({
         uri: 'http://disneyland.test/accounts/1100',
       }).then((body) => {
-        log(body);
         assert.equal(body, 'ok');
         assert.equal(tracer.id.traceId, id1.traceId);
         // alter traceId
@@ -139,27 +121,20 @@ describe(__filename, () => {
     it('Should tracerId = id2 after yield', function* fn() {
       const id1 = makeTraceId();
       const id2 = makeTraceId();
-      log('current id:', tracer.id.traceId);
-      log('traceId id1:', id1.traceId);
-      log('traceId id2:', id2.traceId);
       tracer.setId(id1);
       const req = wrapRequest(tracer);
-      const resolvedId = yield tracer.letId(id2, () => {
-        log('mm:', tracer.id.traceId);
-        return req({
+      const resolvedId = yield tracer.letId(id2, () =>
+        req({
           uri: 'http://disneyland.test/students',
           json: true,
         }).then((body) => {
-          log('response body: ', body);
           assert.equal(body[0], 'me');
         }).then(() => {
-          log('Callback2');
           assert.equal(tracer.id.traceId, id2.traceId);
           return tracer.id.traceId;
-        });
-      });
-      log('Data: ', resolvedId);
-      log('traceId should be restore to id2:', id2.traceId);
+        })
+      );
+      // traceId should be restore to id2
       assert.equal(tracer.id.traceId, id2.traceId);
       assert.equal(resolvedId, id2.traceId);
     });
@@ -167,9 +142,6 @@ describe(__filename, () => {
     it('Should restore after callback ', (done) => {
       const id1 = makeTraceId();
       const id2 = makeTraceId();
-      log('current id:', tracer.id.traceId);
-      log('traceId id1:', id1.traceId);
-      log('traceId id2:', id2.traceId);
       tracer.setId(id1);
       request = wrapRequest(tracer);
       tracer.letId(id2, () => {
@@ -177,16 +149,14 @@ describe(__filename, () => {
           uri: 'http://disneyland.test/food',
           json: true,
         }).catch((err) => {
-          log('response body: ', JSON.stringify(err));
           assert.equal(err.statusCode, '300');
           assert.equal(err.body[0], 'sushi');
         }).catch(() => {
-          log('Callback2');
           assert.equal(tracer.id.traceId, id2.traceId);
           done();
         });
       });
-      log('traceId should be restore to id1:', id1.traceId);
+      // traceId should be restored to id1
       assert.equal(tracer.id.traceId, id1.traceId);
     });
 
@@ -198,14 +168,12 @@ describe(__filename, () => {
         resolveWithFullResponse: true,
         simple: false,
       }).then((resp) => {
-        log('Callack1:', resp.request.path);
         assert.equal(resp.body.name, 'Martin');
         return Promise.resolve(30);
       }).then((data) => {
         assert.equal(data, 30);
         return data;
       });
-      log('Data: ', resolvedData);
       assert.equal(resolvedData, 30);
     });
   });

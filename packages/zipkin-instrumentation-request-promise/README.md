@@ -10,13 +10,16 @@ The library provides two ways to instrument your request. You have the `wrapRequ
 const {Tracer, ExplicitContext, ConsoleRecorder} = require('zipkin');
 const {wrapRequest} = require('zipkin-instrumentation-request-promise');
 
+const request = require('request-promise');
+const {wrapRequest} = require('../src/request');
+
 const ctxImpl = new ExplicitContext();
 const recorder = new ConsoleRecorder();
 const localServiceName = 'service-a'; // name of this application
 const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
 const remoteServiceName = 'weather-api';
-const request = wrapRequest(tracer);
+const request = wrapRequest(request, {tracer, remoteServiceName});
 
 request({
     url: 'http://api.weather.com',
@@ -42,7 +45,7 @@ const localServiceName = 'service-a'; // name of this application
 const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
 const remoteServiceName = 'weather-api';
-const request = new ZipkinRequest(tracer);
+const request = new ZipkinRequest(tracer, remoteServiceName);
 
 request.get('http://api.weather.com')
   .then(function(body, response) {

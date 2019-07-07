@@ -2,7 +2,6 @@ import {assert} from 'chai';
 import {Deferred, Promise as CustomPromise} from '../src/promise';
 import {makeTracer} from './utils';
 
-const {log} = console;
 const EMPTY_OBJ = {};
 const promise = new CustomPromise((resolve) => {
   resolve(EMPTY_OBJ);
@@ -12,19 +11,15 @@ describe(__filename, () => {
   describe('Deferred', () => {
     const tracer = makeTracer();
     it('Callbacks should run in order', () => {
-      log('root traceId:', tracer.id.traceId);
       const t = new Deferred(tracer);
       const p = t.promise;
       p.then((data) => {
-        log('CB1', data);
         assert.equal(data, 35);
         return 40;
       }).then((data) => {
-        log('CB2', data);
         assert.equal(data, 40);
         return Promise.resolve(600);
       }).then((data) => {
-        log('CB3', data);
         assert.equal(data, 600);
       });
       t.resolve(35);
@@ -43,15 +38,13 @@ describe(__filename, () => {
         });
       setTimeout(done, 2000);
     });
-    it('Throwing error should reject the promise', (done) => {
-      const p1 = new CustomPromise(() => {
+    it('Throwing error should reject the promise', () =>
+      new CustomPromise(() => {
         throw new Error('Life is ruff');
-      });
-      p1.catch((e) => {
+      }).catch((e) => {
         assert.equal('Life is ruff', e.message);
-        done();
-      });
-    });
+      })
+    );
     it('Chaining callbacks', (done) => {
       const p1 = new CustomPromise((resolve) => {
         resolve(100);
@@ -88,8 +81,7 @@ describe(__filename, () => {
     describe('if resolver is not a function', () => {
       it('must throw a `TypeError`', () => {
         try {
-          const prms = new CustomPromise({});
-          log(prms);
+          new CustomPromise({}); // eslint-disable-line no-new
         } catch (ex) {
           assert(ex instanceof TypeError);
           return;
@@ -99,20 +91,18 @@ describe(__filename, () => {
     });
     describe('if resolver is a function', () => {
       it('must be called with the promise\'s resolver arguments', (done) => {
-        const prms = new CustomPromise((resolve, reject) => {
+        new CustomPromise((resolve, reject) => { // eslint-disable-line no-new
           assert(typeof resolve === 'function');
           assert(typeof reject === 'function');
           done();
         });
-        log(prms);
       });
       it('must be called immediately, before `Promise` returns', () => {
         let called = false;
-        const prms = new CustomPromise(() => {
+        new CustomPromise(() => { // eslint-disable-line no-new
           called = true;
         });
         assert(called);
-        log(prms);
       });
     });
     describe('Calling resolve(x)', () => {

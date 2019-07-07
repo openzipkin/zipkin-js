@@ -21,11 +21,7 @@ const normalizeParameter = function(param) {
 const Request = class {
   constructor(tracer, remoteServiceName) {
     this.tracer = tracer;
-    this.instrumentation =
-      new Instrumentation.HttpClient({
-        tracer,
-        remoteServiceName,
-      });
+    this.instrumentation = new Instrumentation.HttpClient({tracer, remoteServiceName});
 
     /**
      * This section is very important, it guarantees correct trace duration
