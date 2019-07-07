@@ -1,136 +1,206 @@
-import uuid from 'uuid/v4';
-import CLSContext from 'zipkin-context-cls';
-import {Tracer} from 'zipkin';
-import sinon from 'sinon';
+const {expect} = require('chai');
+const {
+  maybeMiddleware,
+  newSpanRecorder,
+  expectB3Headers,
+  expectSpan
+} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
 import request from 'superagent';
 import zipkinPlugin from '../src/superagentPlugin';
-import {mockServer} from './utils';
 
-describe('SuperAgent instrumentation (integration test)', () => {
-  const localServiceName = 'test-client';
-  const remoteServiceName = 'test-server';
+// NOTE: axiosjs raises an error on non 2xx status instead of passing to the normal callback.
+describe('SuperAgent instrumentation - integration test', () => {
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
 
   let server;
+  let baseURL = ''; // default to relative path, for browser-based tests
+
   before((done) => {
-    const mock = mockServer();
-    server = mock.listen(0, () => done());
+    const middleware = maybeMiddleware();
+    if (middleware !== null) {
+      server = middleware.listen(0, () => {
+        baseURL = `http://127.0.0.1:${server.address().port}`;
+        done();
+      });
+    } else { // Inside a browser
+      done();
+    }
   });
 
-  after((done) => {
-    server.close(() => done());
+  after(() => {
+    if (server) server.close();
   });
 
-  let record;
-  let recorder;
-  let ctxImpl;
+  let spans;
   let tracer;
 
   beforeEach(() => {
-    record = sinon.spy();
-    recorder = {record};
-    ctxImpl = new CLSContext(`zipkin-test-${uuid()}`);
-    tracer = new Tracer({recorder, ctxImpl, localServiceName});
-  });
-
-  it('should record successful request', done => {
-    tracer.scoped(() => {
-      const port = server.address().port;
-      const host = '127.0.0.1';
-      const path = '/test/202';
-
-      request.get(`http://${host}:${port}${path}`)
-        .use(zipkinPlugin({tracer, remoteServiceName}))
-        .end((err, res) => {
-          const {body} = res;
-          const annotations = record.args.map(args => args[0]);
-          const traceId = annotations[0].traceId.traceId;
-          const spanId = annotations[0].traceId.spanId;
-
-          annotations.forEach(annot => {
-            expect(annot.traceId.traceId).to.equal(traceId).and.to.have.lengthOf(16);
-          });
-
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal(localServiceName);
-
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('GET');
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal(path);
-
-          expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-          expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('202');
-
-          expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-
-          const traceIdOnServer = body.traceId;
-          expect(traceIdOnServer).to.equal(traceId);
-
-          const spanIdOnServer = body.spanId;
-          expect(spanIdOnServer).to.equal(spanId);
-          done();
-        });
+    spans = [];
+    tracer = new Tracer({
+      ctxImpl: new ExplicitContext(),
+      localServiceName: serviceName,
+      recorder: newSpanRecorder(spans)
     });
   });
 
-  it('should report 404 when path does not exist', done => {
-    tracer.scoped(() => {
-      const port = server.address().port;
-      const host = '127.0.0.1';
-      const path = '/test/303';
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
 
-      request.get(`http://${host}:${port}${path}`)
-        .use(zipkinPlugin({tracer, remoteServiceName}))
-        .end(() => {
-          const annotations = record.args.map(args => args[0]);
-          const traceId = annotations[0].traceId.traceId;
+  function get(urlToGet) {
+    return request.get(urlToGet).use(zipkinPlugin({tracer, remoteServiceName}));
+  }
 
-          annotations.forEach(annot => {
-            expect(annot.traceId.traceId).to.equal(traceId).and.to.have.lengthOf(16);
-          });
+  function url(path) {
+    return `${baseURL}${path}?index=10&count=300`;
+  }
 
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('404');
+  function successSpan(path) {
+    return ({
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags: {
+        'http.path': path,
+        'http.status_code': '202'
+      }
+    });
+  }
 
-          expect(annotations[6].annotation.key).to.equal('error');
-          expect(annotations[6].annotation.value).to.equal('404');
-          done();
+  it('should add headers to requests', () => {
+    const path = '/weather/wuhan';
+    return get(url(path))
+      .then(response => expectB3Headers(popSpan(), response.body));
+  });
+
+  it('should support get request', () => {
+    const path = '/weather/wuhan';
+    return get(url(path))
+      .then(() => expectSpan(popSpan(), successSpan(path)));
+  });
+
+  it('should report 404 in tags', done => {
+    const path = '/pathno';
+    get(url(path))
+      .then(response => {
+        done(new Error(`expected status 404 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '404',
+            error: '404'
+          }
         });
+        done();
+      });
+  });
+
+  it('should report 400 in tags', done => {
+    const path = '/weather/securedTown';
+    get(url(path))
+      .then(response => {
+        done(new Error(`expected status 400 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '400',
+            error: '400'
+          }
+        });
+        done();
+      });
+  });
+
+  it('should report 500 in tags', done => {
+    const path = '/weather/bagCity';
+    get(url(path))
+      .then(response => {
+        done(new Error(`expected status 500 response to error. status: ${response.status}`));
+      })
+      .catch(() => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            'http.status_code': '500',
+            error: '500'
+          }
+        });
+        done();
+      });
+  });
+
+  it('should report when endpoint doesnt exist in tags', done => {
+    const path = '/badHost';
+    const badUrl = `http://localhost:12345${path}`;
+    get(badUrl)
+      .then(response => {
+        done(new Error(`expected an invalid host to error. status: ${response.status}`));
+      })
+      .catch(error => {
+        expectSpan(popSpan(), {
+          name: 'get',
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'http.path': path,
+            error: error.toString()
+          }
+        });
+        done();
+      });
+  });
+
+  it('should support nested get requests', () => {
+    const beijing = '/weather/beijing';
+    const wuhan = '/weather/wuhan';
+
+    const getBeijingWeather = get(url(beijing));
+    const getWuhanWeather = get(url(wuhan));
+
+    return getBeijingWeather.then(() => {
+      getWuhanWeather.then(() => {
+        // since these are sequential, we should have an expected order
+        expectSpan(popSpan(), successSpan(wuhan));
+        expectSpan(popSpan(), successSpan(beijing));
+      });
     });
   });
 
-  it('should report error when service returns 400', done => {
-    tracer.scoped(() => {
-      const port = server.address().port;
-      const host = '127.0.0.1';
-      const path = '/test/400';
+  it('should support parallel get requests', () => {
+    const beijing = '/weather/beijing';
+    const wuhan = '/weather/wuhan';
 
-      request.get(`http://${host}:${port}${path}`)
-        .use(zipkinPlugin({tracer, remoteServiceName}))
-        .end(() => {
-          const annotations = record.args.map(args => args[0]);
-          const traceId = annotations[0].traceId.traceId;
+    const getBeijingWeather = get(url(beijing));
+    const getWuhanWeather = get(url(wuhan));
 
-          annotations.forEach(annot => {
-            expect(annot.traceId.traceId).to.equal(traceId).and.to.have.lengthOf(16);
-          });
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('400');
-
-          expect(annotations[6].annotation.key).to.equal('error');
-          expect(annotations[6].annotation.value).to.equal('400');
-          done();
-        });
+    return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
+      // since these are parallel, we have an unexpected order
+      const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
+      const secondPath = firstPath === wuhan ? beijing : wuhan;
+      expectSpan(popSpan(), successSpan(firstPath));
+      expectSpan(popSpan(), successSpan(secondPath));
     });
   });
 });

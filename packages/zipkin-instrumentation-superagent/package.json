@@ -5,7 +5,7 @@
   "main": "lib/superagentPlugin.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --exit --require ../../test/helper.js",
+    "test": "mocha --require ../../test/helper.js --require @babel/register",
     "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
@@ -14,7 +14,7 @@
   "repository": "https://github.com/openzipkin/zipkin-js",
   "devDependencies": {
     "nock": "^9.0.14",
-    "superagent": "^4.0.0",
+    "superagent": "^5.1.0",
     "zipkin": "^0.18.4"
   }
 }
