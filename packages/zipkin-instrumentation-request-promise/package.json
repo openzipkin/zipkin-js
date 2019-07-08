@@ -5,7 +5,7 @@
   "main": "lib/request.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --require ../../test/helper.js --require @babel/register --require @babel/polyfill",
+    "test": "mocha --exit --require ../../test/helper.js --require @babel/register --require @babel/polyfill",
     "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js --require @babel/register --require @babel/polyfill",
     "prepublish": "npm run build"
   },

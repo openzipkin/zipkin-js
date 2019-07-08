@@ -1,118 +1,106 @@
-const sinon = require('sinon');
-const {Tracer, ExplicitContext} = require('zipkin');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
 const zipkinClient = require('../src/zipkinClient');
-
-const memcachedConnectionOptions = {
-  timeout: 1000,
-  idle: 1000,
-  failures: 0,
-  retries: 0,
-  poolsize: 1
-};
-
 const Memcached = require('memcached');
 
-function getMemcached(tracer) {
-  const host = process.env.MEMCACHED_HOST || 'localhost:11211';
-  console.log(`Connecting to Memcached on host ${host}`);
-  return new (zipkinClient(tracer, Memcached))(host, memcachedConnectionOptions);
-}
+// This instrumentation records metadata, but does not affect memcached requests otherwise. Hence,
+// these tests do not expect B3 headers.
+describe('memcached instrumentation (integration test)', () => {
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
 
-describe('memcached interceptor', () => {
-  it('should add zipkin annotations', (done) => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
-    // const recorder = new ConsoleRecorder();
-    const tracer = new Tracer({ctxImpl, recorder});
+  let spans;
+  let tracer;
 
-    const memcached = getMemcached(tracer);
-    memcached.on('error', done);
-    tracer.setId(tracer.createRootId());
-    const ctx = ctxImpl.getContext();
-    memcached.set('ping', 'pong', 10, () => {
-      ctxImpl.letContext(ctx, () => {
-        memcached.get('ping', () => {
-          const annotations = recorder.record.args.map(args => args[0]);
-          const firstAnn = annotations[0];
-
-          expect(annotations).to.have.length(12);
-
-          function runTest(start, stop) {
-            const spanAnnotations = annotations.slice(start, stop);
-
-            const sn = spanAnnotations[1].annotation;
-            expect(sn.annotationType).to.equal('ServiceName');
-            expect(sn.serviceName).to.equal('unknown');
-
-            const sa = spanAnnotations[4].annotation;
-            expect(sa.annotationType).to.equal('ServerAddr');
-            expect(sa.serviceName).to.equal('memcached');
-
-            let lastSpanId;
-            spanAnnotations.forEach((ann) => {
-              if (!lastSpanId) {
-                lastSpanId = ann.traceId.spanId;
-              }
-              expect(ann.traceId.spanId).to.equal(lastSpanId);
-            });
-          }
-
-          // we expect two spans, run annotations tests for each
-          runTest(0, annotations.length / 2);
-          runTest(annotations.length / 2, annotations.length);
-
-          expect(
-            annotations[0].traceId.spanId
-          ).not.to.equal(annotations[annotations.length / 2].traceId.spanId);
-
-          annotations.forEach(ann => {
-            expect(ann.traceId.parentSpanId.getOrElse()).to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
-            expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
-          });
-          done();
-        });
-      });
+  beforeEach(() => {
+    spans = [];
+    tracer = new Tracer({
+      localServiceName: serviceName,
+      ctxImpl: new ExplicitContext(),
+      recorder: newSpanRecorder(spans)
     });
   });
 
-  it('should run memcached calls', done => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: () => { }};
-    const tracer = new Tracer({ctxImpl, recorder});
-    const memcached = getMemcached(tracer);
-    memcached.on('error', done);
+  // TODO: pull into http tests also
+  afterEach(() => expect(spans).to.be.empty);
+
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
+
+  function clientSpan(name, tags) {
+    return ({
+      name,
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags
+    });
+  }
+
+  function getClient(host = process.env.MEMCACHED_HOST || 'localhost:11211') {
+    return new (zipkinClient(tracer, Memcached, serviceName, remoteServiceName))(host, {
+      timeout: 1000,
+      idle: 1000,
+      failures: 0,
+      retries: 0,
+      poolsize: 1
+    });
+  }
+
+  it('should record successful request', done =>
+    getClient().set('ping', 'pong', 10, err => {
+      if (err) return done(err);
+
+      expectSpan(popSpan(), clientSpan('set', {'memcached.key': 'ping'}));
+      return done();
+    })
+  );
+
+  it('should report error in tags on transport error', done =>
+    getClient('localhost:12345').set('scooby', 'doo', 10, (err, data) => {
+      if (!err) return done(new Error(`expected response to error: ${data}`));
+
+      expectSpan(popSpan(), clientSpan('set', {
+        'memcached.key': 'scooby',
+        error: 'connect ECONNREFUSED 127.0.0.1:12345'
+      }));
+      return done();
+    })
+  );
+
+  it('should handle nested requests', done => {
+    const memcached = getClient();
     memcached.set('foo', 'bar', 10, err => {
-      if (err) {
-        done(err);
-      } else {
-        memcached.getMulti(['foo', 'fox'], (err2, data) => {
-          if (err2) {
-            done(err2);
-          } else {
-            expect(data).to.deep.equal({foo: 'bar'});
-            done();
-          }
-        });
-      }
+      if (err) return done(err);
+
+      expectSpan(popSpan(), clientSpan('set', {'memcached.key': 'foo'}));
+      return memcached.getMulti(['foo', 'fox'], (err2, data) => {
+        if (err2) return done(err2);
+
+        expect(data).to.deep.equal({foo: 'bar'});
+        expectSpan(popSpan(), clientSpan('get-multi', {'memcached.keys': 'foo,fox'}));
+        return done();
+      });
     });
   });
 
+  // TODO: add to all client tests
   it('should restore original trace ID', done => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: () => { }};
-    const tracer = new Tracer({ctxImpl, recorder});
-    const fakeID = tracer.createRootId();
-    tracer.setId(fakeID);
-    const memcached = getMemcached(tracer);
-    memcached.on('error', done);
-    memcached.set('scooby', 'doo', 10, () => {
-      expect(tracer.id.traceId).to.equal(fakeID.traceId);
-      memcached.get('scooby', (err, data) => {
-        expect(tracer.id.traceId).to.equal(fakeID.traceId);
-        expect(data).to.equal('doo');
-        done();
-      });
+    const rootId = tracer.createRootId();
+    tracer.setId(rootId);
+
+    getClient().set('scooby', 'doo', 10, err => {
+      if (err) return done(err);
+
+      // the recorded span is a child of the original
+      expect(tracer.id.spanId).to.equal(popSpan().parentId);
+
+      // the original span ID is now current
+      expect(tracer.id.traceId).to.equal(rootId.traceId);
+      return done();
     });
   });
 });

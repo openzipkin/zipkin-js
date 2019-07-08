@@ -1,5 +1,7 @@
 const {Annotation} = require('zipkin');
 
+// TODO: function wrapMemcached(memcached, options = {})
+// as it is easy to get the service name and remote service name wrong when using positional args
 module.exports = function zipkinClient(
   tracer,
   Memcached,
@@ -10,6 +12,10 @@ module.exports = function zipkinClient(
     const originalId = tracer.id;
     return function zipkinCallback(...args) {
       tracer.letId(id, () => {
+        const error = args[0];
+        if (error) {
+          tracer.recordBinary('error', error.message || String(error));
+        }
         // TODO: parse host and port from details in callback
         // https://github.com/3rd-Eden/memcached#details-object
         tracer.recordAnnotation(new Annotation.ServerAddr({
@@ -59,7 +65,7 @@ module.exports = function zipkinClient(
       const callback = args.pop();
       const id = tracer.createChildId();
       tracer.letId(id, () => {
-        commonAnnotations(key);
+        commonAnnotations(key === 'getMulti' ? 'get-multi' : key);
         if (annotator) {
           annotator.apply(this, args);
         } else {

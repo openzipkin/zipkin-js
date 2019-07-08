@@ -14,7 +14,7 @@ const tracer = new Tracer({ctxImpl, recorder, localServiceName});
 
 const connectionString = ''localhost:11211'';
 const options = {timeout: 1000};
-const memcached = new(zipkinClient(tracer, Memcached))(connectionString, options);
+const memcached = new (zipkinClient(tracer, Memcached))(connectionString, options);
 
 // Your application code here
 memcached.get('foo', (err, data) => {
