@@ -1,119 +1,119 @@
-const sinon = require('sinon');
-const {Tracer, ExplicitContext, BatchRecorder} = require('zipkin');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
 const zipkinClient = require('../src/zipkinClient');
+const postgres = require('pg');
+delete postgres.native; // because we used to, that's why
 
-const postgresConnectionOptions = {
-  host: '127.0.0.1',
-  port: 5432,
-  database: 'postgres',
-  user: 'postgres',
-  password: process.env.POSTGRES_PWD
-};
+// This instrumentation records metadata, but does not affect postgres requests otherwise. Hence,
+// these tests do not expect B3 headers.
+describe('Postgres instrumentation (integration test)', () => {
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
 
-const Postgres = require('pg');
-delete Postgres.native;
+  let spans;
+  let tracer;
 
-function getPostgres(tracer) {
-  return zipkinClient(tracer, Postgres);
-}
+  beforeEach(() => {
+    spans = [];
+    tracer = new Tracer({
+      localServiceName: serviceName,
+      ctxImpl: new ExplicitContext(),
+      recorder: newSpanRecorder(spans)
+    });
+  });
 
-function expectCorrectSpanData(span) {
-  expect(span.name).to.equal(`query ${postgresConnectionOptions.database}`);
-  expect(span.localEndpoint.serviceName).to.equal('unknown');
-  expect(span.remoteEndpoint.serviceName).to.equal('postgres');
-  expect(span.remoteEndpoint.ipv4).to.equal(postgresConnectionOptions.host);
-  expect(span.remoteEndpoint.port).to.equal(postgresConnectionOptions.port);
-}
+  // TODO: pull into http tests also
+  afterEach(() => expect(spans).to.be.empty);
 
-describe('postgres interceptor', () => {
-  it('should add zipkin annotations', (done) => {
-    const logSpan = sinon.spy();
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
 
-    const ctxImpl = new ExplicitContext();
-    const recorder = new BatchRecorder({logger: {logSpan}});
-    const tracer = new Tracer({ctxImpl, recorder});
-    tracer.setId(tracer.createRootId());
+  function clientSpan(name, tags) {
+    const result = {
+      name,
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {
+        port: '5432',
+        serviceName: remoteServiceName
+      },
+    };
+    if (tags) result.tags = tags;
+    return result;
+  }
 
-    const postgres = new (getPostgres(tracer).Client)(postgresConnectionOptions);
-    postgres.connect();
-    postgres.query('SELECT NOW()', () => {
-      postgres.query('SELECT NOW()').then(() => {
-        const query = new Postgres.Query('SELECT NOW()');
-        const result = postgres.query(query);
-        result.on('end', () => {
-          const spans = logSpan.args.map(arg => arg[0]);
-          expect(spans).to.have.length(3);
-          spans.forEach(expectCorrectSpanData);
+  function getClient(done, options = {}) {
+    const traced = zipkinClient(tracer, postgres, serviceName, remoteServiceName);
+    const host = options.host || 'localhost:5432';
+    let clientFunction = (pg, args) => new pg.Client(args);
+    if (options.clientFunction) {
+      clientFunction = options.clientFunction;
+    }
+    const result = clientFunction(traced, {
+      host: host.split(':')[0],
+      port: host.split(':')[1],
+      database: 'postgres',
+      user: 'postgres',
+      password: process.env.POSTGRES_PWD
+    });
+    result.connect();
+    if (options.expectFail || false) result.on('error', err => done(err));
+    return result;
+  }
 
+  it('should record successful request', done =>
+    getClient(done).query('SELECT NOW()', () => {
+      // TODO: this span name is the same for everything and so offers little value
+      expectSpan(popSpan(), clientSpan('query postgres'));
+      done();
+    })
+  );
+
+  it('should record successful request :: pool', done =>
+    getClient(done, {clientFunction: (pg, args) => new pg.Pool(args)})
+      .query('SELECT NOW()', () => {
+        expectSpan(popSpan(), clientSpan('query postgres'));
+        done();
+      })
+  );
+
+  // this chains to show 3 forms of error handling
+  it('should report error in tags', done => {
+    const client = getClient(done, {expectFail: true});
+
+    client.query('INVALID QUERY', () => {
+      expectSpan(popSpan(), clientSpan('query postgres', {
+        error: 'syntax error at or near "INVALID"'
+      }));
+
+      client.query('ERROR QUERY').catch(() => {
+        expectSpan(popSpan(), clientSpan('query postgres', {
+          error: 'syntax error at or near "ERROR"'
+        }));
+
+        client.query(new postgres.Query('FAILED QUERY()')).on('error', () => {
+          expectSpan(popSpan(), clientSpan('query postgres', {
+            error: 'syntax error at or near "FAILED"'
+          }));
           done();
         });
       });
     });
   });
 
-  it('should annotate pool', (done) => {
-    const logSpan = sinon.spy();
-
-    const ctxImpl = new ExplicitContext();
-    const recorder = new BatchRecorder({logger: {logSpan}});
-    const tracer = new Tracer({ctxImpl, recorder});
-    tracer.setId(tracer.createRootId());
-
-    const postgres = new (getPostgres(tracer).Pool)(postgresConnectionOptions);
-    postgres.connect();
-    postgres.query('SELECT NOW()', () => {
-      postgres.query('SELECT NOW()').then(() => {
-        const spans = logSpan.args.map(arg => arg[0]);
-        expect(spans).to.have.length(2);
-        spans.forEach(expectCorrectSpanData);
-
-        done();
-      });
-    });
-  });
-
-  it('should annotate postgres errors', (done) => {
-    const logSpan = sinon.spy();
-
-    const ctxImpl = new ExplicitContext();
-    const recorder = new BatchRecorder({logger: {logSpan}});
-    const tracer = new Tracer({ctxImpl, recorder});
-    tracer.setId(tracer.createRootId());
-
-    const postgres = new (getPostgres(tracer).Client)(postgresConnectionOptions);
-    postgres.connect();
-
-    postgres.query('INVALID QUERY', (firstError) => {
-      postgres.query('ERROR QUERY').catch((secondError) => {
-        const query = new Postgres.Query('FAILED QUERY()');
-        const result = postgres.query(query);
-        result.on('error', (thirdError) => {
-          const errorTags = logSpan.args.map(arg => arg[0].tags.error);
-          expect(errorTags[0]).to.equal(firstError.toString());
-          expect(errorTags[1]).to.equal(secondError.toString());
-          expect(errorTags[2]).to.equal(thirdError.toString());
-        });
-
-        done();
-      });
-    });
-  });
-
-  it('should run postgres calls', (done) => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
-    const tracer = new Tracer({ctxImpl, recorder});
-    tracer.setId(tracer.createRootId());
-
-    const postgres = new (getPostgres(tracer).Client)(postgresConnectionOptions);
-    postgres.connect();
-
+  // this chains to show 3 forms of success handling
+  it('should handle nested requests', done => {
+    const client = getClient(done);
     const queryText = 'SELECT $1::text as "res"';
     const queryValues = ['test'];
-    postgres.query(queryText, queryValues, (error, firstResult) => {
-      postgres.query({text: queryText, values: queryValues}).then((secondResult) => {
-        const query = new Postgres.Query(queryText, queryValues);
-        const result = postgres.query(query);
+
+    client.query(queryText, queryValues, (error, firstResult) => {
+      client.query({text: queryText, values: queryValues}).then((secondResult) => {
+        const query = new postgres.Query(queryText, queryValues);
+        const result = client.query(query);
 
         expect(query).to.equal(result);
 
@@ -124,9 +124,28 @@ describe('postgres interceptor', () => {
           expect(secondResult.rows[0].res).to.equal('test');
           expect(submittableRows[0].res).to.equal('test');
 
+          expectSpan(popSpan(), clientSpan('query postgres'));
+          expectSpan(popSpan(), clientSpan('query postgres'));
+          expectSpan(popSpan(), clientSpan('query postgres'));
+
           done();
         });
       });
+    });
+  });
+
+  // TODO: add to all client tests
+  it('should restore original trace ID', done => {
+    const rootId = tracer.createRootId();
+    tracer.setId(rootId);
+
+    getClient(done).query('SELECT NOW()', () => {
+      // the recorded span is a child of the original
+      expect(tracer.id.spanId).to.equal(popSpan().parentId);
+
+      // the original span ID is now current
+      expect(tracer.id.traceId).to.equal(rootId.traceId);
+      done();
     });
   });
 });
