@@ -1,5 +1,8 @@
 const {Annotation, InetAddress} = require('zipkin');
 const redisCommands = require('redis-commands');
+
+// TODO: function wrapRedis(tracer, options = {})
+// as it is easy to get the service name and remote service name wrong when using positional args
 module.exports = function zipkinClient(
   tracer,
   redis,
@@ -15,7 +18,9 @@ module.exports = function zipkinClient(
   function mkZipkinCallback(callback, id) {
     const originalId = tracer.id;
     return function zipkinCallback(...args) {
+      const error = args[0];
       tracer.letId(id, () => {
+        if (error) tracer.recordBinary('error', error.message || String(error));
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
       // callback runs after the client request, so let's restore the former ID
@@ -31,7 +36,7 @@ module.exports = function zipkinClient(
     tracer.recordAnnotation(new Annotation.ClientSend());
   }
 
-
+  // TODO: rewrite this logic as it is very complex and seems to only impact 'batch'
   const redisClient = redis.createClient(options);
   const methodsToWrap = redisCommands.list.concat('batch');
   const methodsThatReturnMulti = ['batch', 'multi'];
@@ -59,6 +64,7 @@ module.exports = function zipkinClient(
           const id = tracer.createChildId();
           const commands = args[0].map(command => command[0]);
           tracer.letId(id, () => {
+            // TODO: rename this tag probaby to redis.batch and not use json if plain strings.
             tracer.recordBinary('commands', JSON.stringify(commands));
           });
           wrap(multiInstance, id);

@@ -1,171 +1,112 @@
-const sinon = require('sinon');
-const {Tracer, ExplicitContext} = require('zipkin');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
 const zipkinClient = require('../src/zipkinClient');
+const redis = require('redis');
 
-const redisConnectionOptions = {
-  host: 'localhost',
-  port: '6379'
-};
+// This instrumentation records metadata, but does not affect redis requests otherwise. Hence,
+// these tests do not expect B3 headers.
+describe('redis instrumentation (integration test)', () => {
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
 
-const Redis = require('redis');
+  let spans;
+  let tracer;
 
-function getRedis(tracer) {
-  return zipkinClient(tracer, Redis, redisConnectionOptions);
-}
-
-function expectAnnotationsDescribeRedisInteraction(annotations) {
-  const sn = annotations[1].annotation;
-  expect(sn.annotationType).to.equal('ServiceName');
-  expect(sn.serviceName).to.equal('unknown');
-
-  const sa = annotations[2].annotation;
-  expect(sa.annotationType).to.equal('ServerAddr');
-  expect(sa.serviceName).to.equal('redis');
-  expect(sa.host.addr).to.equal(redisConnectionOptions.host);
-  expect(sa.port).to.equal(redisConnectionOptions.port);
-}
-
-function expectAnnotationsBelongToTheSameSpan(annotations) {
-  let lastSpanId;
-  annotations.forEach((ann) => {
-    if (!lastSpanId) {
-      lastSpanId = ann.traceId.spanId;
-    }
-    expect(ann.traceId.spanId).to.equal(lastSpanId);
-  });
-}
-
-function runTest(annotations) {
-  expectAnnotationsDescribeRedisInteraction(annotations);
-  expectAnnotationsBelongToTheSameSpan(annotations);
-}
-
-describe('redis interceptor', () => {
-  it('should add zipkin annotations', (done) => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
-    // const recorder = new ConsoleRecorder();
-    const tracer = new Tracer({ctxImpl, recorder});
-
-    const redis = getRedis(tracer);
-    redis.on('error', done);
-    tracer.setId(tracer.createRootId());
-    redis.set('ping', 'pong', 10, () => {
-      redis.get('ping', () => {
-        const annotations = recorder.record.args.map(args => args[0]);
-        const firstAnn = annotations[0];
-        expect(annotations).to.have.length(10);
-
-        // we expect two spans, run annotations tests for each
-
-        runTest(annotations.slice(0, annotations.length / 2));
-        runTest(annotations.slice(annotations.length / 2, annotations.length));
-
-        expect(
-          annotations[0].traceId.spanId
-        ).not.to.equal(annotations[annotations.length / 2].traceId.spanId);
-
-        annotations.forEach(ann => {
-          expect(ann.traceId.parentSpanId.getOrElse()).to.equal(firstAnn.traceId.traceId);
-          expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
-          expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
-        });
-
-        done();
-      });
+  beforeEach(() => {
+    spans = [];
+    tracer = new Tracer({
+      localServiceName: serviceName,
+      ctxImpl: new ExplicitContext(),
+      recorder: newSpanRecorder(spans)
     });
   });
 
-  it('should add zipkin annotations for batch method', (done) => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
-    // const recorder = new ConsoleRecorder();
-    const tracer = new Tracer({ctxImpl, recorder});
+  // TODO: pull into http tests also
+  afterEach(() => expect(spans).to.be.empty);
 
-    const redis = getRedis(tracer);
-    redis.on('error', done);
-    tracer.setId(tracer.createRootId());
-    redis.set('ping', 'pong', 10, () => {
-      redis.batch([['get', 'ping'], ['set', 'syn', 'ack']]).exec(() => {
-        const annotations = recorder.record.args.map(args => args[0]);
-        const firstAnn = annotations[0];
-        expect(annotations).to.have.length(11);
-        expect(annotations[5].annotation.key).to.equal('commands');
-        expect(annotations[5].annotation.value).to.deep.equal('["get","set"]');
-        expect(annotations[6].annotation.name).to.equal('exec');
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
 
-        // we expect two spans, run annotations tests for each
-        expectAnnotationsBelongToTheSameSpan(
-          annotations.slice(0, annotations.length / 2));
-        expectAnnotationsDescribeRedisInteraction(
-          annotations.slice(0, annotations.length / 2));
+  function clientSpan(name, tags) {
+    const result = {
+      name,
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {
+        port: '6379',
+        serviceName: remoteServiceName
+      },
+    };
+    if (tags) result.tags = tags;
+    return result;
+  }
 
-        expectAnnotationsBelongToTheSameSpan(
-          annotations.slice(annotations.length / 2, annotations.length));
-        expectAnnotationsDescribeRedisInteraction(
-          annotations.slice(annotations.length / 2 + 1, annotations.length));
+  function getClient(done, options = {expectSuccess: true}) {
+    const host = options.host || 'localhost:6379';
+    const result = zipkinClient(tracer, redis, {
+      host: host.split(':')[0],
+      port: host.split(':')[1],
+    }, serviceName, remoteServiceName);
+    if (options.expectSuccess) result.on('error', err => done(err));
+    return result;
+  }
 
-        expect(
-          annotations[0].traceId.spanId
-        ).not.to.equal(annotations[Math.floor(annotations.length / 2)].traceId.spanId);
+  it('should record successful request', done =>
+    getClient(done).set('ping', 'pong', () => {
+      expectSpan(popSpan(), clientSpan('set'));
+      done();
+    })
+  );
 
-        annotations.forEach(ann => {
-          expect(ann.traceId.parentSpanId.getOrElse()).to.equal(firstAnn.traceId.traceId);
-          expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
-          expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
-        });
+  it('should record successful batch request', done =>
+    getClient(done).batch([['get', 'ping'], ['set', 'syn', 'ack']]).exec(() => {
+      // TODO: should this span be named exec?
+      expectSpan(popSpan(), clientSpan('exec', {commands: '["get","set"]'}));
+      done();
+    })
+  );
 
-        done();
-      });
-    });
-  });
-
-  it('should add zipkin annotations for multiple embedded methods', (done) => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: sinon.spy()};
-    // const recorder = new ConsoleRecorder();
-    const tracer = new Tracer({ctxImpl, recorder});
-
-    const redis = getRedis(tracer);
-    redis.on('error', done);
-    tracer.setId(tracer.createRootId());
-    redis.set('ping', 'pong', 10, () => {
-      redis.batch([['get', 'ping']]).exec(() => {
-        redis.multi([['get', 'ping']]).exec(() => {
-          redis.get('ping', () => {
-            const annotations = recorder.record.args.map(args => args[0]);
-            const firstAnn = annotations[0];
-            annotations.forEach(ann => {
-              expect(ann.traceId.parentSpanId.getOrElse()).to.equal(firstAnn.traceId.traceId);
-              expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
-              expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
-            });
-            done();
-          });
-        });
-      });
-    });
-  });
-
-  it('should run redis calls', done => {
-    const ctxImpl = new ExplicitContext();
-    const recorder = {record: () => { }};
-    const tracer = new Tracer({ctxImpl, recorder});
-    const redis = getRedis(tracer);
-    redis.on('error', done);
-    redis.set('foo', 'bar', err => {
-      if (err) {
-        done(err);
+  it('should report error in tags', done =>
+    getClient(done, {expectSuccess: false}).get('ping', 'pong', (err, data) => {
+      if (!err) {
+        done(new Error(`expected response to error: ${data}`));
       } else {
-        redis.get('foo', (err2, data) => {
-          if (err2) {
-            done(err2);
-          } else {
-            expect(data).to.deep.equal('bar');
-            done();
-          }
-        });
+        expectSpan(popSpan(), clientSpan('get', {
+          error: 'ERR wrong number of arguments for \'get\' command'
+        }));
+        done();
       }
+    })
+  );
+
+  it('should handle nested requests', done => {
+    const client = getClient(done);
+    client.set('foo', 'bar', () => {
+      expectSpan(popSpan(), clientSpan('set'));
+
+      client.get('foo', (err, data) => {
+        expectSpan(popSpan(), clientSpan('get'));
+        expect(data).to.deep.equal('bar');
+        done();
+      });
+    });
+  });
+
+  // TODO: add to all client tests
+  it('should restore original trace ID', done => {
+    const rootId = tracer.createRootId();
+    tracer.setId(rootId);
+
+    getClient(done).set('scooby', 'doo', () => {
+      // the recorded span is a child of the original
+      expect(tracer.id.spanId).to.equal(popSpan().parentId);
+
+      // the original span ID is now current
+      expect(tracer.id.traceId).to.equal(rootId.traceId);
+      done();
     });
   });
 });
