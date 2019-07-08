@@ -1,7 +1,4 @@
 /* eslint-disable new-cap */
-import {Tracer, ConsoleRecorder} from 'zipkin';
-import CLSContext from 'zipkin-context-cls';
-import uuid from 'uuid/v4';
 import grpc from 'grpc';
 import * as protoLoader from '@grpc/proto-loader';
 
@@ -26,19 +23,6 @@ function getLocations(call, callback) {
   return callback(null, {locations: ['Germany', 'France'], metadata});
 }
 
-/**
- * Tracer factory
- * @return {zipkin.Tracer}
- */
-const makeTracer = () => new Tracer({
-  ctxImpl: new CLSContext(`zipkin-test-${uuid()}`),
-  traceId128Bit: true,
-  recorder: new ConsoleRecorder(() => {}),
-});
-
-const tracer = makeTracer();
-const makeTraceId = () => tracer.createRootId();
-
 const mockServer = () => {
   const server = new grpc.Server();
   server.addService(weather.WeatherService.service, {
@@ -50,12 +34,4 @@ const mockServer = () => {
   return server;
 };
 
-const getClient = () =>
-  new weather.WeatherService('localhost:50051', grpc.credentials.createInsecure());
-
-export {
-  makeTracer,
-  makeTraceId,
-  mockServer,
-  getClient
-};
+export {mockServer, weather};

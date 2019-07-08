@@ -26,9 +26,19 @@ function expectB3Headers(span, headers, caseInsensitive = true) {
   expect(headers[caseInsensitive ? 'x-b3-spanid' : 'X-B3-SpanId']).to.equal(span.id);
   expect(headers[caseInsensitive ? 'x-b3-sampled' : 'X-B3-Sampled']).to.equal('1');
 
-  /* eslint-disable no-unused-expressions */
-  expect(headers[caseInsensitive ? 'x-b3-parentspanid' : 'X-B3-ParentSpanId']).to.not.exist;
-  expect(headers[caseInsensitive ? 'x-b3-flags' : 'X-B3-Flags']).to.not.exist;
+  const parentIdHeader = headers[caseInsensitive ? 'x-b3-parentspanid' : 'X-B3-ParentSpanId'];
+  if (span.parentId) {
+    expect(parentIdHeader).to.equal(span.parentId);
+  } else {
+    expect(parentIdHeader).to.not.exist;
+  }
+
+  const flagsHeader = headers[caseInsensitive ? 'x-b3-flags' : 'X-B3-Flags'];
+  if (span.debug) {
+    expect(flagsHeader).to.equal('1');
+  } else {
+    expect(flagsHeader).to.not.exist;
+  }
 }
 
 function expectSpan(span, expected) {

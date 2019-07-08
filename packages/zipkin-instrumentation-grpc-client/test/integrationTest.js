@@ -1,14 +1,21 @@
-const {option: {None}, Tracer} = require('zipkin');
-import uuid from 'uuid/v4';
-import CLSContext from 'zipkin-context-cls';
-import sinon from 'sinon';
+const {
+  newSpanRecorder,
+  expectB3Headers,
+  expectSpan
+} = require('../../../test/testFixture');
+const {ExplicitContext, Tracer} = require('zipkin');
+
 import grpc from 'grpc';
-import grpcIntrumentation from '../src/grpcClientInterceptor';
-import {mockServer, getClient} from './utils';
+import tracingInterceptor from '../src/grpcClientInterceptor';
+
+import {mockServer, weather} from './utils';
 
 describe('gRPC client instrumentation (integration test)', () => {
-  const localServiceName = 'weather-client';
-  const remoteServiceName = 'weater-service';
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
+
+  const temperature = '/weather.weatherservice/gettemperature';
+  const locations = '/weather.weatherservice/getlocations';
 
   let server;
   before(() => {
@@ -16,187 +23,157 @@ describe('gRPC client instrumentation (integration test)', () => {
     server.start();
   });
 
-  after(() => {
-    server.forceShutdown();
-  });
+  after(() => server.forceShutdown());
 
-  let record;
-  let recorder;
-  let ctxImpl;
+  let spans;
   let tracer;
 
   beforeEach(() => {
-    record = sinon.spy();
-    recorder = {record};
-    ctxImpl = new CLSContext(`zipkin-test-${uuid()}`);
-    tracer = new Tracer({recorder, ctxImpl, localServiceName});
-  });
-
-  it('should record successful request', done => {
-    tracer.scoped(() => {
-      const client = getClient();
-      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
-      client.getTemperature({location: 'Tahoe'}, {interceptors: [interceptor]}, (err) => {
-        if (err) {
-          return done(err);
-        }
-
-        const annotations = record.args.map(args => args[0]);
-        const traceId = annotations[0].traceId.traceId;
-
-        annotations.forEach(annot => {
-          expect(annot.traceId.traceId).to.equal(traceId).and.to.have.lengthOf(16);
-        });
-
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal(localServiceName);
-
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('/weather.WeatherService/GetTemperature');
-
-        expect(annotations[2].annotation.annotationType).to.equal('ClientSend');
-
-        expect(annotations[3].annotation.annotationType).to.equal('ServerAddr');
-
-        expect(annotations[4].annotation.annotationType).to.equal('ClientRecv');
-        return done();
-      });
+    spans = [];
+    tracer = new Tracer({
+      localServiceName: serviceName,
+      ctxImpl: new ExplicitContext(),
+      recorder: newSpanRecorder(spans)
     });
   });
 
-  it('should record successful request', done => {
-    tracer.scoped(() => {
-      const client = getClient();
-      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
-      client.getTemperature({location: 'Las Vegas'}, {interceptors: [interceptor]}, () => {
-        const annotations = record.args.map(args => args[0]);
-        const traceId = annotations[0].traceId.traceId;
+  // TODO: pull into http tests also
+  afterEach(() => expect(spans).to.be.empty);
 
-        annotations.forEach(annot => {
-          expect(annot.traceId.traceId).to.equal(traceId).and.to.have.lengthOf(16);
-        });
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
 
-        expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-        expect(annotations[0].annotation.serviceName).to.equal(localServiceName);
+  function successSpan(name) {
+    return ({
+      name,
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName}
+      // no tags in grpc in success case..
+    });
+  }
 
-        expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-        expect(annotations[1].annotation.name).to.equal('/weather.WeatherService/GetTemperature');
+  function getClient(host = 'localhost:50051') {
+    const interceptor = tracingInterceptor(grpc, {tracer, remoteServiceName});
+    return new weather.WeatherService(
+      host,
+      grpc.credentials.createInsecure(),
+      {interceptors: [interceptor]}
+    );
+  }
 
-        expect(annotations[2].annotation.annotationType).to.equal('ClientSend');
+  it('should add headers to requests', done =>
+    getClient().getTemperature({location: 'Tahoe'}, (err, res) => {
+      if (err) return done(err);
 
-        expect(annotations[3].annotation.annotationType).to.equal('ServerAddr');
+      const {metadata} = res;
+      expectB3Headers(popSpan(), metadata);
+      return done();
+    })
+  );
 
-        expect(annotations[4].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[4].annotation.key).to.equal('grpc.status_code');
-        expect(annotations[4].annotation.value).to.equal('2');
+  // TODO: this test needs to be pulled up also to the other clients
+  it('should send "x-b3-flags" header', done => {
+    // enables debug
+    tracer.setId(tracer.createRootId(undefined, true));
 
-        expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-        expect(annotations[5].annotation.key).to.equal('error');
-        expect(annotations[5].annotation.value).to.equal('2');
+    getClient().getTemperature({location: 'Tahoe'}, (err, res) => {
+      if (err) return done(err);
 
-        expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
-        return done();
-      });
+      const {metadata} = res;
+      expectB3Headers(popSpan(), metadata);
+      return done();
     });
   });
+
+  it('should record successful request', done =>
+    getClient().getTemperature({location: 'Tahoe'}, err => {
+      if (err) return done(err);
+
+      expectSpan(popSpan(), successSpan(temperature));
+      return done();
+    })
+  );
+
+  it('should report error in tags', done =>
+    getClient().getTemperature({location: 'Las Vegas'}, (err, res) => {
+      if (err) {
+        expectSpan(popSpan(), {
+          name: temperature,
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'grpc.status_code': '2', // NOTE: in brave this code is text, like UNAVAILABLE
+            error: 'test'
+          }
+        });
+        done();
+      } else {
+        done(new Error(`expected response to error: ${res}`));
+      }
+    })
+  );
+
+  it('should report error in tags on transport error', done =>
+    getClient('localhost:12345').getTemperature({location: 'Las Vegas'}, (err, res) => {
+      if (err) {
+        expectSpan(popSpan(), {
+          name: temperature,
+          kind: 'CLIENT',
+          localEndpoint: {serviceName},
+          remoteEndpoint: {serviceName: remoteServiceName},
+          tags: {
+            'grpc.status_code': '14', // NOTE: in brave this code is text, like UNAVAILABLE
+            error: 'failed to connect to all addresses'
+          }
+        });
+        done();
+      } else {
+        done(new Error(`expected response to error: ${res}`));
+      }
+    })
+  );
 
   it('should handle nested requests', done => {
-    tracer.scoped(() => {
-      const client = getClient();
-      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
+    const client = getClient();
 
-      client.getTemperature({location: 'Tahoe'}, {interceptors: [interceptor]}, () => {
-        client.getLocations({temperature: 25}, {interceptors: [interceptor]}, () => {
-          const annotations = record.args.map(args => args[0]);
-          let firstTraceId;
-          let weatherSpanId;
-          let locationSpanId;
+    client.getTemperature({location: 'Tahoe'}, err => {
+      if (err) {
+        done(err);
+      } else {
+        client.getLocations({temperature: 25}, err2 => {
+          if (err2) done(err2);
 
-          annotations.forEach(annot => {
-            if (firstTraceId) {
-              expect(annot.traceId.traceId === firstTraceId);
-            } else {
-              firstTraceId = annot.traceId.traceId;
-            }
-
-            if (annot.annotation.name === '/weather.WeatherService/GetTemperature') {
-              weatherSpanId = annot.traceId.spanId;
-            }
-            if (annot.annotation.name === '/weather.WeatherService/GetLocations') {
-              locationSpanId = annot.traceId.spanId;
-            }
-            expect(annot.traceId.parentSpanId).to.equal(None);
-          });
-
-          expect(weatherSpanId).to.not.equal(locationSpanId);
-          expect(locationSpanId).to.not.equal(weatherSpanId);
-
+          // since these are sequential, we should have an expected order
+          expectSpan(popSpan(), successSpan(locations));
+          expectSpan(popSpan(), successSpan(temperature));
           done();
         });
-      });
+      }
     });
   });
 
   it('should handle parallel requests', () => {
-    let promise;
-    tracer.scoped(() => {
-      const client = getClient();
-      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
+    const client = getClient();
 
-      const getTemperature = new Promise((resolve) => {
-        client.getTemperature({location: 'Tahoe'}, {interceptors: [interceptor]}, resolve);
-      });
-      const getLocations = new Promise((resolve) => {
-        client.getLocations({temperature: 25}, {interceptors: [interceptor]}, resolve);
-      });
-
-      promise = Promise.all([getTemperature, getLocations]).then(() => {
-        const annotations = record.args.map(args => args[0]);
-        let firstTraceId;
-        let weatherSpanId;
-        let locationSpanId;
-
-        annotations.forEach(annot => {
-          if (firstTraceId) {
-            expect(annot.traceId.traceId === firstTraceId);
-          } else {
-            firstTraceId = annot.traceId.traceId;
-          }
-
-          if (annot.annotation.name === '/weather.WeatherService/GetTemperature') {
-            weatherSpanId = annot.traceId.spanId;
-          }
-          if (annot.annotation.name === '/weather.WeatherService/GetLocations') {
-            locationSpanId = annot.traceId.spanId;
-          }
-
-          expect(annot.traceId.parentSpanId).to.equal(None);
-        });
-
-        expect(weatherSpanId).to.not.equal(locationSpanId);
-        expect(locationSpanId).to.not.equal(weatherSpanId);
-      });
+    const getTemperature = new Promise((resolve) => {
+      client.getTemperature({location: 'Tahoe'}, resolve);
     });
-    return promise;
-  });
+    const getLocations = new Promise((resolve) => {
+      client.getLocations({temperature: 25}, resolve);
+    });
 
-  it('should send "x-b3-flags" header', done => {
-    tracer.scoped(() => {
-      const client = getClient();
+    return Promise.all([getTemperature, getLocations]).then(() => {
+      // since these are parallel, we have an unexpected order
+      const firstSpan = popSpan(); // TODO: move this race condition fix to http
+      const firstName = firstSpan.name === temperature ? temperature : locations;
+      const secondName = firstName === temperature ? locations : temperature;
 
-      // enables debug
-      tracer.setId(tracer.createRootId(undefined, true));
-
-      const interceptor = grpcIntrumentation(grpc, {tracer, remoteServiceName});
-      client.getTemperature({location: 'Tahoe'}, {interceptors: [interceptor]}, (err, res) => {
-        if (err) {
-          return done(err);
-        }
-        const {metadata} = res;
-        // eslint-disable-next-line no-unused-expressions
-        expect(metadata['x-b3-flags']).to.equal('1');
-        return done();
-      });
+      expectSpan(firstSpan, successSpan(firstName));
+      expectSpan(popSpan(), successSpan(secondName));
     });
   });
 });
