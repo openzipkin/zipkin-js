@@ -21,8 +21,10 @@
   "peerDependencies": {
     "got": ">= 9.6.0"
   },
-  "devDependencies": {
-    "got": "^9.6.0",
+  "dependencies": {
     "zipkin": "^0.18.4"
+  },
+  "devDependencies": {
+    "got": "^9.6.0"
   }
 }

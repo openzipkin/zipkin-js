@@ -1,3 +1,4 @@
+const isPromise = require('is-promise');
 const {None, Some} = require('../option');
 const {Sampler, alwaysSample} = require('./sampler');
 
@@ -8,10 +9,13 @@ const randomTraceId = require('./randomTraceId');
 const {now, hrtime} = require('../time');
 const {Endpoint} = require('../model');
 
-const isPromise = require('is-promise');
 
 function requiredArg(name) {
   throw new Error(`Tracer: Missing required argument ${name}.`);
+}
+
+function isUndefinedOrNull(obj) {
+  return typeof obj === 'undefined' || obj === null;
 }
 
 class Tracer {
@@ -87,17 +91,13 @@ class Tracer {
     return id;
   }
 
-  isUndefinedOrNull(obj) {
-    return typeof obj === 'undefined' || obj === null;
-  }
-
   createChildId(parentId) {
-    if (this.isUndefinedOrNull(parentId)) {
+    if (isUndefinedOrNull(parentId)) {
       /* eslint-disable no-param-reassign */
       parentId = this._ctxImpl.getContext();
     }
 
-    if (parentId === this._sentinelTraceId || this.isUndefinedOrNull(parentId)) {
+    if (parentId === this._sentinelTraceId || isUndefinedOrNull(parentId)) {
       return this.createRootId();
     }
 
@@ -253,7 +253,7 @@ class Tracer {
   setTags(tags = {}) {
     // eslint-disable-next-line no-restricted-syntax
     for (const tag in tags) {
-      if (tags.hasOwnProperty(tag)) {
+      if (Object.prototype.hasOwnProperty.call(tags, tag)) {
         this.recordBinary(tag, tags[tag]);
       }
     }

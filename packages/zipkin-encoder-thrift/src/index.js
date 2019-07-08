@@ -1,6 +1,6 @@
+const {TBinaryProtocol, TBufferedTransport} = require('thrift');
 const {InetAddress} = require('zipkin');
 const thriftTypes = require('./gen-nodejs/zipkinCore_types');
-const {TBufferedTransport, TBinaryProtocol} = require('thrift');
 
 function toThriftEndpoint(endpoint) {
   if (endpoint === undefined) {
@@ -93,9 +93,7 @@ function toThriftSpan(span) {
   }
 
   if (span.annotations.length > 0 || beginAnnotation) { // don't write empty array
-    res.annotations = span.annotations.map((ann) =>
-      toThriftAnnotation(ann, thriftEndpoint)
-    );
+    res.annotations = span.annotations.map(ann => toThriftAnnotation(ann, thriftEndpoint));
   }
 
   if (beginAnnotation) {
@@ -115,8 +113,9 @@ function toThriftSpan(span) {
 
   const keys = Object.keys(span.tags);
   if (keys.length > 0 || span.remoteEndpoint) { // don't write empty array
-    res.binary_annotations = keys.map(key =>
-      toThriftBinaryAnnotation(key, span.tags[key], thriftEndpoint));
+    res.binary_annotations = keys.map(key => toThriftBinaryAnnotation(
+      key, span.tags[key], thriftEndpoint
+    ));
   }
 
   if (span.remoteEndpoint) {

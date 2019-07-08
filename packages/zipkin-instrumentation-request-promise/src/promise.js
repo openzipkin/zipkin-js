@@ -1,3 +1,6 @@
+/* eslint-disable */
+// lint disabled until we refactor this file to the point it doesn't crash, or obviate
+// by deleting this file.
 /**
 
  IMPORTANT:
@@ -20,7 +23,6 @@
 
  */
 
-/* eslint-disable no-underscore-dangle, no-use-before-define, no-param-reassign*/
 import asap from 'asap/raw';
 
 const noop = () => {};

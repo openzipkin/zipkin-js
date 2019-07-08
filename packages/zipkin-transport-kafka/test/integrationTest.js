@@ -1,9 +1,11 @@
 /* eslint-disable no-console */
 const kafka = require('kafka-node');
 const THRIFT = require('zipkin-encoder-thrift');
-const {Annotation, BatchRecorder, jsonEncoder: {JSON_V2}, option, TraceId} = require('zipkin');
-const KafkaLogger = require('../src/KafkaLogger');
+const {
+  Annotation, BatchRecorder, jsonEncoder: {JSON_V2}, option, TraceId
+} = require('zipkin');
 const makeKafkaServer = require('kafka-please');
+const KafkaLogger = require('../src/KafkaLogger');
 
 function waitPromise(length) {
   return new Promise((resolve) => {
@@ -55,7 +57,7 @@ function verifyJsonV2(message) {
 
 describe('Kafka transport - integration test', () => {
   function shouldSendTraceDataToKafka(encoder, verifySerialized, done) {
-    makeKafkaServer().then(kafkaServer => {
+    makeKafkaServer().then((kafkaServer) => {
       const producerClient = new kafka.Client(
         `localhost:${kafkaServer.zookeeperPort}`,
         'zipkin-integration-test-producer'
@@ -68,15 +70,15 @@ describe('Kafka transport - integration test', () => {
 
         const closeProducerClient = () => new Promise(resolve => producerClient.close(resolve));
         const closeClient = () => {
-          return client ?
-            new Promise(resolve => client.close(resolve))
+          return client
+            ? new Promise(resolve => client.close(resolve))
             : Promise.resolve();
         };
 
         const closeKafkaLogger = () => {
-          return kafkaLogger ?
-            kafkaLogger.close() :
-            Promise.resolve();
+          return kafkaLogger
+            ? kafkaLogger.close()
+            : Promise.resolve();
         };
 
         closeKafkaLogger()
@@ -86,10 +88,10 @@ describe('Kafka transport - integration test', () => {
             .then(() => done(arg)));
       }
 
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         console.log('creating topic...');
         producer.on('ready', () => {
-          producer.createTopics(['zipkin'], true, err => {
+          producer.createTopics(['zipkin'], true, (err) => {
             if (err) {
               finish(err);
             } else {
@@ -110,18 +112,18 @@ describe('Kafka transport - integration test', () => {
             groupId: 'zipkin'
           }
         );
-        consumer.on('message', message => {
+        consumer.on('message', (message) => {
           console.log('Received Zipkin data from Kafka');
           expect(message.topic).to.equal('zipkin');
           verifySerialized(message);
           consumer.close(true, finish);
         });
 
-        client.on('error', err => {
+        client.on('error', (err) => {
           console.log('client error', err);
           finish(err);
         });
-        consumer.on('error', err => {
+        consumer.on('error', (err) => {
           console.log('consumer error', err);
           consumer.close(true, () => finish(err));
         });
@@ -135,7 +137,7 @@ describe('Kafka transport - integration test', () => {
 
         createSpan(new BatchRecorder({logger: kafkaLogger}));
       });
-    }).catch(err => {
+    }).catch((err) => {
       console.error('Big err', err);
       done(err);
     });
@@ -159,7 +161,7 @@ describe('Kafka transport - integration test', () => {
     this.slow(10 * 1000);
     this.timeout(60 * 1000);
 
-    makeKafkaServer().then(kafkaServer => {
+    makeKafkaServer().then((kafkaServer) => {
       const producerClient = new kafka.Client(
         `localhost:${kafkaServer.zookeeperPort}`,
         'zipkin-integration-test-producer'
@@ -172,15 +174,15 @@ describe('Kafka transport - integration test', () => {
 
         const closeProducerClient = () => new Promise(resolve => producerClient.close(resolve));
         const closeClient = () => {
-          return client ?
-            new Promise(resolve => client.close(resolve))
+          return client
+            ? new Promise(resolve => client.close(resolve))
             : Promise.resolve();
         };
 
         const closeKafkaLogger = () => {
-          return kafkaLogger ?
-            kafkaLogger.close() :
-            Promise.resolve();
+          return kafkaLogger
+            ? kafkaLogger.close()
+            : Promise.resolve();
         };
 
         closeKafkaLogger()
@@ -190,10 +192,10 @@ describe('Kafka transport - integration test', () => {
             .then(() => done(arg)));
       }
 
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         console.log('creating topic...');
         producer.on('ready', () => {
-          producer.createTopics(['zipkin'], true, err => {
+          producer.createTopics(['zipkin'], true, (err) => {
             if (err) {
               finish(err);
             } else {
@@ -214,18 +216,18 @@ describe('Kafka transport - integration test', () => {
             groupId: 'zipkin'
           }
         );
-        consumer.on('message', message => {
+        consumer.on('message', (message) => {
           console.log('Received Zipkin data from Kafka');
           expect(message.topic).to.equal('zipkin');
           verifyThrift(message);
           consumer.close(true, finish);
         });
 
-        client.on('error', err => {
+        client.on('error', (err) => {
           console.log('client error', err);
           finish(err);
         });
-        consumer.on('error', err => {
+        consumer.on('error', (err) => {
           console.log('consumer error', err);
           consumer.close(true, () => finish(err));
         });
@@ -238,7 +240,7 @@ describe('Kafka transport - integration test', () => {
 
         createSpan(new BatchRecorder({logger: kafkaLogger}));
       });
-    }).catch(err => {
+    }).catch((err) => {
       console.error('Big err', err);
       done(err);
     });

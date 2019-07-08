@@ -1,4 +1,6 @@
-const {TraceId, option: {fromNullable}, Annotation, HttpHeaders} = require('zipkin');
+const {
+  TraceId, option: {fromNullable}, Annotation, HttpHeaders
+} = require('zipkin');
 
 function bufferToAscii(maybeBuffer) { // TODO: backfill tests for this
   return Buffer.isBuffer(maybeBuffer) ? maybeBuffer.asciiSlice(0) : maybeBuffer;

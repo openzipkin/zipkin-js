@@ -1,4 +1,5 @@
 const InetAddress = require('../src/InetAddress');
+
 describe('InetAddress', () => {
   it('should get the local address', () => {
     InetAddress.getLocalAddress();

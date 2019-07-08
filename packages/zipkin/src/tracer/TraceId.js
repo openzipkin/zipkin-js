@@ -5,6 +5,7 @@ const {
   verifyIsNotOptional,
   isOptional
 } = require('../option');
+
 const T = new Some(true);
 
 class TraceId {
@@ -81,9 +82,9 @@ class TraceId {
   }
 
   toString() {
-    return `TraceId(spanId=${this.spanId.toString()}` +
-      `, parentSpanId=${this.parentSpanId.toString()}` +
-      `, traceId=${this.traceId.toString()})`;
+    return `TraceId(spanId=${this.spanId.toString()}`
+      + `, parentSpanId=${this.parentSpanId.toString()}`
+      + `, traceId=${this.traceId.toString()})`;
   }
 }
 

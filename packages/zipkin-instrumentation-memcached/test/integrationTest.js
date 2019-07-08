@@ -1,8 +1,8 @@
-const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 const {ExplicitContext, Tracer} = require('zipkin');
+const Memcached = require('memcached');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 
 const zipkinClient = require('../src/zipkinClient');
-const Memcached = require('memcached');
 
 // This instrumentation records metadata, but does not affect memcached requests otherwise. Hence,
 // these tests do not expect B3 headers.
@@ -50,30 +50,26 @@ describe('memcached instrumentation (integration test)', () => {
     });
   }
 
-  it('should record successful request', done =>
-    getClient().set('ping', 'pong', 10, err => {
-      if (err) return done(err);
+  it('should record successful request', done => getClient().set('ping', 'pong', 10, (err) => {
+    if (err) return done(err);
 
-      expectSpan(popSpan(), clientSpan('set', {'memcached.key': 'ping'}));
-      return done();
-    })
-  );
+    expectSpan(popSpan(), clientSpan('set', {'memcached.key': 'ping'}));
+    return done();
+  }));
 
-  it('should report error in tags on transport error', done =>
-    getClient('localhost:12345').set('scooby', 'doo', 10, (err, data) => {
-      if (!err) return done(new Error(`expected response to error: ${data}`));
+  it('should report error in tags on transport error', done => getClient('localhost:12345').set('scooby', 'doo', 10, (err, data) => {
+    if (!err) return done(new Error(`expected response to error: ${data}`));
 
-      expectSpan(popSpan(), clientSpan('set', {
-        'memcached.key': 'scooby',
-        error: 'connect ECONNREFUSED 127.0.0.1:12345'
-      }));
-      return done();
-    })
-  );
+    expectSpan(popSpan(), clientSpan('set', {
+      'memcached.key': 'scooby',
+      error: 'connect ECONNREFUSED 127.0.0.1:12345'
+    }));
+    return done();
+  }));
 
-  it('should handle nested requests', done => {
+  it('should handle nested requests', (done) => {
     const memcached = getClient();
-    memcached.set('foo', 'bar', 10, err => {
+    memcached.set('foo', 'bar', 10, (err) => {
       if (err) return done(err);
 
       expectSpan(popSpan(), clientSpan('set', {'memcached.key': 'foo'}));
@@ -88,11 +84,11 @@ describe('memcached instrumentation (integration test)', () => {
   });
 
   // TODO: add to all client tests
-  it('should restore original trace ID', done => {
+  it('should restore original trace ID', (done) => {
     const rootId = tracer.createRootId();
     tracer.setId(rootId);
 
-    getClient().set('scooby', 'doo', 10, err => {
+    getClient().set('scooby', 'doo', 10, (err) => {
       if (err) return done(err);
 
       // the recorded span is a child of the original

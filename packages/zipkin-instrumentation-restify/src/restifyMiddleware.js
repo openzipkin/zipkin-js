@@ -23,7 +23,7 @@ module.exports = function restifyMiddleware({tracer, serviceName, port = 0}) {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
 
   return function zipkinRestifyMiddleware(req, res, next) {
-    const readHeader = (header) => headerOption(req, header);
+    const readHeader = header => headerOption(req, header);
     const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
 
     const onCloseOrFinish = () => {

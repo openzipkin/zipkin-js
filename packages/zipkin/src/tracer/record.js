@@ -4,6 +4,7 @@ class Record {
     this.timestamp = timestamp;
     this.annotation = annotation;
   }
+
   toString() {
     return `Record(traceId=${this.traceId.toString()}, annotation=${this.annotation.toString()})`;
   }

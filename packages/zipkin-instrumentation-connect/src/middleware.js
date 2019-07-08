@@ -51,7 +51,7 @@ module.exports = function middleware({tracer, serviceName, port = 0}) {
    * @param {function()} next
    */
   return function zipkinMiddleware(req, res, next) {
-    const readHeader = (header) => headerOption(req, header);
+    const readHeader = header => headerOption(req, header);
 
     const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
     Object.defineProperty(req, '_trace_id', {configurable: false, get: () => id});

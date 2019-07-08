@@ -1,13 +1,13 @@
 const {expect} = require('chai');
+const {ExplicitContext, Tracer} = require('zipkin');
+
+const request = require('request');
 const {
   maybeMiddleware,
   newSpanRecorder,
   expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
-const {ExplicitContext, Tracer} = require('zipkin');
-
-const request = require('request');
 const wrapRequest = require('../src/index');
 
 describe('request instrumentation - integration test', () => {
@@ -74,17 +74,15 @@ describe('request instrumentation - integration test', () => {
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return getClient().get(url(path), () =>
-      expectSpan(popSpan(), successSpan(path)));
+    return getClient().get(url(path), () => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should support options request', () => {
     const path = '/weather/wuhan';
-    return getClient()({url: url(path)}, () =>
-      expectSpan(popSpan(), successSpan(path)));
+    return getClient()({url: url(path)}, () => expectSpan(popSpan(), successSpan(path)));
   });
 
-  it('should report 404 in tags', done => {
+  it('should report 404 in tags', (done) => {
     const path = '/pathno';
     getClient().get(url(path))
       .on('response', () => {
@@ -104,7 +102,7 @@ describe('request instrumentation - integration test', () => {
       .on('error', error => done(error));
   });
 
-  it('should report 400 in tags', done => {
+  it('should report 400 in tags', (done) => {
     const path = '/weather/securedTown';
     getClient().get(url(path))
       .on('response', () => {
@@ -124,7 +122,7 @@ describe('request instrumentation - integration test', () => {
       .on('error', error => done(error));
   });
 
-  it('should report 500 in tags', done => {
+  it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
     getClient().get(url(path))
       .on('response', () => {
@@ -144,11 +142,11 @@ describe('request instrumentation - integration test', () => {
       .on('error', error => done(error));
   });
 
-  it('should report when endpoint doesnt exist in tags', done => {
+  it('should report when endpoint doesnt exist in tags', (done) => {
     const path = '/badHost';
     const badUrl = `http://localhost:12345${path}`;
     getClient().get({url: badUrl, timeout: 300})
-      .on('error', error => {
+      .on('error', (error) => {
         expectSpan(popSpan(), {
           name: 'get',
           kind: 'CLIENT',
@@ -161,9 +159,7 @@ describe('request instrumentation - integration test', () => {
         });
         done();
       })
-      .on('response', response =>
-        new Error(`expected an invalid host to error. status: ${response.status}`)
-      );
+      .on('response', response => new Error(`expected an invalid host to error. status: ${response.status}`));
   });
 
   it('should support nested get requests', () => {
@@ -172,12 +168,10 @@ describe('request instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    client.get(url(beijing), () =>
-      client.get(url(wuhan), () => {
-        // since these are sequential, we should have an expected order
-        expectSpan(popSpan(), successSpan(wuhan));
-        expectSpan(popSpan(), successSpan(beijing));
-      })
-    );
+    client.get(url(beijing), () => client.get(url(wuhan), () => {
+      // since these are sequential, we should have an expected order
+      expectSpan(popSpan(), successSpan(wuhan));
+      expectSpan(popSpan(), successSpan(beijing));
+    }));
   });
 });

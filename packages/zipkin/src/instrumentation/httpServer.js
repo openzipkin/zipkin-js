@@ -41,7 +41,7 @@ class HttpServerInstrumentation {
   _createIdFromHeaders(readHeader) {
     if (containsRequiredHeaders(readHeader)) {
       const spanId = readHeader(Header.SpanId);
-      const parentId = spanId.map(sid => {
+      const parentId = spanId.map((sid) => {
         const traceId = readHeader(Header.TraceId);
         const parentSpanId = readHeader(Header.ParentSpanId);
         const sampled = readHeader(Header.Sampled);
@@ -56,21 +56,19 @@ class HttpServerInstrumentation {
       });
 
       return new Some(this.tracer.join(parentId.getOrElse()));
+    } else if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
+      const sampled = readHeader(Header.Sampled) === None
+        ? None : readHeader(Header.Sampled).map(stringToBoolean);
+      const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
+      return new Some(this.tracer.createRootId(sampled, flags === 1));
     } else {
-      if (readHeader(Header.Flags) !== None || readHeader(Header.Sampled) !== None) {
-        const sampled = readHeader(Header.Sampled) === None ?
-          None : readHeader(Header.Sampled).map(stringToBoolean);
-        const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
-        return new Some(this.tracer.createRootId(sampled, flags === 1));
-      } else {
-        return new Some(this.tracer.createRootId());
-      }
+      return new Some(this.tracer.createRootId());
     }
   }
 
   recordRequest(method, requestUrl, readHeader) {
     this._createIdFromHeaders(readHeader).ifPresent(id => this.tracer.setId(id));
-    const id = this.tracer.id;
+    const {id} = this.tracer;
     const {path} = parseRequestUrl(requestUrl);
 
     this.tracer.recordServiceName(this.serviceName);

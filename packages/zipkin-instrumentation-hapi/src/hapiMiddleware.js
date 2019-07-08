@@ -23,11 +23,10 @@ exports.register = (server, {tracer, serviceName, port = 0}) => {
   server.ext('onRequest', (request, reply) => {
     const {headers} = request;
     const readHeader = headerOption.bind(null, headers);
-    const plugins = request.plugins;
+    const {plugins} = request;
 
     tracer.scoped(() => {
-      const id =
-        instrumentation.recordRequest(request.method, url.format(request.url), readHeader);
+      const id = instrumentation.recordRequest(request.method, url.format(request.url), readHeader);
 
       plugins.zipkin = {
         traceId: id

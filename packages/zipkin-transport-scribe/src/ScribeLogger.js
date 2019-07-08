@@ -3,7 +3,9 @@ const {Scribe} = require('scribe');
 const {fromByteArray: base64encode} = require('base64-js');
 const THRIFT = require('zipkin-encoder-thrift');
 
-function ScribeLogger({scribeHost, scribePort = 9410, scribeInterval = 1000, log = console}) {
+function ScribeLogger({
+  scribeHost, scribePort = 9410, scribeInterval = 1000, log = console
+}) {
   const scribeClient = new Scribe(scribeHost, scribePort, {autoReconnect: true});
   scribeClient.on('error', () => {});
 

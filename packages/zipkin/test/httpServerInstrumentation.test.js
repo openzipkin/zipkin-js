@@ -11,7 +11,9 @@ const setupTest = () => {
   const recorder = {record, setDefaultTags};
   const ctxImpl = new ExplicitContext();
   const defaultTags = {instanceId: 'i-1234567890abcdef0'};
-  return {record, recorder, ctxImpl, defaultTags};
+  return {
+    record, recorder, ctxImpl, defaultTags
+  };
 };
 
 const setupServerUrl = () => {
@@ -137,7 +139,9 @@ describe('Http Server Instrumentation', () => {
     it(`should should not join spans if join not supported case ${index}`, () => {
       const {record, recorder, ctxImpl} = setupTest();
       const supportsJoin = false;
-      const tracer = new Tracer({recorder, ctxImpl, localServiceName: serviceName, supportsJoin});
+      const tracer = new Tracer({
+        recorder, ctxImpl, localServiceName: serviceName, supportsJoin
+      });
 
       const {port, url} = setupServerUrl();
       const instrumentation = new HttpServer({tracer, port});
@@ -328,7 +332,7 @@ describe('Http Server Instrumentation', () => {
       }
     ];
 
-    headersCases.forEach(headers => {
+    headersCases.forEach((headers) => {
       const port = 80;
       const url = `http://127.0.0.1:${port}`;
       const instrumentation = new HttpServer({tracer, serviceName, port});
@@ -347,10 +351,12 @@ describe('Http Server Instrumentation', () => {
     new Sampler(neverSample)
   ];
 
-  samplerCases.forEach(sampler => {
+  samplerCases.forEach((sampler) => {
     it(`should use sampler to calculate sampled value if missing in header (${sampler})`, () => {
       const {recorder, ctxImpl} = setupTest();
-      const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl, sampler});
+      const tracer = new Tracer({
+        recorder, localServiceName: serviceName, ctxImpl, sampler
+      });
 
       const headers = {
         'X-B3-TraceId': 'aaa',

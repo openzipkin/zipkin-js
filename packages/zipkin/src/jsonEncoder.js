@@ -72,9 +72,7 @@ function encodeV1(span) {
   }
 
   if (span.annotations.length > 0 || beginAnnotation) { // don't write empty array
-    res.annotations = span.annotations.map((ann) =>
-      toV1Annotation(ann, jsonEndpoint)
-    );
+    res.annotations = span.annotations.map(ann => toV1Annotation(ann, jsonEndpoint));
   }
 
   if (beginAnnotation) {

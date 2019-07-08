@@ -13,8 +13,10 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
-  "devDependencies": {
-    "node-fetch": "^1.5.3",
+  "dependencies": {
     "zipkin": "^0.18.4"
+  },
+  "devDependencies": {
+    "node-fetch": "^1.5.3"
   }
 }

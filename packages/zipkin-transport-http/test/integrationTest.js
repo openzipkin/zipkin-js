@@ -2,9 +2,9 @@ const {
   Tracer, BatchRecorder, Annotation, ExplicitContext,
   jsonEncoder: {JSON_V2}
 } = require('zipkin');
-const HttpLogger = require('../src/HttpLogger');
 const express = require('express');
 const bodyParser = require('body-parser');
+const HttpLogger = require('../src/HttpLogger');
 
 const mockPublisher = (serverExpectations) => {
   const app = express();
@@ -104,7 +104,8 @@ describe('HTTP transport - integration test', () => {
     const app = mockPublisher((req) => {
       const contentLength = parseInt(req.headers['content-length']);
       expect(contentLength).to.be.below(maxPayloadSize);
-      if (++publisherCount === 2) {
+      publisherCount += 1;
+      if (publisherCount === 2) {
         this.server.close(done);
       }
     });
@@ -118,7 +119,7 @@ describe('HTTP transport - integration test', () => {
         maxPayloadSize
       });
 
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 6; i += 1) {
         triggerPublish(httpLogger);
       }
     });
@@ -151,8 +152,8 @@ describe('HTTP transport - integration test', () => {
     const app = mockPublisher((req) => {
       const contentLength = parseInt(req.headers['content-length']);
       expect(contentLength).to.be.below(maxPayloadSize);
-      publisherCount++;
-      if (++publisherCount === 2) {
+      publisherCount += 2;
+      if (publisherCount === 2) {
         expect(errorEmitted).to.equal(true);
         this.server.close(done);
       }
@@ -172,7 +173,7 @@ describe('HTTP transport - integration test', () => {
         errorEmitted = true;
       });
 
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 6; i += 1) {
         triggerPublish(httpLogger);
       }
       triggerLargePublish(httpLogger);

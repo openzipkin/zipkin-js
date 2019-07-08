@@ -13,10 +13,10 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "redis-commands": "^1.2.0"
+    "zipkin": "^0.18.4"
   },
   "devDependencies": {
     "redis": "^2.6.2",
-    "zipkin": "^0.18.4"
+    "redis-commands": "^1.2.0"
   }
 }

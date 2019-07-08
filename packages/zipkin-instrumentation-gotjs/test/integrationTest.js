@@ -1,13 +1,13 @@
 const {expect} = require('chai');
+const {ExplicitContext, Tracer} = require('zipkin');
+
+const got = require('got');
 const {
   maybeMiddleware,
   newSpanRecorder,
   expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
-const {ExplicitContext, Tracer} = require('zipkin');
-
-const got = require('got');
 const wrapGot = require('../src/wrapGot');
 
 describe('got instrumentation - integration test', () => {
@@ -66,15 +66,15 @@ describe('got instrumentation - integration test', () => {
     });
   }
 
-  it('should not interfere with errors that precede a call', done => {
+  it('should not interfere with errors that precede a call', (done) => {
     // Here we are passing a function instead of the value of it. This ensures our error callback
     // doesn't make assumptions about a span in progress: there won't be if there was a config error
     wrappedGot()(url)
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
       })
-      .catch(error => {
-        const message = error.message;
+      .catch((error) => {
+        const {message} = error;
         const expected = ['must be of type string', 'must be a string']; // messages can vary in CI
         if (message.indexOf(expected[0]) !== -1 || message.indexOf(expected[1]) !== -1) {
           done();
@@ -102,10 +102,10 @@ describe('got instrumentation - integration test', () => {
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
-  it('should report 404 in tags', done => {
+  it('should report 404 in tags', (done) => {
     const path = '/pathno';
     wrappedGot()(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -124,10 +124,10 @@ describe('got instrumentation - integration test', () => {
       });
   });
 
-  it('should report 400 in tags', done => {
+  it('should report 400 in tags', (done) => {
     const path = '/weather/securedTown';
     wrappedGot()(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 400 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -146,10 +146,10 @@ describe('got instrumentation - integration test', () => {
       });
   });
 
-  it('should report 500 in tags', done => {
+  it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
     wrappedGot()(url(path), {retry: 0})
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -168,14 +168,14 @@ describe('got instrumentation - integration test', () => {
       });
   });
 
-  it('should report when endpoint doesnt exist in tags', done => {
+  it('should report when endpoint doesnt exist in tags', (done) => {
     const path = '/badHost';
     const badUrl = `http://localhost:12345${path}`;
     wrappedGot()(badUrl, {retry: 0})
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
-      .catch(error => {
+      .catch((error) => {
         expectSpan(popSpan(), {
           name: 'get',
           kind: 'CLIENT',

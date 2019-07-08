@@ -41,17 +41,15 @@ describe(__filename, () => {
         const id2 = makeTraceId();
         tracer.setId(id1);
         const req = new Request(tracer);
-        const resolvedId = yield tracer.letId(id2, () =>
-          req.send({
-            uri: 'http://disneyland.test/students',
-            json: true,
-          }).then((body) => {
-            assert.equal(body[0], 'me');
-          }).then(() => {
-            assert.equal(tracer.id.traceId, id2.traceId);
-            return tracer.id.traceId;
-          })
-        );
+        const resolvedId = yield tracer.letId(id2, () => req.send({
+          uri: 'http://disneyland.test/students',
+          json: true,
+        }).then((body) => {
+          assert.equal(body[0], 'me');
+        }).then(() => {
+          assert.equal(tracer.id.traceId, id2.traceId);
+          return tracer.id.traceId;
+        }));
         // traceId should be restored to id2
         assert.equal(tracer.id.traceId, id2.traceId);
         assert.equal(resolvedId, id2.traceId);
@@ -123,17 +121,15 @@ describe(__filename, () => {
       const id2 = makeTraceId();
       tracer.setId(id1);
       const req = wrapRequest(tracer);
-      const resolvedId = yield tracer.letId(id2, () =>
-        req({
-          uri: 'http://disneyland.test/students',
-          json: true,
-        }).then((body) => {
-          assert.equal(body[0], 'me');
-        }).then(() => {
-          assert.equal(tracer.id.traceId, id2.traceId);
-          return tracer.id.traceId;
-        })
-      );
+      const resolvedId = yield tracer.letId(id2, () => req({
+        uri: 'http://disneyland.test/students',
+        json: true,
+      }).then((body) => {
+        assert.equal(body[0], 'me');
+      }).then(() => {
+        assert.equal(tracer.id.traceId, id2.traceId);
+        return tracer.id.traceId;
+      }));
       // traceId should be restore to id2
       assert.equal(tracer.id.traceId, id2.traceId);
       assert.equal(resolvedId, id2.traceId);

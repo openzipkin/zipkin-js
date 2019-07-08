@@ -1,5 +1,3 @@
-const THRIFT = require('../src');
-const thriftTypes = require('../src/gen-nodejs/zipkinCore_types');
 const {
   TFramedTransport,
   TBufferedTransport,
@@ -10,6 +8,8 @@ const {
   model: {Span, Endpoint},
   option: {Some}
 } = require('zipkin');
+const THRIFT = require('../src');
+const thriftTypes = require('../src/gen-nodejs/zipkinCore_types');
 
 function serialize(spanThrift) {
   let serialized;

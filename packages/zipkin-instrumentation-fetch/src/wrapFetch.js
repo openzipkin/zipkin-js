@@ -9,16 +9,15 @@ function wrapFetch(fetch, {tracer, serviceName, remoteServiceName}) {
       tracer.scoped(() => {
         const url = (typeof input === 'string') ? input : input.url;
         const method = opts.method || 'GET';
-        const zipkinOpts =
-          instrumentation.recordRequest(opts, url, method);
+        const zipkinOpts = instrumentation.recordRequest(opts, url, method);
         const traceId = tracer.id;
 
-        fetch(url, zipkinOpts).then(res => {
+        fetch(url, zipkinOpts).then((res) => {
           tracer.scoped(() => {
             instrumentation.recordResponse(traceId, res.status);
           });
           resolve(res);
-        }).catch(err => {
+        }).catch((err) => {
           tracer.scoped(() => {
             instrumentation.recordError(traceId, err);
           });

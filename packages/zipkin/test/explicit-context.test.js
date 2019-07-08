@@ -43,7 +43,7 @@ describe('ExplicitContext', () => {
     expect(finalReturnValue).to.equal(3);
   });
 
-  it('does not support async context', done => {
+  it('does not support async context', (done) => {
     const clock = lolex.install();
 
     const ctx = new ExplicitContext();

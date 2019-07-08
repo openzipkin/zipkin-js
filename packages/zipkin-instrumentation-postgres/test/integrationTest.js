@@ -1,8 +1,9 @@
-const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 const {ExplicitContext, Tracer} = require('zipkin');
+const postgres = require('pg');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 
 const zipkinClient = require('../src/zipkinClient');
-const postgres = require('pg');
+
 delete postgres.native; // because we used to, that's why
 
 // This instrumentation records metadata, but does not affect postgres requests otherwise. Hence,
@@ -48,9 +49,9 @@ describe('Postgres instrumentation (integration test)', () => {
   function getClient(done, options = {}) {
     const traced = zipkinClient(tracer, postgres, serviceName, remoteServiceName);
     const host = options.host || 'localhost:5432';
-    let clientFunction = (pg, args) => new pg.Client(args);
-    if (options.clientFunction) {
-      clientFunction = options.clientFunction;
+    let {clientFunction} = options;
+    if (!clientFunction) {
+      clientFunction = (pg, args) => new pg.Client(args);
     }
     const result = clientFunction(traced, {
       host: host.split(':')[0],
@@ -64,24 +65,20 @@ describe('Postgres instrumentation (integration test)', () => {
     return result;
   }
 
-  it('should record successful request', done =>
-    getClient(done).query('SELECT NOW()', () => {
-      // TODO: this span name is the same for everything and so offers little value
+  it('should record successful request', done => getClient(done).query('SELECT NOW()', () => {
+    // TODO: this span name is the same for everything and so offers little value
+    expectSpan(popSpan(), clientSpan('query postgres'));
+    done();
+  }));
+
+  it('should record successful request :: pool', done => getClient(done, {clientFunction: (pg, args) => new pg.Pool(args)})
+    .query('SELECT NOW()', () => {
       expectSpan(popSpan(), clientSpan('query postgres'));
       done();
-    })
-  );
-
-  it('should record successful request :: pool', done =>
-    getClient(done, {clientFunction: (pg, args) => new pg.Pool(args)})
-      .query('SELECT NOW()', () => {
-        expectSpan(popSpan(), clientSpan('query postgres'));
-        done();
-      })
-  );
+    }));
 
   // this chains to show 3 forms of error handling
-  it('should report error in tags', done => {
+  it('should report error in tags', (done) => {
     const client = getClient(done, {expectFail: true});
 
     client.query('INVALID QUERY', () => {
@@ -105,7 +102,7 @@ describe('Postgres instrumentation (integration test)', () => {
   });
 
   // this chains to show 3 forms of success handling
-  it('should handle nested requests', done => {
+  it('should handle nested requests', (done) => {
     const client = getClient(done);
     const queryText = 'SELECT $1::text as "res"';
     const queryValues = ['test'];
@@ -118,7 +115,7 @@ describe('Postgres instrumentation (integration test)', () => {
         expect(query).to.equal(result);
 
         const submittableRows = [];
-        query.on('row', (row) => submittableRows.push(row));
+        query.on('row', row => submittableRows.push(row));
         query.on('end', () => {
           expect(firstResult.rows[0].res).to.equal('test');
           expect(secondResult.rows[0].res).to.equal('test');
@@ -135,7 +132,7 @@ describe('Postgres instrumentation (integration test)', () => {
   });
 
   // TODO: add to all client tests
-  it('should restore original trace ID', done => {
+  it('should restore original trace ID', (done) => {
     const rootId = tracer.createRootId();
     tracer.setId(rootId);
 

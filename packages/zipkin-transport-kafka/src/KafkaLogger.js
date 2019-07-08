@@ -23,7 +23,7 @@ module.exports = class KafkaLogger {
       this.encoder = THRIFT;
     } else if (options.encoder === JSON_V2) {
       // Temporarily do singleton list messages until logic from the http logger is extracted
-      this.encoder = {encode: (span) => `[${JSON_V2.encode(span)}]`};
+      this.encoder = {encode: span => `[${JSON_V2.encode(span)}]`};
     } else {
       throw new Error('Unsupported encoder. Valid choices are THRIFT and JSON_V2.');
     }

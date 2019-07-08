@@ -7,7 +7,7 @@ const middleware = require('../src/restifyMiddleware');
 describe('restify middleware - integration test', () => {
   const serviceName = 'weather-app';
 
-  it('should receive trace info from the client', done => {
+  it('should receive trace info from the client', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -28,7 +28,7 @@ describe('restify middleware - integration test', () => {
         return next();
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -73,7 +73,7 @@ describe('restify middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -81,7 +81,7 @@ describe('restify middleware - integration test', () => {
     });
   });
 
-  it('should accept a 128bit X-B3-TraceId', done => {
+  it('should accept a 128bit X-B3-TraceId', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -103,7 +103,7 @@ describe('restify middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const traceId = '863ac35c9f6413ad48485a3953bb6124';
-        const port = server.address().port;
+        const {port} = server.address();
         const url = `http://127.0.0.1:${port}/foo`;
         fetch(url, {
           method: 'post',
@@ -120,7 +120,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -128,7 +128,7 @@ describe('restify middleware - integration test', () => {
     });
   });
 
-  it('should record error on status <200 or >399', done => {
+  it('should record error on status <200 or >399', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -149,7 +149,7 @@ describe('restify middleware - integration test', () => {
         return next();
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -198,7 +198,7 @@ describe('restify middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });

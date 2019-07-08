@@ -1,16 +1,16 @@
 require('promise.prototype.finally').shim();
 const {expect} = require('chai');
+const {ExplicitContext, Tracer} = require('zipkin');
+const {Kafka} = require('kafkajs');
 const {
   newSpanRecorder,
   expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
-const {ExplicitContext, Tracer} = require('zipkin');
 
 // In order to verify Kafka headers, which have buffer values
 const {bufferToAscii} = require('../src/kafka-recorder');
 
-const {Kafka} = require('kafkajs');
 const instrumentKafkaJs = require('../src/zipkin-instrumentation-kafkajs');
 
 describe('KafkaJS instrumentation - integration test', function() { // => doesn't allow this.X
@@ -95,12 +95,12 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
                 ));
                 expectB3Headers(popSpan(), headers, false);
                 done();
-              }).catch((err) => done(err));
+              }).catch(err => done(err));
             }, 0);
             return Promise.resolve(); // TODO: why do we return a resolved promise here?
           }
         }))
-        .catch((err) => done(err));
+        .catch(err => done(err));
     });
   });
 
@@ -129,12 +129,12 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
                 });
                 expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
                 done();
-              }).catch((err) => done(err));
+              }).catch(err => done(err));
             }, 0);
             return Promise.resolve();
           }
         }))
-        .catch((err) => done(err));
+        .catch(err => done(err));
     });
 
     it('should resume trace from headers', function(done) { // => doesn't allow this.X
@@ -177,12 +177,12 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
                 });
                 expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
                 done();
-              }).catch((err) => done(err));
+              }).catch(err => done(err));
             }, 0);
             return Promise.resolve();
           }
         }))
-        .catch((err) => done(err));
+        .catch(err => done(err));
     });
 
     it('should tag a consumer span with error', function(done) { // => doesn't allow this.X
@@ -227,14 +227,14 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
               }, 0);
 
               if (isError) {
-                errorCount++;
+                errorCount += 1;
                 return Promise.reject();
               }
               return Promise.resolve();
             }
           });
         })
-        .catch((err) => done(err));
+        .catch(err => done(err));
     });
   });
 });
