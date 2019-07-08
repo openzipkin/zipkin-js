@@ -18,6 +18,7 @@ module.exports = function zipkinClient(
         tracer.recordAnnotation(new Annotation.ClientRecv());
       });
       // callback runs after the client request, so let's restore the former ID
+      // TODO: add tests for this for all clients
       tracer.letId(originalId, () => {
         callback.apply(this, args);
       });

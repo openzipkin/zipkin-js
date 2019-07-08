@@ -1,5 +1,3 @@
-const spawn = require('child_process').spawn;
-const path = require('path');
 const sinon = require('sinon');
 const {Tracer, ExplicitContext} = require('zipkin');
 const zipkinClient = require('../src/zipkinClient');
@@ -21,43 +19,6 @@ function getMemcached(tracer) {
 }
 
 describe('memcached interceptor', () => {
-  let memcachedProcess;
-
-  before(function(done) {
-    try {
-      const isWindows = /^win/.test(process.platform);
-      if (isWindows) {
-        console.log('Running tests on a windows box; try to spawn a memcached process.');
-        memcachedProcess = spawn(path.join(__dirname, 'windows', 'memcached.exe'), [], {
-          cwd: path.join(__dirname, 'windows')
-        });
-
-        memcachedProcess.stdout.on('data', (data) => {
-          console.log(`memcached stdout: ${data}`);
-        });
-
-        memcachedProcess.stderr.on('data', (data) => {
-          console.log(`memcached stderr: ${data}`);
-        });
-
-        // give it 10 seconds to boot
-        setTimeout(done, 10000);
-        this.timeout(15000);
-      } else {
-        done();
-      }
-    } catch (err) {
-      console.error('The before hook failed.', err);
-      done(err);
-    }
-  });
-
-  after(() => {
-    if (memcachedProcess) {
-      memcachedProcess.kill();
-    }
-  });
-
   it('should add zipkin annotations', (done) => {
     const ctxImpl = new ExplicitContext();
     const recorder = {record: sinon.spy()};
