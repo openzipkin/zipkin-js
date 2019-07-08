@@ -5,7 +5,7 @@
   "main": "lib/middleware.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --exit --require ../../test/helper.js",
+    "test": "mocha --exit --require ../../test/helper.js --require @babel/register",
     "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
