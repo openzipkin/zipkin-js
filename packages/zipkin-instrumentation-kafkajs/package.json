@@ -6,7 +6,7 @@
   "scripts": {
     "build": "babel src -d lib",
     "pretest": "(docker kill kafkajs-test; docker rm kafkajs-test) 2>&-; docker run -d -p 9092:9092 --name kafkajs-test --hostname localhost openzipkin/zipkin-kafka && timeout 60 bash -c 'until echo > /dev/tcp/localhost/9092; do sleep 1; done'",
-    "test": "mocha --require ../../test/helper.js --require @babel/register",
+    "test": "mocha --exit --require ../../test/helper.js --require @babel/register",
     "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
     "posttest": "docker kill kafkajs-test && docker rm kafkajs-test",
     "prepublish": "npm run build"
