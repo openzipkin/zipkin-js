@@ -1,5 +1,7 @@
 const {Annotation, InetAddress} = require('zipkin');
 
+// TODO: function wrapPostgres(postgres, options = {})
+// as it is easy to get the service name and remote service name wrong when using positional args
 module.exports = function zipkinClient(
   tracer,
   Postgres,
@@ -13,7 +15,7 @@ module.exports = function zipkinClient(
   }
   function annotateError(id, error) {
     tracer.letId(id, () => {
-      tracer.recordBinary('error', error.toString());
+      tracer.recordBinary('error', error.message || String(error));
       tracer.recordAnnotation(new Annotation.ClientRecv());
     });
   }
@@ -45,7 +47,7 @@ module.exports = function zipkinClient(
       tracer.recordAnnotation(new Annotation.ServerAddr({
         serviceName: remoteServiceName,
         host: new InetAddress(this.host),
-        port: this.port
+        port: this.port.toString()
       }));
       tracer.recordRpc(`query ${this.database}`);
     });
