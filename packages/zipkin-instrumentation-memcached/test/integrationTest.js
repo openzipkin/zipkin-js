@@ -1,5 +1,3 @@
-const spawn = require('child_process').spawn;
-const path = require('path');
 const sinon = require('sinon');
 const {Tracer, ExplicitContext} = require('zipkin');
 const zipkinClient = require('../src/zipkinClient');
