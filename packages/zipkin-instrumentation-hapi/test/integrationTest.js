@@ -6,7 +6,7 @@ const middleware = require('../src/hapiMiddleware');
 describe('hapi middleware - integration test', () => {
   const serviceName = 'weather-app';
 
-  it('should receive trace info from the client', done => {
+  it('should receive trace info from the client', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -36,9 +36,9 @@ describe('hapi middleware - integration test', () => {
           return server.inject({method, url, headers});
         })
         .then(() => {
-          const annotations = record.args.map((args) => args[0]);
-          annotations.forEach((ann) => expect(ann.traceId.traceId).to.equal('aaa'));
-          annotations.forEach((ann) => expect(ann.traceId.spanId).to.equal('bbb'));
+          const annotations = record.args.map(args => args[0]);
+          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
+          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
 
           expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
           expect(annotations[0].annotation.serviceName).to.equal(serviceName);
@@ -68,7 +68,7 @@ describe('hapi middleware - integration test', () => {
     });
   });
 
-  it('should not crash on 404', done => {
+  it('should not crash on 404', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -86,7 +86,7 @@ describe('hapi middleware - integration test', () => {
           return server.inject({method, url});
         })
         .then(() => {
-          const annotations = record.args.map((args) => args[0]);
+          const annotations = record.args.map(args => args[0]);
           expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
           expect(annotations[5].annotation.key).to.equal('http.status_code');
           expect(annotations[5].annotation.value).to.equal('404');
@@ -98,7 +98,7 @@ describe('hapi middleware - integration test', () => {
     });
   });
 
-  it('should properly report the URL with a query string', done => {
+  it('should properly report the URL with a query string', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -138,7 +138,7 @@ describe('hapi middleware - integration test', () => {
     });
   });
 
-  it('should record a reasonably accurate span duration', done => {
+  it('should record a reasonably accurate span duration', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -151,12 +151,12 @@ describe('hapi middleware - integration test', () => {
         method: 'POST',
         path: '/foo',
         config: {
-          handler: (request, reply) =>
-            new Promise(resolve => {
-              setTimeout(
-                () => resolve(reply.response({status: 'OK'}).code(202)),
-                PAUSE_TIME_MILLIS);
-            })
+          handler: (request, reply) => new Promise((resolve) => {
+            setTimeout(
+              () => resolve(reply.response({status: 'OK'}).code(202)),
+              PAUSE_TIME_MILLIS
+            );
+          })
         }
       });
 
@@ -170,7 +170,7 @@ describe('hapi middleware - integration test', () => {
           return server.inject({method, url});
         })
         .then(() => {
-          const annotations = record.args.map((args) => args[0]);
+          const annotations = record.args.map(args => args[0]);
           const serverRecvTs = annotations[3].timestamp / 1000.0;
           const serverSendTs = annotations[6].timestamp / 1000.0;
           const durationMillis = (serverSendTs - serverRecvTs);

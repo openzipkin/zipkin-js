@@ -1,16 +1,13 @@
-/* eslint-disable no-console */
-const globalFetch =
-  (typeof window !== 'undefined' && window.fetch) ||
-  (typeof global !== 'undefined' && global.fetch);
+/* eslint-disable no-undef */
+const globalFetch = (typeof window !== 'undefined' && window.fetch)
+  || (typeof global !== 'undefined' && global.fetch);
 
 // eslint-disable-next-line global-require
 const fetch = globalFetch || require('node-fetch');
 
-const {
-  jsonEncoder: {JSON_V1}
-} = require('zipkin');
+const {jsonEncoder: {JSON_V1}} = require('zipkin');
 
-const EventEmitter = require('events').EventEmitter;
+const {EventEmitter} = require('events');
 
 class HttpLogger extends EventEmitter {
   constructor({
@@ -93,8 +90,8 @@ class HttpLogger extends EventEmitter {
         timeout: self.timeout,
       }).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
-          const err = 'Unexpected response while sending Zipkin data, status:' +
-            `${response.status}, body: ${postBody}`;
+          const err = 'Unexpected response while sending Zipkin data, status:'
+            + `${response.status}, body: ${postBody}`;
 
           if (self.errorListenerSet) this.emit('error', new Error(err));
           else this.log.error(err);

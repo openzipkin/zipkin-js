@@ -14,9 +14,13 @@ describe('Batch Recorder - integration test', () => {
 
   beforeEach(() => {
     spans = [];
-    recorder = new BatchRecorder({logger: {logSpan: (span) => {
-      spans.push(JSON.parse(JSON_V2.encode(span)));
-    }}});
+    recorder = new BatchRecorder({
+      logger: {
+        logSpan: (span) => {
+          spans.push(JSON.parse(JSON_V2.encode(span)));
+        }
+      }
+    });
   });
 
   function pendingSpan(traceId) {

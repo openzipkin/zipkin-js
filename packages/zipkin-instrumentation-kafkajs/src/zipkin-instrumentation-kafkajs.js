@@ -1,8 +1,8 @@
+const {Request} = require('zipkin');
 const {
   recordConsumeStop, recordConsumeStart,
   recordProducerStart, recordProducerStop
 } = require('./kafka-recorder.js');
-const {Request} = require('zipkin');
 
 const instrumentKafkaJs = (kafkaJs, {tracer, remoteServiceName}) => {
   const consumerRunHandler = {
@@ -49,7 +49,7 @@ const instrumentKafkaJs = (kafkaJs, {tracer, remoteServiceName}) => {
             id = recordProducerStart(tracer, 'send', remoteServiceName, {topic: params.topic});
 
             const withTraceHeaders = Object.assign({}, params, {
-              messages: params.messages.map((msg) => Request.addZipkinHeaders(msg, id))
+              messages: params.messages.map(msg => Request.addZipkinHeaders(msg, id))
             });
 
             promise = obj[prop](withTraceHeaders);

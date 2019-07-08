@@ -18,7 +18,8 @@ describe('Http Client Instrumentation', () => {
     const instrumentation = new HttpClient({
       tracer,
       serviceName: 'weather-app',
-      remoteServiceName: 'weather-forecast-service'});
+      remoteServiceName: 'weather-forecast-service'
+    });
 
     const port = '80';
     const host = '127.0.0.1';
@@ -64,7 +65,8 @@ describe('Http Client Instrumentation', () => {
     const instrumentation = new HttpClient({
       tracer,
       serviceName: 'weather-app',
-      remoteServiceName: 'weather-forecast-service'});
+      remoteServiceName: 'weather-forecast-service'
+    });
 
     const url = 'http://127.0.0.1:80/weather?index=10&count=300';
     tracer.scoped(() => {
@@ -90,7 +92,8 @@ describe('Http Client Instrumentation', () => {
       const instrumentation = new HttpClient({
         tracer,
         serviceName: 'weather-app',
-        remoteServiceName: 'weather-forecast-service'});
+        remoteServiceName: 'weather-forecast-service'
+      });
 
       const url = 'http://127.0.0.1:80/weather?index=10&count=300';
       tracer.scoped(() => {

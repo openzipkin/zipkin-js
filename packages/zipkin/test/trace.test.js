@@ -176,10 +176,8 @@ describe('Tracer', () => {
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
 
     ctxImpl.scoped(() => {
-      const promise = trace.local('buy-smoothie', () =>
-        Promise.delay(10)
-          .then(() => 'smoothie')
-      );
+      const promise = trace.local('buy-smoothie', () => Promise.delay(10)
+        .then(() => 'smoothie'));
 
       expect(isPromise(promise)).to.eql(true);
 
@@ -211,10 +209,8 @@ describe('Tracer', () => {
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
 
     ctxImpl.scoped(() => {
-      const promise = trace.local('buy-smoothie', () =>
-        Promise.delay(10)
-          .then(() => 'smoothie')
-      );
+      const promise = trace.local('buy-smoothie', () => Promise.delay(10)
+        .then(() => 'smoothie'));
 
       expect(isPromise(promise)).to.eql(true);
 
@@ -239,13 +235,11 @@ describe('Tracer', () => {
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
 
     ctxImpl.scoped(() => {
-      const promise = trace.local('buy-smoothie', () =>
-        Promise.delay(10)
-          .then(() => {
-            trace.recordBinary('taste', 'banana');
-            return 'smoothie';
-          })
-      );
+      const promise = trace.local('buy-smoothie', () => Promise.delay(10)
+        .then(() => {
+          trace.recordBinary('taste', 'banana');
+          return 'smoothie';
+        }));
 
       expect(isPromise(promise)).to.eql(true);
 
@@ -288,11 +282,11 @@ describe('Tracer', () => {
     });
   }
 
-  it('should set sampled flag when shouldSample is true', done => {
+  it('should set sampled flag when shouldSample is true', (done) => {
     runTest(true, done);
   });
 
-  it('should set sampled flag when shouldSample is false', done => {
+  it('should set sampled flag when shouldSample is false', (done) => {
     runTest(false, done);
   });
 
@@ -393,7 +387,7 @@ describe('Tracer', () => {
     new Sampler(neverSample)
   ];
 
-  samplerCases.forEach(sampler => {
+  samplerCases.forEach((sampler) => {
     it(`should follow sampler if sampled value is missing when joining (${sampler})`, () => {
       const ctxImpl = new ExplicitContext();
       const tracer = new Tracer({recorder, ctxImpl, sampler});

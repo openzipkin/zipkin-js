@@ -4,10 +4,12 @@ import * as protoLoader from '@grpc/proto-loader';
 
 // constants
 const PROTO_PATH = `${__dirname}/protos/weather.proto`;
-const PROTO_OPTIONS = {keepCase: true, enums: String, defaults: true, oneofs: true};
+const PROTO_OPTIONS = {
+  keepCase: true, enums: String, defaults: true, oneofs: true
+};
 
 const definition = protoLoader.loadSync(PROTO_PATH, PROTO_OPTIONS);
-const weather = grpc.loadPackageDefinition(definition).weather;
+const {weather} = grpc.loadPackageDefinition(definition);
 
 function getTemperature(call, callback) {
   const metadata = call.metadata.getMap();

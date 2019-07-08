@@ -33,13 +33,13 @@ const plugin = ({tracer, serviceName, remoteServiceName}) => {
     // We can't use end() as the caller might be using it.
     // The following avoids double-recording on error as 4xx and 5xx are treated as errors.
     let done = false;
-    const recordResponse = (res) => tracer.scoped(() => {
+    const recordResponse = res => tracer.scoped(() => {
       if (done) return;
       done = true;
       instrumentation.recordResponse(traceId, res.statusCode);
     });
 
-    const recordError = (error) => tracer.scoped(() => {
+    const recordError = error => tracer.scoped(() => {
       if (done) return;
       done = true;
       instrumentation.recordError(traceId, error);

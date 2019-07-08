@@ -107,7 +107,7 @@ const annotation = {
   LocalOperationStop
 };
 
-Object.keys(annotation).forEach(key => {
+Object.keys(annotation).forEach((key) => {
   annotation[key].prototype.annotationType = key;
 });
 

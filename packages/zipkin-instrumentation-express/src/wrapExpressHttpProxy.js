@@ -79,8 +79,9 @@ function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
       };
     }
 
-    const instrumentation =
-      new ExpressHttpProxyInstrumentation({tracer, serviceName, remoteServiceName});
+    const instrumentation = new ExpressHttpProxyInstrumentation(
+      {tracer, serviceName, remoteServiceName}
+    );
 
     const wrappedOptions = options;
 

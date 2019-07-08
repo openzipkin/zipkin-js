@@ -1,8 +1,8 @@
-const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 const {ExplicitContext, Tracer} = require('zipkin');
+const redis = require('redis');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 
 const zipkinClient = require('../src/zipkinClient');
-const redis = require('redis');
 
 // This instrumentation records metadata, but does not affect redis requests otherwise. Hence,
 // these tests do not expect B3 headers.
@@ -54,35 +54,29 @@ describe('redis instrumentation (integration test)', () => {
     return result;
   }
 
-  it('should record successful request', done =>
-    getClient(done).set('ping', 'pong', () => {
-      expectSpan(popSpan(), clientSpan('set'));
+  it('should record successful request', done => getClient(done).set('ping', 'pong', () => {
+    expectSpan(popSpan(), clientSpan('set'));
+    done();
+  }));
+
+  it('should record successful batch request', done => getClient(done).batch([['get', 'ping'], ['set', 'syn', 'ack']]).exec(() => {
+    // TODO: should this span be named exec?
+    expectSpan(popSpan(), clientSpan('exec', {commands: '["get","set"]'}));
+    done();
+  }));
+
+  it('should report error in tags', done => getClient(done, {expectSuccess: false}).get('ping', 'pong', (err, data) => {
+    if (!err) {
+      done(new Error(`expected response to error: ${data}`));
+    } else {
+      expectSpan(popSpan(), clientSpan('get', {
+        error: 'ERR wrong number of arguments for \'get\' command'
+      }));
       done();
-    })
-  );
+    }
+  }));
 
-  it('should record successful batch request', done =>
-    getClient(done).batch([['get', 'ping'], ['set', 'syn', 'ack']]).exec(() => {
-      // TODO: should this span be named exec?
-      expectSpan(popSpan(), clientSpan('exec', {commands: '["get","set"]'}));
-      done();
-    })
-  );
-
-  it('should report error in tags', done =>
-    getClient(done, {expectSuccess: false}).get('ping', 'pong', (err, data) => {
-      if (!err) {
-        done(new Error(`expected response to error: ${data}`));
-      } else {
-        expectSpan(popSpan(), clientSpan('get', {
-          error: 'ERR wrong number of arguments for \'get\' command'
-        }));
-        done();
-      }
-    })
-  );
-
-  it('should handle nested requests', done => {
+  it('should handle nested requests', (done) => {
     const client = getClient(done);
     client.set('foo', 'bar', () => {
       expectSpan(popSpan(), clientSpan('set'));
@@ -96,7 +90,7 @@ describe('redis instrumentation (integration test)', () => {
   });
 
   // TODO: add to all client tests
-  it('should restore original trace ID', done => {
+  it('should restore original trace ID', (done) => {
     const rootId = tracer.createRootId();
     tracer.setId(rootId);
 

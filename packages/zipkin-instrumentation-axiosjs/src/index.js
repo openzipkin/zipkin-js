@@ -18,7 +18,7 @@ function wrapAxios(axios, options = {}) {
   });
   const zipkinRecordError = error => tracer.scoped(() => {
     if (error.config) {
-      const traceId = error.config.traceId;
+      const {traceId} = error.config;
       if (error.response) {
         instrumentation.recordResponse(traceId, error.response.status);
       } else {

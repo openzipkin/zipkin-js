@@ -12,8 +12,10 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
-  "devDependencies": {
-    "pg": "^7.6.1",
+  "dependencies": {
     "zipkin": "^0.18.4"
+  },
+  "devDependencies": {
+    "pg": "^7.6.1"
   }
 }

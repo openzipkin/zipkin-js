@@ -5,21 +5,19 @@ const {
 } = require('zipkin');
 
 function getRequestMethod(req) {
-  let method = 'get';
   if (req.entity) {
-    method = 'post';
+    return 'post';
   }
   if (req.method) {
-    method = req.method;
+    return req.method;
   }
-  return method;
+  return 'get';
 }
 
 function request(req, {tracer, serviceName, remoteServiceName}) {
   this.instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
   return tracer.scoped(() => {
-    const reqWithHeaders =
-      this.instrumentation.recordRequest(req, req.path, getRequestMethod(req));
+    const reqWithHeaders = this.instrumentation.recordRequest(req, req.path, getRequestMethod(req));
     this.traceId = tracer.id;
     return reqWithHeaders;
   });

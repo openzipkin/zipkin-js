@@ -5,10 +5,10 @@ function appendZipkinHeaders(req, traceId) {
   headers[HttpHeaders.TraceId] = traceId.traceId;
   headers[HttpHeaders.SpanId] = traceId.spanId;
 
-  traceId.parentSpanId.ifPresent(psid => {
+  traceId.parentSpanId.ifPresent((psid) => {
     headers[HttpHeaders.ParentSpanId] = psid;
   });
-  traceId.sampled.ifPresent(sampled => {
+  traceId.sampled.ifPresent((sampled) => {
     headers[HttpHeaders.Sampled] = sampled ? '1' : '0';
   });
 

@@ -29,8 +29,7 @@ const Request = class {
     this.httpRequest = request.defaults((options, callback) => tracer.scoped(() => {
       const method = options.method || 'GET';
       const url = options.uri || options.url;
-      const wrappedOptions =
-        this.instrumentation.recordRequest(options, url, method);
+      const wrappedOptions = this.instrumentation.recordRequest(options, url, method);
       const traceId = tracer.id;
 
       const recordResponse = (response) => {

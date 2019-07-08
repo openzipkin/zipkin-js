@@ -38,13 +38,11 @@ describe(__filename, () => {
         });
       setTimeout(done, 2000);
     });
-    it('Throwing error should reject the promise', () =>
-      new CustomPromise(() => {
-        throw new Error('Life is ruff');
-      }).catch((e) => {
-        assert.equal('Life is ruff', e.message);
-      })
-    );
+    it('Throwing error should reject the promise', () => new CustomPromise(() => {
+      throw new Error('Life is ruff');
+    }).catch((e) => {
+      assert.equal('Life is ruff', e.message);
+    }));
     it('Chaining callbacks', (done) => {
       const p1 = new CustomPromise((resolve) => {
         resolve(100);

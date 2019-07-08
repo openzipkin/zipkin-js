@@ -19,13 +19,13 @@ function wrapGot(got, {tracer, serviceName, remoteServiceName}) {
   return got.extend({
     hooks: {
       init: [
-        opts => {
+        (opts) => {
           const ctx = getZipkinContext(opts);
           ctx.parentId = tracer.id;
         }
       ],
       beforeRequest: [
-        opts => {
+        (opts) => {
           const url = opts.href;
           const method = opts.method || 'GET';
           const ctx = getZipkinContext(opts);
@@ -36,7 +36,7 @@ function wrapGot(got, {tracer, serviceName, remoteServiceName}) {
         }
       ],
       afterResponse: [
-        res => {
+        (res) => {
           const ctx = getZipkinContext(res.request.gotOptions);
           tracer.scoped(() => {
             instrumentation.recordResponse(ctx.traceId, res.statusCode);
@@ -45,7 +45,7 @@ function wrapGot(got, {tracer, serviceName, remoteServiceName}) {
         }
       ],
       beforeError: [
-        err => {
+        (err) => {
           if (!err.gotOptions) return err;
           const ctx = getZipkinContext(err.gotOptions);
           tracer.scoped(() => {

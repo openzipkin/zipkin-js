@@ -1,13 +1,13 @@
 const {expect} = require('chai');
+const {ExplicitContext, Tracer} = require('zipkin');
+
+const rest = require('rest');
 const {
   maybeMiddleware,
   newSpanRecorder,
   expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
-const {ExplicitContext, Tracer} = require('zipkin');
-
-const rest = require('rest');
 const restInterceptor = require('../src/restInterceptor');
 
 // NOTE: CujoJS/rest sends all http status to success callback

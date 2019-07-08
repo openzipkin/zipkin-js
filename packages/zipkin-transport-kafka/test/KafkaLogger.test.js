@@ -11,7 +11,9 @@ describe('Kafka transport', () => {
 
   it('should accept to JSON_V2 encoder', () => {
     const logger = new KafkaLogger({encoder: JSON_V2, clientOpts: {}});
-    expect(logger.encoder.encode({traceId: 'a', id: 'b', annotations: [], tags: {}}))
+    expect(logger.encoder.encode({
+      traceId: 'a', id: 'b', annotations: [], tags: {}
+    }))
       .to.equal('[{"traceId":"a","id":"b"}]');
   });
 

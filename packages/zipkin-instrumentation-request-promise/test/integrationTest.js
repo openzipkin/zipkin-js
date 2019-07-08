@@ -1,11 +1,11 @@
 const {expect} = require('chai');
+const {ExplicitContext, Tracer} = require('zipkin');
 const {
   maybeMiddleware,
   newSpanRecorder,
   expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
-const {ExplicitContext, Tracer} = require('zipkin');
 
 const ZipkinRequest = require('../src/request').default;
 
@@ -79,10 +79,10 @@ describe('request-promise instrumentation - integration test', () => {
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
-  it('should report 404 in tags', done => {
+  it('should report 404 in tags', (done) => {
     const path = '/pathno';
     getClient().get(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -101,10 +101,10 @@ describe('request-promise instrumentation - integration test', () => {
       });
   });
 
-  it('should report 400 in tags', done => {
+  it('should report 400 in tags', (done) => {
     const path = '/weather/securedTown';
     getClient().get(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 400 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -123,10 +123,10 @@ describe('request-promise instrumentation - integration test', () => {
       });
   });
 
-  it('should report 500 in tags', done => {
+  it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
     getClient().get(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -151,10 +151,10 @@ describe('request-promise instrumentation - integration test', () => {
     const path = '/badHost';
     const badUrl = `http://localhost:12345${path}`;
     getClient().get({url: badUrl, timeout: 300})
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
-      .catch(error => {
+      .catch((error) => {
         expectSpan(popSpan(), {
           name: 'get',
           kind: 'CLIENT',

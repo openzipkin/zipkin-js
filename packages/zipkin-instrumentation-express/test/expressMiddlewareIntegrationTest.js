@@ -7,7 +7,7 @@ const middleware = require('../src/expressMiddleware');
 describe('express middleware - integration test', () => {
   const serviceName = 'weather-app';
 
-  it('should record request & response annotations', done => {
+  it('should record request & response annotations', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -27,7 +27,7 @@ describe('express middleware - integration test', () => {
         }, 10);
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -76,7 +76,7 @@ describe('express middleware - integration test', () => {
             expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
             done();
           })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -84,7 +84,7 @@ describe('express middleware - integration test', () => {
     });
   });
 
-  it('should properly report the URL with a query string', done => {
+  it('should properly report the URL with a query string', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -104,7 +104,7 @@ describe('express middleware - integration test', () => {
         }, 10);
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}?abc=123`;
@@ -122,7 +122,7 @@ describe('express middleware - integration test', () => {
 
             done();
           })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -130,7 +130,7 @@ describe('express middleware - integration test', () => {
     });
   });
 
-  it('should report Rpc with route path', done => {
+  it('should report Rpc with route path', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -152,7 +152,7 @@ describe('express middleware - integration test', () => {
       });
 
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo/123';
         const url = `http://${host}:${port}${urlPath}`;
@@ -169,7 +169,7 @@ describe('express middleware - integration test', () => {
 
             done();
           })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -177,7 +177,7 @@ describe('express middleware - integration test', () => {
     });
   });
 
-  it('should have the same traceId in async calls on same request', done => {
+  it('should have the same traceId in async calls on same request', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -204,7 +204,7 @@ describe('express middleware - integration test', () => {
         .then(() => res.status(202).json({status: 'OK'})));
 
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}?abc=123`;
@@ -216,15 +216,13 @@ describe('express middleware - integration test', () => {
             const originalTraceId = annotations[0].traceId.traceId;
             const originalSpanId = annotations[0].traceId.spanId;
 
-            annotations.forEach(ann =>
-              expect(ann.traceId.traceId)
-                .to.have.lengthOf(16).and
-                .to.equal(originalTraceId));
+            annotations.forEach(ann => expect(ann.traceId.traceId)
+              .to.have.lengthOf(16).and
+              .to.equal(originalTraceId));
 
-            annotations.forEach(ann =>
-              expect(ann.traceId.spanId)
-                .to.have.lengthOf(16).and
-                .to.equal(originalSpanId));
+            annotations.forEach(ann => expect(ann.traceId.spanId)
+              .to.have.lengthOf(16).and
+              .to.equal(originalSpanId));
 
             record.reset();
 
@@ -237,21 +235,19 @@ describe('express middleware - integration test', () => {
                 const traceId2 = annot2[0].traceId.traceId;
                 const spanId2 = annot2[0].traceId.spanId;
 
-                annot2.forEach(ann =>
-                  expect(ann.traceId.traceId)
-                    .to.have.lengthOf(16).and
-                    .to.equal(traceId2));
+                annot2.forEach(ann => expect(ann.traceId.traceId)
+                  .to.have.lengthOf(16).and
+                  .to.equal(traceId2));
 
-                annot2.forEach(ann =>
-                  expect(ann.traceId.spanId)
-                    .to.have.lengthOf(16).and
-                    .to.equal(spanId2));
+                annot2.forEach(ann => expect(ann.traceId.spanId)
+                  .to.have.lengthOf(16).and
+                  .to.equal(spanId2));
 
                 expect(originalTraceId).to.not.equal(traceId2);
                 done();
               });
           })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -259,7 +255,7 @@ describe('express middleware - integration test', () => {
     });
   });
 
-  it('should mark 500 respones as errors', done => {
+  it('should mark 500 respones as errors', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -275,12 +271,12 @@ describe('express middleware - integration test', () => {
       });
 
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const urlPath = `http://127.0.0.1:${port}/error`;
 
         fetch(urlPath, {
           method: 'get'
-        }).then(res => {
+        }).then((res) => {
           server.close();
 
           expect(res.status).to.equal(500);
@@ -294,7 +290,7 @@ describe('express middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });

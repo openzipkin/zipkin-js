@@ -4,9 +4,9 @@ const fetch = require('node-fetch');
 const restify = require('restify');
 const express = require('express');
 const connect = require('connect');
-const middleware = require('../src/middleware');
 const https = require('https');
 const fs = require('fs');
+const middleware = require('../src/middleware');
 
 const serviceName = 'weather-app';
 const testSetup = () => {
@@ -14,11 +14,13 @@ const testSetup = () => {
   const recorder = {record};
   const ctxImpl = new ExplicitContext();
   const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
-  return {record, recorder, ctxImpl, tracer};
+  return {
+    record, recorder, ctxImpl, tracer
+  };
 };
 
 describe('restify middleware - integration test', () => {
-  it('should receive trace info from the client', done => {
+  it('should receive trace info from the client', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -38,7 +40,7 @@ describe('restify middleware - integration test', () => {
         });
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -83,7 +85,7 @@ describe('restify middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -91,7 +93,7 @@ describe('restify middleware - integration test', () => {
     });
   });
 
-  it('should accept a 128bit X-B3-TraceId', done => {
+  it('should accept a 128bit X-B3-TraceId', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -110,7 +112,7 @@ describe('restify middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const traceId = '863ac35c9f6413ad48485a3953bb6124';
-        const port = server.address().port;
+        const {port} = server.address();
         const url = `http://127.0.0.1:${port}/foo`;
         fetch(url, {
           method: 'post',
@@ -127,7 +129,7 @@ describe('restify middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -135,7 +137,7 @@ describe('restify middleware - integration test', () => {
     });
   });
 
-  it('should record error on status <200 or >399', done => {
+  it('should record error on status <200 or >399', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -153,7 +155,7 @@ describe('restify middleware - integration test', () => {
         return next();
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -202,7 +204,7 @@ describe('restify middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -212,7 +214,7 @@ describe('restify middleware - integration test', () => {
 });
 
 describe('express middleware - integration test', () => {
-  it('should receive trace info from the client', done => {
+  it('should receive trace info from the client', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -230,7 +232,7 @@ describe('express middleware - integration test', () => {
       });
 
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -271,7 +273,7 @@ describe('express middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -279,7 +281,7 @@ describe('express middleware - integration test', () => {
     });
   });
 
-  it('should accept a 128bit X-B3-TraceId', done => {
+  it('should accept a 128bit X-B3-TraceId', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -297,7 +299,7 @@ describe('express middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const traceId = '863ac35c9f6413ad48485a3953bb6124';
-        const port = server.address().port;
+        const {port} = server.address();
         const url = `http://127.0.0.1:${port}/foo`;
         fetch(url, {
           method: 'post',
@@ -314,7 +316,7 @@ describe('express middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -322,7 +324,7 @@ describe('express middleware - integration test', () => {
     });
   });
 
-  it('should record error on status <200 or >399', done => {
+  it('should record error on status <200 or >399', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -339,7 +341,7 @@ describe('express middleware - integration test', () => {
         }, 10);
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -384,7 +386,7 @@ describe('express middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -394,7 +396,7 @@ describe('express middleware - integration test', () => {
 });
 
 describe('connect middleware - integration test', () => {
-  it('should receive trace info from the client', done => {
+  it('should receive trace info from the client', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -412,7 +414,7 @@ describe('connect middleware - integration test', () => {
         }, 10);
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -457,7 +459,7 @@ describe('connect middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -465,7 +467,7 @@ describe('connect middleware - integration test', () => {
     });
   });
 
-  it('should accept a 128bit X-B3-TraceId', done => {
+  it('should accept a 128bit X-B3-TraceId', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -484,7 +486,7 @@ describe('connect middleware - integration test', () => {
       });
       const server = app.listen(0, () => {
         const traceId = '863ac35c9f6413ad48485a3953bb6124';
-        const port = server.address().port;
+        const {port} = server.address();
         const url = `http://127.0.0.1:${port}/foo`;
         fetch(url, {
           method: 'post',
@@ -501,7 +503,7 @@ describe('connect middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -509,7 +511,7 @@ describe('connect middleware - integration test', () => {
     });
   });
 
-  it('should record error on status <200 or >399', done => {
+  it('should record error on status <200 or >399', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     ctxImpl.scoped(() => {
@@ -527,7 +529,7 @@ describe('connect middleware - integration test', () => {
         }, 10);
       });
       const server = app.listen(0, () => {
-        const port = server.address().port;
+        const {port} = server.address();
         const host = '127.0.0.1';
         const urlPath = '/foo';
         const url = `http://${host}:${port}${urlPath}`;
@@ -576,7 +578,7 @@ describe('connect middleware - integration test', () => {
 
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });
@@ -584,7 +586,7 @@ describe('connect middleware - integration test', () => {
     });
   });
 
-  it('should work with https', done => {
+  it('should work with https', (done) => {
     const {record, ctxImpl, tracer} = testSetup();
 
     const tlsOptions = {
@@ -628,7 +630,7 @@ describe('connect middleware - integration test', () => {
           annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
           done();
         })
-          .catch(err => {
+          .catch((err) => {
             server.close();
             done(err);
           });

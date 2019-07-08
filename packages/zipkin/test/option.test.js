@@ -15,7 +15,7 @@ describe('option', () => {
         const s = new option.Some(0);
 
         let called = false;
-        s.ifPresent(x => {
+        s.ifPresent((x) => {
           expect(x).to.equal(0);
           called = true;
         });

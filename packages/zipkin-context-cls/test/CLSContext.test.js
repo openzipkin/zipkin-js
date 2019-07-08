@@ -1,4 +1,5 @@
 const CLSContext = require('../');
+
 describe('CLSContext', () => {
   it('should start with context null', () => {
     const ctx = new CLSContext();
@@ -50,7 +51,7 @@ describe('CLSContext', () => {
     expect(finalReturnValue).to.equal(3);
   });
 
-  it('supports CLS contexts (setTimeout etc)', done => {
+  it('supports CLS contexts (setTimeout etc)', (done) => {
     const ctx = new CLSContext();
     function callback() {
       expect(ctx.getContext()).to.equal('foo');

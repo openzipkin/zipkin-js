@@ -13,6 +13,10 @@ const defaultTimeout = 60 * 1000000;
  */
 const defaultTagsSymbol = Symbol('defaultTags');
 
+function _timedOut(span) {
+  return span.timeoutTimestamp < now();
+}
+
 /**
  * @class PartialSpan
  */
@@ -70,7 +74,7 @@ class BatchRecorder {
     // and collect any timed-out ones
     const timer = setInterval(() => {
       this.partialSpans.forEach((span, id) => {
-        if (this._timedOut(span)) {
+        if (_timedOut(span)) {
           this._writeSpan(id, span);
         }
       });
@@ -84,7 +88,7 @@ class BatchRecorder {
     const defaultTags = this[defaultTagsSymbol];
     // eslint-disable-next-line no-restricted-syntax
     for (const tag in defaultTags) {
-      if (defaultTags.hasOwnProperty(tag)) {
+      if (Object.prototype.hasOwnProperty.call(defaultTags, tag)) {
         span.delegate.putTag(tag, defaultTags[tag]);
       }
     }
@@ -127,14 +131,10 @@ class BatchRecorder {
     }
   }
 
-  _timedOut(span) {
-    return span.timeoutTimestamp < now();
-  }
-
   record(rec) {
     const id = rec.traceId;
 
-    this._updateSpanMap(id, rec.timestamp, span => {
+    this._updateSpanMap(id, rec.timestamp, (span) => {
       switch (rec.annotation.annotationType) {
         case 'ClientSend':
           span.delegate.setKind('CLIENT');
@@ -219,7 +219,7 @@ class BatchRecorder {
     this[defaultTagsSymbol] = tags;
   }
 
-  toString() {
+  toString() { // eslint-disable-line class-methods-use-this
     return 'BatchRecorder()';
   }
 }

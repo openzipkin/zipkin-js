@@ -14,13 +14,13 @@ describe('axios instrumentation - unit test', () => {
     const ctxImpl = new ExplicitContext();
     tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
   });
-  it('should return an axios instance when pass axios', done => {
+  it('should return an axios instance when pass axios', (done) => {
     const axiosInstance = wrapAxios(axios, {tracer, remoteServiceName});
     expect(axiosInstance.create).to.equal(undefined);
     done();
   });
 
-  it('should return itself when pass an axiosInstance', done => {
+  it('should return itself when pass an axiosInstance', (done) => {
     const axiosInstance = axios.create();
     const zipkinAxiosInstance = wrapAxios(axiosInstance, {tracer, remoteServiceName});
     expect(axiosInstance).to.equal(zipkinAxiosInstance);

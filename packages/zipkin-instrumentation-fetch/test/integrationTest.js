@@ -1,11 +1,11 @@
 const {expect} = require('chai');
+const {ExplicitContext, Tracer} = require('zipkin');
 const {
   maybeMiddleware,
   newSpanRecorder,
   expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
-const {ExplicitContext, Tracer} = require('zipkin');
 
 // defer lookup of node fetch until we know if we are node
 const wrapFetch = require('../src/wrapFetch');
@@ -55,7 +55,7 @@ describe('fetch instrumentation - integration test', () => {
     if (server) { // defer loading node-fetch
       fetch = require('node-fetch'); // eslint-disable-line global-require
     } else {
-      fetch = window.fetch;
+      fetch = window.fetch; // eslint-disable-line
     }
     return wrapFetch(fetch, {tracer, remoteServiceName});
   }
@@ -77,15 +77,15 @@ describe('fetch instrumentation - integration test', () => {
     });
   }
 
-  it('should not interfere with errors that precede a call', done => {
+  it('should not interfere with errors that precede a call', (done) => {
     // Here we are passing a function instead of the value of it. This ensures our error callback
     // doesn't make assumptions about a span in progress: there won't be if there was a config error
     wrappedFetch()(url)
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
       })
-      .catch(error => {
-        const message = error.message;
+      .catch((error) => {
+        const {message} = error;
         const expected = ['must be of type string', 'must be a string']; // messages can vary in CI
         if (message.indexOf(expected[0]) !== -1 || message.indexOf(expected[1]) !== -1) {
           done();
@@ -163,14 +163,14 @@ describe('fetch instrumentation - integration test', () => {
       }));
   });
 
-  it('should report when endpoint doesnt exist in tags', done => {
+  it('should report when endpoint doesnt exist in tags', (done) => {
     const path = '/badHost';
     const badUrl = `http://localhost:12345${path}`;
     wrappedFetch()(badUrl)
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
-      .catch(error => {
+      .catch((error) => {
         expectSpan(popSpan(), {
           name: 'get',
           kind: 'CLIENT',
@@ -221,4 +221,3 @@ describe('fetch instrumentation - integration test', () => {
     });
   });
 });
-

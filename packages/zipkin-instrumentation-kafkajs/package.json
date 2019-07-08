@@ -14,9 +14,11 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
+  "dependencies": {
+    "zipkin": "^0.18.4"
+  },
   "devDependencies": {
     "kafkajs": "^1.9.3",
-    "zipkin": "^0.18.4",
     "promise.prototype.finally": "3.1.0"
   }
 }

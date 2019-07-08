@@ -7,12 +7,12 @@ const {
   option: {Some}
 } = require('zipkin');
 const thrift = require('thrift');
-const thriftTypes = require('../../zipkin-encoder-thrift/src/gen-nodejs/zipkinCore_types');
 const sinon = require('sinon');
+const {toByteArray: base64decode} = require('base64-js');
+const thriftTypes = require('../../zipkin-encoder-thrift/src/gen-nodejs/zipkinCore_types');
 const ScribeLogger = require('../src/ScribeLogger');
 const Scribe = require('./gen-nodejs/scribe');
 const {ResultCode} = require('./gen-nodejs/scribeServer_types');
-const {toByteArray: base64decode} = require('base64-js');
 
 function deserialize(serialized) {
   const res = new thriftTypes.Span();
@@ -35,7 +35,7 @@ describe('Scribe transport - integration test', () => {
       protocol: thrift.TBinaryProtocol
     });
     const scribeServer = server.listen(0, () => {
-      const port = scribeServer.address().port;
+      const {port} = scribeServer.address();
       const logger = new ScribeLogger({
         scribeHost: '127.0.0.1',
         scribePort: port,

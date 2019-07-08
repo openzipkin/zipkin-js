@@ -13,10 +13,12 @@
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
+  "dependencies": {
+    "zipkin": "^0.18.4"
+  },
   "devDependencies": {
     "express-http-proxy": "^0.11.0",
     "node-fetch": "^1.5.3",
-    "zipkin": "^0.18.4",
     "zipkin-context-cls": "^0.18.4"
   }
 }

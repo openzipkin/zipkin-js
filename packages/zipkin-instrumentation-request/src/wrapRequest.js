@@ -7,8 +7,7 @@ function wrapRequest(request, {tracer, serviceName, remoteServiceName}) {
   return request.defaults((options, callback) => tracer.scoped(() => {
     const method = options.method || 'GET';
     const url = options.uri || options.url;
-    const wrappedOptions =
-      instrumentation.recordRequest(options, url, method);
+    const wrappedOptions = instrumentation.recordRequest(options, url, method);
     const traceId = tracer.id;
 
     const recordResponse = (response) => {

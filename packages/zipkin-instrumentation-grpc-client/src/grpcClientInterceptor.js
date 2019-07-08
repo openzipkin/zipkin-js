@@ -24,30 +24,28 @@ const interceptor = (grpc, {tracer, remoteServiceName}) => {
   return (options, nextCall) => {
     const method = options.method_definition.path;
 
-    return tracer.scoped(() =>
-      new grpc.InterceptingCall(nextCall(options), {
-        /**
+    return tracer.scoped(() => new grpc.InterceptingCall(nextCall(options), {
+      /**
          * @param {grpc.Metadata} metadata
          * @param {Object} listener
          * @param {function(metadata: grpc.Metadata, listener: Object)} next
          */
-        start(metadata, listener, next) {
-          const traceId = instrumentation.start(metadata, method);
-          const zipkinMetadata = Instrumentation.setHeaders(metadata, traceId);
+      start(metadata, listener, next) {
+        const traceId = instrumentation.start(metadata, method);
+        const zipkinMetadata = Instrumentation.setHeaders(metadata, traceId);
 
-          next(zipkinMetadata, {
-            /**
+        next(zipkinMetadata, {
+          /**
              * @param {grpc.Status} status
              * @param {function(status: grpc.Status)} next
              */
-            onReceiveStatus(status, next) {
-              instrumentation.onReceiveStatus(traceId, status);
-              next(status);
-            }
-          });
-        }
-      })
-    );
+          onReceiveStatus(status, next) {
+            instrumentation.onReceiveStatus(traceId, status);
+            next(status);
+          }
+        });
+      }
+    }));
   };
 };
 

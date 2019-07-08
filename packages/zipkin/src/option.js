@@ -27,27 +27,35 @@ class Some {
   constructor(value) {
     this.value = value;
   }
-  get type() {
+
+  get type() { // eslint-disable-line class-methods-use-this
     return 'Some';
   }
-  get present() {
+
+  get present() { // eslint-disable-line class-methods-use-this
     return true;
   }
+
   map(f) {
     return new Some(f(this.value));
   }
+
   ifPresent(f) {
     f(this.value);
   }
+
   flatMap(f) {
     return f(this.value);
   }
+
   getOrElse() {
     return this.value;
   }
+
   equals(other) {
     return other instanceof Some && other.value === this.value;
   }
+
   toString() {
     return `Some(${this.value})`;
   }

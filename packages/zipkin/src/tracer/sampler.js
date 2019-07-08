@@ -38,9 +38,9 @@ function makeCountingEvaluator(sampleRate) {
     let counter = 0;
     const limit = parseInt(1 / sampleRate);
     const counting = function counting(traceId) { // eslint-disable-line no-unused-vars
-      counter = counter % limit;
+      counter %= limit;
       const shouldSample = counter === 0;
-      counter++;
+      counter += 1;
       return shouldSample;
     };
     counting.toString = () => `countingSampler: sampleRate=${sampleRate}`;
@@ -54,4 +54,6 @@ class CountingSampler extends Sampler {
   }
 }
 
-module.exports = {Sampler, CountingSampler, neverSample, alwaysSample};
+module.exports = {
+  Sampler, CountingSampler, neverSample, alwaysSample
+};

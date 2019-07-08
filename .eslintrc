@@ -1,6 +1,7 @@
 {
   "extends": "airbnb",
   "rules": {
+    "import/no-extraneous-dependencies": "off",
     "comma-dangle": "off",
     "func-names": "off",
     "object-curly-spacing": [2, "never"],

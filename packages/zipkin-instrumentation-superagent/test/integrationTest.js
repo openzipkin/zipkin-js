@@ -1,14 +1,15 @@
+import request from 'superagent';
+
+import zipkinPlugin from '../src/superagentPlugin';
+
 const {expect} = require('chai');
+const {ExplicitContext, Tracer} = require('zipkin');
 const {
   maybeMiddleware,
   newSpanRecorder,
   expectB3Headers,
   expectSpan
 } = require('../../../test/testFixture');
-const {ExplicitContext, Tracer} = require('zipkin');
-
-import request from 'superagent';
-import zipkinPlugin from '../src/superagentPlugin';
 
 // NOTE: axiosjs raises an error on non 2xx status instead of passing to the normal callback.
 describe('SuperAgent instrumentation - integration test', () => {
@@ -84,10 +85,10 @@ describe('SuperAgent instrumentation - integration test', () => {
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
-  it('should report 404 in tags', done => {
+  it('should report 404 in tags', (done) => {
     const path = '/pathno';
     get(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -106,10 +107,10 @@ describe('SuperAgent instrumentation - integration test', () => {
       });
   });
 
-  it('should report 400 in tags', done => {
+  it('should report 400 in tags', (done) => {
     const path = '/weather/securedTown';
     get(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 400 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -128,10 +129,10 @@ describe('SuperAgent instrumentation - integration test', () => {
       });
   });
 
-  it('should report 500 in tags', done => {
+  it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
     get(url(path))
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
       .catch(() => {
@@ -150,14 +151,14 @@ describe('SuperAgent instrumentation - integration test', () => {
       });
   });
 
-  it('should report when endpoint doesnt exist in tags', done => {
+  it('should report when endpoint doesnt exist in tags', (done) => {
     const path = '/badHost';
     const badUrl = `http://localhost:12345${path}`;
     get(badUrl)
-      .then(response => {
+      .then((response) => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
-      .catch(error => {
+      .catch((error) => {
         expectSpan(popSpan(), {
           name: 'get',
           kind: 'CLIENT',

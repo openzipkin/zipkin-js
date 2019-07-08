@@ -17,7 +17,7 @@ describe('express http proxy instrumentation - integration test', () => {
     });
   });
 
-  it('should add headers to requests', done => {
+  it('should add headers to requests', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -57,10 +57,9 @@ describe('express http proxy instrumentation - integration test', () => {
 
               const annotations = record.args.map(args => args[0]);
               const initialTraceId = annotations[0].traceId.traceId;
-              annotations.forEach(ann =>
-                expect(ann.traceId.traceId)
-                  .to.equal(initialTraceId).and
-                  .to.have.lengthOf(16));
+              annotations.forEach(ann => expect(ann.traceId.traceId)
+                .to.equal(initialTraceId).and
+                .to.have.lengthOf(16));
 
               expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
               expect(annotations[0].annotation.serviceName).to.equal(serviceName);
@@ -83,7 +82,7 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
               done();
             })
-            .catch(err => {
+            .catch((err) => {
               appServer.close();
               done(err);
             });
@@ -92,7 +91,7 @@ describe('express http proxy instrumentation - integration test', () => {
     });
   });
 
-  it('should create decorateRequest and intercept functions if they do not exist', done => {
+  it('should create decorateRequest and intercept functions if they do not exist', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new ExplicitContext();
@@ -121,10 +120,9 @@ describe('express http proxy instrumentation - integration test', () => {
 
               const annotations = record.args.map(args => args[0]);
               const initialTraceId = annotations[0].traceId.traceId;
-              annotations.forEach(ann =>
-                expect(ann.traceId.traceId)
-                  .to.equal(initialTraceId).and
-                  .to.have.lengthOf(16));
+              annotations.forEach(ann => expect(ann.traceId.traceId)
+                .to.equal(initialTraceId).and
+                .to.have.lengthOf(16));
 
               expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
               expect(annotations[0].annotation.serviceName).to.equal(serviceName);
@@ -147,7 +145,7 @@ describe('express http proxy instrumentation - integration test', () => {
               expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
               done();
             })
-            .catch(err => {
+            .catch((err) => {
               appServer.close();
               done(err);
             });
@@ -156,7 +154,7 @@ describe('express http proxy instrumentation - integration test', () => {
     });
   });
 
-  it('should work in conjunction with express middleware and zipkin-context-cls', done => {
+  it('should work in conjunction with express middleware and zipkin-context-cls', (done) => {
     const record = sinon.spy();
     const recorder = {record};
     const ctxImpl = new CLSContext();
@@ -247,7 +245,7 @@ describe('express http proxy instrumentation - integration test', () => {
 
               done();
             })
-            .catch(err => {
+            .catch((err) => {
               appServer.close();
               done(err);
             });

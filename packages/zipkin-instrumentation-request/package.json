@@ -16,9 +16,11 @@
   "peerDependencies": {
     "@types/request": "^2.0.8"
   },
+  "dependencies": {
+    "zipkin": "^0.18.4"
+  },
   "devDependencies": {
     "@types/request": "^2.0.8",
-    "request": "^2.88.0",
-    "zipkin": "^0.18.4"
+    "request": "^2.88.0"
   }
 }
