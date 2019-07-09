@@ -1,208 +1,147 @@
-const sinon = require('sinon');
-const {Tracer, ExplicitContext} = require('zipkin');
+const {expect} = require('chai');
+const {ExplicitContext, InetAddress, Tracer} = require('zipkin');
+
 const fetch = require('node-fetch');
 const restify = require('restify');
 const middleware = require('../src/restifyMiddleware');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 
-describe('restify middleware - integration test', () => {
-  const serviceName = 'weather-app';
+describe('restify instrumentation - integration test', () => {
+  const serviceName = 'weather-api';
+  const ipv4 = InetAddress.getLocalAddress().ipv4();
 
-  it('should receive trace info from the client', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
+  let spans;
+  let tracer;
 
-    ctxImpl.scoped(() => {
-      const app = restify.createServer();
-      app.use(middleware({tracer}));
-      app.post('/foo', (req, res, next) => {
-        // Use setTimeout to test that the trace context is propagated into the callback
-        const ctx = ctxImpl.getContext();
-        setTimeout(() => {
-          ctxImpl.letContext(ctx, () => {
-            tracer.recordBinary('message', 'hello from within app');
-            res.send(202, {status: 'OK'});
-          });
-        }, 10);
-        return next();
-      });
-      const server = app.listen(0, () => {
-        const {port} = server.address();
-        const host = '127.0.0.1';
-        const urlPath = '/foo';
-        const url = `http://${host}:${port}${urlPath}`;
-        fetch(url, {
-          method: 'post',
-          headers: {
-            'X-B3-TraceId': 'aaa',
-            'X-B3-SpanId': 'bbb',
-            'X-B3-Flags': '1'
-          }
-        }).then(res => res.json()).then(() => {
-          server.close();
-
-          const annotations = record.args.map(args => args[0]);
-
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
-          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
-
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
-
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('POST');
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal(urlPath);
-
-          expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
-
-          expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('message');
-          expect(annotations[5].annotation.value).to.equal('hello from within app');
-
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('202');
-
-          expect(annotations[7].annotation.annotationType).to.equal('ServerSend');
-
-          done();
-        })
-          .catch((err) => {
-            server.close();
-            done(err);
-          });
-      });
+  beforeEach(() => {
+    spans = [];
+    tracer = new Tracer({
+      localServiceName: serviceName,
+      ctxImpl: new ExplicitContext(),
+      recorder: newSpanRecorder(spans)
     });
   });
 
-  it('should accept a 128bit X-B3-TraceId', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
+  let server;
+  let baseURL;
 
-    ctxImpl.scoped(() => {
-      const app = restify.createServer();
-      app.use(middleware({tracer}));
-      app.post('/foo', (req, res, next) => {
-        // Use setTimeout to test that the trace context is propagated into the callback
-        const ctx = ctxImpl.getContext();
-        setTimeout(() => {
-          ctxImpl.letContext(ctx, () => {
-            tracer.recordBinary('message', 'hello from within app');
-            res.send(202, {status: 'OK'});
-          });
-        }, 10);
-        return next();
-      });
-      const server = app.listen(0, () => {
-        const traceId = '863ac35c9f6413ad48485a3953bb6124';
-        const {port} = server.address();
-        const url = `http://127.0.0.1:${port}/foo`;
-        fetch(url, {
-          method: 'post',
-          headers: {
-            'X-B3-TraceId': traceId,
-            'X-B3-SpanId': '48485a3953bb6124',
-            'X-B3-Flags': '1'
-          }
-        }).then(res => res.json()).then(() => {
-          server.close();
-
-          const annotations = record.args.map(args => args[0]);
-
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal(traceId));
-          done();
-        })
-          .catch((err) => {
-            server.close();
-            done(err);
-          });
-      });
+  beforeEach((done) => {
+    const app = restify.createServer({handleUncaughtExceptions: true});
+    app.use(middleware({tracer}));
+    app.get('/weather/wuhan', (req, res, next) => {
+      tracer.recordBinary('city', 'wuhan');
+      res.send(200, req.headers);
+      return next();
+    });
+    app.get('/weather/beijing', (req, res, next) => {
+      tracer.recordBinary('city', 'beijing');
+      res.send(200, req.headers);
+      return next();
+    });
+    app.get('/weather/securedTown', (req, res, next) => {
+      tracer.recordBinary('city', 'securedTown');
+      res.send(401, req.headers);
+      return next();
+    });
+    app.get('/weather/bagCity', () => {
+      tracer.recordBinary('city', 'bagCity');
+      throw new Error('service is dead');
+    });
+    server = app.listen(0, () => {
+      baseURL = `http://127.0.0.1:${server.address().port}`;
+      done();
     });
   });
 
-  it('should record error on status <200 or >399', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
+  afterEach(() => {
+    if (server) server.close();
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
 
-    ctxImpl.scoped(() => {
-      const app = restify.createServer();
-      app.use(middleware({tracer}));
-      app.post('/foo', (req, res, next) => {
-        // Use setTimeout to test that the trace context is propagated into the callback
-        const ctx = ctxImpl.getContext();
-        setTimeout(() => {
-          ctxImpl.letContext(ctx, () => {
-            tracer.recordBinary('message', 'testing error annotation recording');
-            res.send(404, {status: 'OK'});
-          });
-        }, 10);
-        return next();
-      });
-      const server = app.listen(0, () => {
-        const {port} = server.address();
-        const host = '127.0.0.1';
-        const urlPath = '/foo';
-        const url = `http://${host}:${port}${urlPath}`;
-        fetch(url, {
-          method: 'post',
-          headers: {
-            'X-B3-TraceId': 'aaa',
-            'X-B3-SpanId': 'bbb',
-            'X-B3-Flags': '1'
-          }
-        }).then(res => res.json()).then(() => {
-          server.close();
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
 
-          const annotations = record.args.map(args => args[0]);
-
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
-          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
-
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
-
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('POST');
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal(urlPath);
-
-          expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
-
-          expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('message');
-          expect(annotations[5].annotation.value).to.equal('testing error annotation recording');
-
-          expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[6].annotation.key).to.equal('http.status_code');
-          expect(annotations[6].annotation.value).to.equal('404');
-
-          expect(annotations[7].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[7].annotation.key).to.equal('error');
-          expect(annotations[7].annotation.value).to.equal('404');
-
-          expect(annotations[8].annotation.annotationType).to.equal('ServerSend');
-
-          done();
-        })
-          .catch((err) => {
-            server.close();
-            done(err);
-          });
-      });
+  function successSpan(path, city) {
+    return ({
+      name: 'get',
+      kind: 'SERVER',
+      localEndpoint: {serviceName, ipv4},
+      tags: {
+        'http.path': path,
+        'http.status_code': '200',
+        city
+      }
     });
+  }
+
+  function errorSpan(path, city, status) {
+    return ({
+      name: 'get',
+      kind: 'SERVER',
+      localEndpoint: {serviceName, ipv4},
+      tags: {
+        'http.path': path,
+        'http.status_code': status.toString(),
+        error: status.toString(), // TODO: better error message especially on 500
+        city
+      }
+    });
+  }
+
+  it('should start a new trace', () => {
+    const path = '/weather/wuhan';
+    const url = `${baseURL}${path}`;
+    return fetch(url).then(() => expectSpan(popSpan(), successSpan(path, 'wuhan')));
+  });
+
+  it('http.path tag should not include query parameters', () => {
+    const path = '/weather/wuhan';
+    const url = `${baseURL}${path}?index=10&count=300`;
+    return fetch(url).then(() => expect(popSpan().tags['http.path']).to.equal(path));
+  });
+
+  it('should receive continue a trace from the client', () => {
+    const path = '/weather/wuhan';
+    return fetch(`${baseURL}${path}`, {
+      method: 'get',
+      headers: {
+        'X-B3-TraceId': '863ac35c9f6413ad',
+        'X-B3-SpanId': '48485a3953bb6124',
+        'X-B3-Flags': '1'
+      }
+    }).then(() => {
+      const span = popSpan();
+      expect(span.traceId).to.equal('863ac35c9f6413ad');
+      expect(span.id).to.equal('48485a3953bb6124');
+
+      expectSpan(span, {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}});
+    });
+  });
+
+  it('should accept a 128bit X-B3-TraceId', () => {
+    const traceId = '863ac35c9f6413ad48485a3953bb6124';
+    const path = '/weather/wuhan';
+    return fetch(`${baseURL}${path}`, {
+      method: 'get',
+      headers: {
+        'X-B3-TraceId': traceId,
+        'X-B3-SpanId': '48485a3953bb6124',
+        'X-B3-Sampled': '1'
+      }
+    }).then(() => expect(popSpan().traceId).to.equal(traceId));
+  });
+
+  it('should report 401 in tags', () => {
+    const path = '/weather/securedTown';
+    return fetch(`${baseURL}${path}`)
+      .then(() => expectSpan(popSpan(), errorSpan(path, 'securedTown', 401)));
+  });
+
+  it('should report 500 in tags', () => {
+    const path = '/weather/bagCity';
+    return fetch(`${baseURL}${path}`)
+      .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
   });
 });
