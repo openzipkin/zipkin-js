@@ -1,185 +1,195 @@
-const sinon = require('sinon');
-const {Tracer, ExplicitContext} = require('zipkin');
+const {expect} = require('chai');
+const {ExplicitContext, InetAddress, Tracer} = require('zipkin');
+
+const fetch = require('node-fetch');
 const Hapi = require('hapi');
 const middleware = require('../src/hapiMiddleware');
+const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 
-describe('hapi middleware - integration test', () => {
-  const serviceName = 'weather-app';
+describe('hapi instrumentation - integration test', () => {
+  const PAUSE_TIME_MILLIS = 100;
+  const serviceName = 'weather-api';
+  const ipv4 = InetAddress.getLocalAddress().ipv4();
 
-  it('should receive trace info from the client', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
+  let spans;
+  let tracer;
 
-    ctxImpl.scoped(() => {
-      const server = new Hapi.Server();
-      server.route({
-        method: 'POST',
-        path: '/foo',
-        config: {
-          handler: (request, reply) => reply.response({status: 'OK'}).code(202)
-        }
-      });
-      server.register({
-        plugin: middleware,
-        options: {tracer}
-      })
-        .then(() => {
-          const method = 'POST';
-          const url = '/foo';
-          const headers = {
-            'X-B3-TraceId': 'aaa',
-            'X-B3-SpanId': 'bbb',
-            'X-B3-Flags': '1'
-          };
-          return server.inject({method, url, headers});
-        })
-        .then(() => {
-          const annotations = record.args.map(args => args[0]);
-          annotations.forEach(ann => expect(ann.traceId.traceId).to.equal('aaa'));
-          annotations.forEach(ann => expect(ann.traceId.spanId).to.equal('bbb'));
-
-          expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-          expect(annotations[0].annotation.serviceName).to.equal(serviceName);
-
-          expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-          expect(annotations[1].annotation.name).to.equal('POST');
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal('/foo');
-
-          expect(annotations[3].annotation.annotationType).to.equal('ServerRecv');
-
-          expect(annotations[4].annotation.annotationType).to.equal('LocalAddr');
-
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('202');
-
-          expect(annotations[6].annotation.annotationType).to.equal('ServerSend');
-
-          done();
-        })
-        .catch((err) => {
-          done(err);
-        });
+  beforeEach(() => {
+    spans = [];
+    tracer = new Tracer({
+      localServiceName: serviceName,
+      ctxImpl: new ExplicitContext(),
+      recorder: newSpanRecorder(spans)
     });
   });
 
-  it('should not crash on 404', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
+  let server;
+  let baseURL;
 
-    ctxImpl.scoped(() => {
-      const server = new Hapi.Server();
-      server.register({
-        plugin: middleware,
-        options: {tracer}
-      })
-        .then(() => {
-          const method = 'POST';
-          const url = '/foo';
-          return server.inject({method, url});
+  beforeEach((done) => {
+    server = new Hapi.Server({
+      host: 'localhost',
+      port: 0
+    });
+    server.route({
+      method: 'GET',
+      path: '/weather/wuhan',
+      config: {
+        handler: (request, reply) => {
+          tracer.recordBinary('city', 'wuhan');
+          return reply.response(request.headers).code(200);
+        }
+      }
+    });
+    server.route({
+      method: 'GET',
+      path: '/weather/beijing',
+      config: {
+        handler: (request, reply) => {
+          tracer.recordBinary('city', 'beijing');
+          return reply.response(request.headers).code(200);
+        }
+      }
+    });
+    server.route({
+      method: 'GET',
+      path: '/weather/securedTown',
+      config: {
+        handler: (request, reply) => {
+          tracer.recordBinary('city', 'securedTown');
+          return reply.response(request.headers).code(401);
+        }
+      }
+    });
+    server.route({
+      method: 'GET',
+      path: '/weather/bagCity',
+      config: {
+        handler: () => {
+          tracer.recordBinary('city', 'bagCity');
+          throw new Error('service is dead');
+        }
+      }
+    });
+    server.route({
+      method: 'GET',
+      path: '/slow',
+      config: {
+        handler: (request, reply) => new Promise((resolve) => {
+          setTimeout(
+            () => resolve(reply.response(request.headers).code(202)),
+            PAUSE_TIME_MILLIS
+          );
         })
-        .then(() => {
-          const annotations = record.args.map(args => args[0]);
-          expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[5].annotation.key).to.equal('http.status_code');
-          expect(annotations[5].annotation.value).to.equal('404');
-          done();
-        })
-        .catch((err) => {
-          done(err);
-        });
+      }
+    });
+    server.register({
+      plugin: middleware,
+      options: {tracer}
+    }).then(() => server.start())
+      .then(() => {
+        baseURL = `http://127.0.0.1:${server.info.port}`;
+        done();
+      });
+  });
+
+  afterEach(() => {
+    if (server) server.stop();
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
+
+  function successSpan(path, city) { // eslint-disable-line no-unused-vars
+    return ({
+      name: 'get',
+      kind: 'SERVER',
+      localEndpoint: {serviceName, ipv4},
+      tags: {
+        'http.path': path,
+        'http.status_code': '200',
+        // city TODO: scoping for the handler function
+      }
+    });
+  }
+
+  function errorSpan(path, city, status) {
+    return ({
+      name: 'get',
+      kind: 'SERVER',
+      localEndpoint: {serviceName, ipv4},
+      tags: {
+        'http.path': path,
+        'http.status_code': status.toString(),
+        error: status.toString(), // TODO: better error message especially on 500
+        // city TODO: scoping for the handler function
+      }
+    });
+  }
+
+  it('should start a new trace', () => {
+    const path = '/weather/wuhan';
+    const url = `${baseURL}${path}`;
+    return fetch(url).then(() => expectSpan(popSpan(), successSpan(path, 'wuhan')));
+  });
+
+  it('http.path tag should not include query parameters', () => {
+    const path = '/weather/wuhan';
+    const url = `${baseURL}${path}?index=10&count=300`;
+    return fetch(url).then(() => expect(popSpan().tags['http.path']).to.equal(path));
+  });
+
+  it('should record a reasonably accurate span duration', () => {
+    const path = '/slow';
+    const url = `${baseURL}${path}`;
+    return fetch(url).then(() => {
+      expect(popSpan().duration / 1000.0).to.be.greaterThan(PAUSE_TIME_MILLIS);
+    });
+  }); // TODO: this test isn't anywhere else
+
+  it('should receive continue a trace from the client', () => {
+    const path = '/weather/wuhan';
+    return fetch(`${baseURL}${path}`, {
+      method: 'get',
+      headers: {
+        'X-B3-TraceId': '863ac35c9f6413ad',
+        'X-B3-SpanId': '48485a3953bb6124',
+        'X-B3-Flags': '1'
+      }
+    }).then(() => {
+      const span = popSpan();
+      expect(span.traceId).to.equal('863ac35c9f6413ad');
+      expect(span.id).to.equal('48485a3953bb6124');
+
+      expectSpan(span, {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}});
     });
   });
 
-  it('should properly report the URL with a query string', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
-
-    ctxImpl.scoped(() => {
-      const server = new Hapi.Server();
-      const path = '/foo';
-      server.route({
-        method: 'GET',
-        path: '/foo',
-        config: {
-          handler: (request, reply) => reply.response({status: 'OK'}).code(202)
-        }
-      });
-      server.register({
-        plugin: middleware,
-        options: {tracer}
-      })
-        .then(() => {
-          const method = 'GET';
-          const url = '/foo?abc=123';
-          return server.inject({method, url});
-        })
-        .then(() => {
-          const annotations = record.args.map(args => args[0]);
-
-          expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-          expect(annotations[2].annotation.key).to.equal('http.path');
-          expect(annotations[2].annotation.value).to.equal(path);
-
-          done();
-        })
-        .catch((err) => {
-          done(err);
-        });
-    });
+  it('should accept a 128bit X-B3-TraceId', () => {
+    const traceId = '863ac35c9f6413ad48485a3953bb6124';
+    const path = '/weather/wuhan';
+    return fetch(`${baseURL}${path}`, {
+      method: 'get',
+      headers: {
+        'X-B3-TraceId': traceId,
+        'X-B3-SpanId': '48485a3953bb6124',
+        'X-B3-Sampled': '1'
+      }
+    }).then(() => expect(popSpan().traceId).to.equal(traceId));
   });
 
-  it('should record a reasonably accurate span duration', (done) => {
-    const record = sinon.spy();
-    const recorder = {record};
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({recorder, localServiceName: serviceName, ctxImpl});
-    const PAUSE_TIME_MILLIS = 100;
+  it('should report 401 in tags', () => {
+    const path = '/weather/securedTown';
+    return fetch(`${baseURL}${path}`)
+      .then(() => expectSpan(popSpan(), errorSpan(path, 'securedTown', 401)));
+  });
 
-    ctxImpl.scoped(() => {
-      const server = new Hapi.Server();
-      server.route({
-        method: 'POST',
-        path: '/foo',
-        config: {
-          handler: (request, reply) => new Promise((resolve) => {
-            setTimeout(
-              () => resolve(reply.response({status: 'OK'}).code(202)),
-              PAUSE_TIME_MILLIS
-            );
-          })
-        }
-      });
-
-      server.register({
-        plugin: middleware,
-        options: {tracer}
-      })
-        .then(() => {
-          const method = 'POST';
-          const url = '/foo';
-          return server.inject({method, url});
-        })
-        .then(() => {
-          const annotations = record.args.map(args => args[0]);
-          const serverRecvTs = annotations[3].timestamp / 1000.0;
-          const serverSendTs = annotations[6].timestamp / 1000.0;
-          const durationMillis = (serverSendTs - serverRecvTs);
-          expect(durationMillis).to.be.greaterThan(PAUSE_TIME_MILLIS);
-          done();
-        })
-        .catch((err) => {
-          done(err);
-        });
-    });
+  it('should report 500 in tags', () => {
+    const path = '/weather/bagCity';
+    return fetch(`${baseURL}${path}`)
+      .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
   });
 });

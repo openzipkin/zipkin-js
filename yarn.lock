@@ -1649,10 +1649,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/hapi@^17.0.10":
-  version "17.8.6"
-  resolved "https://registry.yarnpkg.com/@types/hapi/-/hapi-17.8.6.tgz#bf9132c2dd56b6344dd3f60eb86806d197f0e90b"
-  integrity sha512-8xfvwsfZmQCSognkNDMAkyNlnQwfpGdIP1Y7h/EMgcEzrVHB6lmuDHc8TEMhOJ6lt40TKGBA1e9z9htb/KSbOA==
+"@types/hapi@^18.0.2":
+  version "18.0.2"
+  resolved "https://registry.yarnpkg.com/@types/hapi/-/hapi-18.0.2.tgz#2c3ed843e1e7358486eccf64256e91f7918948b2"
+  integrity sha512-I3THPpOY0G0bXNLzyaqUzMIbqPrci21C1Vqlnek348SJq2Gp7TLSnQbwOb+v/xunxCTzY3o2fV3h7uffL3Ln0w==
   dependencies:
     "@types/boom" "*"
     "@types/catbox" "*"
@@ -2262,11 +2262,6 @@ better-assert@~1.0.0:
   dependencies:
     callsite "1.0.0"
 
-big-time@2.x.x:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/big-time/-/big-time-2.0.1.tgz#68c7df8dc30f97e953f25a67a76ac9713c16c9de"
-  integrity sha1-aMffjcMPl+lT8lpnp2rJcTwWyd4=
-
 binary-extensions@^1.0.0:
   version "1.13.1"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.13.1.tgz#598afe54755b2868a5330d2aff9d4ebb53209b65"
@@ -2801,12 +2796,11 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-catbox-memory@3.x.x:
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/catbox-memory/-/catbox-memory-3.1.4.tgz#114fd6da3b2630a5db2ff246db9ff2226148c2b0"
-  integrity sha512-1tDnll066au0HXBSDHS/YQ34MQ2omBsmnA9g/jseyq/M3m7UPrajVtPDZK/rXgikSC1dfjo9Pa+kQ1qcyG2d3g==
+catbox-memory@4.x.x:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/catbox-memory/-/catbox-memory-4.0.1.tgz#3371ae0dd91bbf5d9dd88dcab5332470354cbd1f"
+  integrity sha512-ZmqNiLsYCIu9qvBJ/MQbznDV2bFH5gFiH67TgIJgSSffJFtTXArT+MM3AvJQlby9NSkLHOX4eH/uuUqnch/Ldw==
   dependencies:
-    big-time "2.x.x"
     boom "7.x.x"
     hoek "6.x.x"
 
@@ -5017,10 +5011,10 @@ handlebars@^4.1.0:
   optionalDependencies:
     uglify-js "^3.1.4"
 
-hapi@^17.3.1:
-  version "17.8.5"
-  resolved "https://registry.yarnpkg.com/hapi/-/hapi-17.8.5.tgz#31bc23dfd45c9cbc8b417ea2eaecd14694aa150e"
-  integrity sha512-+RnMWK/HI3VCvzfy0vO28YycMX19OiY8h9tYaDzjjOJ1eTh/HY2URvhFNkcqxZ1R1uoUdiB+pnjGi9e+vkaPEw==
+hapi@^18.1.0:
+  version "18.1.0"
+  resolved "https://registry.yarnpkg.com/hapi/-/hapi-18.1.0.tgz#98a2a5a8f37a41eb196bdad9727f66b1fbca5fec"
+  integrity sha512-nSU1VLyTAgp7P5gy47QzJIP2JAb+wOFvJIV3gnL0lFj/mD+HuTXhyUsDYXjF/dhADMVXVEz31z6SUHBJhtsvGA==
   dependencies:
     accept "3.x.x"
     ammo "3.x.x"
@@ -5028,7 +5022,7 @@ hapi@^17.3.1:
     bounce "1.x.x"
     call "5.x.x"
     catbox "10.x.x"
-    catbox-memory "3.x.x"
+    catbox-memory "4.x.x"
     heavy "6.x.x"
     hoek "6.x.x"
     joi "14.x.x"
