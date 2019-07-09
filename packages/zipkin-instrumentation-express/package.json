@@ -18,7 +18,6 @@
   },
   "devDependencies": {
     "express-http-proxy": "^0.11.0",
-    "node-fetch": "^1.5.3",
-    "zipkin-context-cls": "^0.18.4"
+    "node-fetch": "^2.6.0"
   }
 }
