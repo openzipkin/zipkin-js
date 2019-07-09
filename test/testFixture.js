@@ -52,6 +52,8 @@ function expectSpan(span, expected) {
     duration: span.duration
   }
 
+  if (span.parentId) volatileProperties.parentId = span.parentId;
+
   expect(span).to.deep.equal({...volatileProperties, ...expected});
 }
 
