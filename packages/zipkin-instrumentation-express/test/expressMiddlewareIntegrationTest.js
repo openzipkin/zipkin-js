@@ -4,6 +4,7 @@ const {ExplicitContext, InetAddress, Tracer} = require('zipkin');
 const fetch = require('node-fetch');
 const express = require('express');
 const middleware = require('../src/expressMiddleware');
+const addTestRoutes = require('./testMiddleware');
 
 const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
 
@@ -26,40 +27,10 @@ describe('express instrumentation - integration test', () => {
   let server;
   let baseURL;
 
-  function step(num) {
-    return new Promise((done) => {
-      setTimeout(() => {
-        tracer.scoped(() => {
-          tracer.recordBinary('step', num.toString());
-          done();
-        });
-      }, 10);
-    });
-  }
-
   beforeEach((done) => {
     const app = express();
     app.use(middleware({tracer}));
-    app.get('/weather/wuhan', (req, res) => {
-      tracer.recordBinary('city', 'wuhan');
-      res.status(200).json(req.headers);
-    });
-    app.get('/weather/beijing', (req, res) => {
-      tracer.recordBinary('city', 'beijing');
-      res.status(200).json(req.headers);
-    });
-    app.get('/weather/securedTown', (req, res) => {
-      tracer.recordBinary('city', 'securedTown');
-      res.status(401).json(req.headers);
-    });
-    app.get('/weather/bagCity', (req, res, next) => {
-      tracer.recordBinary('city', 'bagCity');
-      next(new Error('service is dead'));
-    });
-    app.get('/steps', (req, res) => step(1)
-      .then(() => step(2))
-      .then(() => step(3))
-      .then(() => res.status(200).json(req.headers)));
+    addTestRoutes(app, tracer);
     server = app.listen(0, () => {
       baseURL = `http://127.0.0.1:${server.address().port}`;
       done();
@@ -97,7 +68,7 @@ describe('express instrumentation - integration test', () => {
       tags: {
         'http.path': path,
         'http.status_code': status.toString(),
-        error: status.toString(),
+        error: status.toString(), // TODO: better error message especially on 500
         city
       }
     });

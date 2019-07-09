@@ -60,7 +60,7 @@ describe('connect instrumentation - integration test', () => {
       tags: {
         'http.path': path,
         'http.status_code': status.toString(),
-        error: status.toString(),
+        error: status.toString(), // TODO: better error message especially on 500
         city
       }
     });

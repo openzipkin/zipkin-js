@@ -36,7 +36,7 @@ class ExpressHttpProxyInstrumentation {
     if (this.remoteServiceName) {
       this.tracer.recordAnnotation(new Annotation.ServerAddr({
         serviceName: this.remoteServiceName,
-        port: proxyReq.port
+        port: parseInt(proxyReq.port)
       }));
     }
   }
