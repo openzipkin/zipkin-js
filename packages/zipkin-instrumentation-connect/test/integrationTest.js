@@ -265,10 +265,9 @@ describe('connect instrumentation - integration test', () => {
       };
 
       const tlsServer = https.createServer(tlsOptions, app);
-      const port = 4443;
-      tlsServer.listen(port, () => {
+      tlsServer.listen(0, () => {
         const path = '/foo';
-        fetch(`https://localhost:${port}${path}`, {
+        fetch(`https://localhost:${tlsServer.address().port}${path}`, {
           agent: new https.Agent({rejectUnauthorized: false})
         }).then(() => {
           expectSpan(popSpan(), successSpan(path));
