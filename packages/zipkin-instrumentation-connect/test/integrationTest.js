@@ -270,11 +270,12 @@ describe('connect instrumentation - integration test', () => {
         fetch(`https://localhost:${tlsServer.address().port}${path}`, {
           agent: new https.Agent({rejectUnauthorized: false})
         }).then(() => {
+          tlsServer.close(); // closing here because in travis env, finally syntax doesn't work.
+
           expectSpan(popSpan(), successSpan(path));
           done();
         })
-          .catch(err => done(err))
-          .finally(() => tlsServer.close());
+          .catch(err => done(err));
       });
     });
   });
