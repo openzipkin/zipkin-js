@@ -67,7 +67,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
       remoteEndpoint: {serviceName: remoteServiceName},
       tags: {
         'http.path': path,
-        'http.status_code': '202'
+        'http.status_code': '200'
       }
     });
   }
@@ -100,7 +100,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
       }));
   });
 
-  it('should report 400 in tags', () => {
+  it('should report 401 in tags', () => {
     const path = '/weather/securedTown';
     return getClient()(url(path))
       .then(() => expectSpan(popSpan(), {
@@ -110,8 +110,8 @@ describe('CujoJS/rest instrumentation - integration test', () => {
         remoteEndpoint: {serviceName: remoteServiceName},
         tags: {
           'http.path': path,
-          'http.status_code': '400',
-          error: '400'
+          'http.status_code': '401',
+          error: '401'
         }
       }));
   });

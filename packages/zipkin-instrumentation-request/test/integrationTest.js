@@ -61,7 +61,7 @@ describe('request instrumentation - integration test', () => {
       remoteEndpoint: {serviceName: remoteServiceName},
       tags: {
         'http.path': path,
-        'http.status_code': '202'
+        'http.status_code': '200'
       }
     });
   }
@@ -102,7 +102,7 @@ describe('request instrumentation - integration test', () => {
       .on('error', error => done(error));
   });
 
-  it('should report 400 in tags', (done) => {
+  it('should report 401 in tags', (done) => {
     const path = '/weather/securedTown';
     getClient().get(url(path))
       .on('response', () => {
@@ -113,8 +113,8 @@ describe('request instrumentation - integration test', () => {
           remoteEndpoint: {serviceName: remoteServiceName},
           tags: {
             'http.path': path,
-            'http.status_code': '400',
-            error: '400'
+            'http.status_code': '401',
+            error: '401'
           }
         });
         done();

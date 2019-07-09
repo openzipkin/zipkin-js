@@ -62,7 +62,7 @@ describe('request-promise instrumentation - integration test', () => {
       remoteEndpoint: {serviceName: remoteServiceName},
       tags: {
         'http.path': path,
-        'http.status_code': '202'
+        'http.status_code': '200'
       }
     });
   }
@@ -101,11 +101,11 @@ describe('request-promise instrumentation - integration test', () => {
       });
   });
 
-  it('should report 400 in tags', (done) => {
+  it('should report 401 in tags', (done) => {
     const path = '/weather/securedTown';
     getClient().get(url(path))
       .then((response) => {
-        done(new Error(`expected status 400 response to error. status: ${response.status}`));
+        done(new Error(`expected status 401 response to error. status: ${response.status}`));
       })
       .catch(() => {
         expectSpan(popSpan(), {
@@ -115,8 +115,8 @@ describe('request-promise instrumentation - integration test', () => {
           remoteEndpoint: {serviceName: remoteServiceName},
           tags: {
             'http.path': path,
-            'http.status_code': '400',
-            error: '400'
+            'http.status_code': '401',
+            error: '401'
           }
         });
         done();
