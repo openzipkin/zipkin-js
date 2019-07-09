@@ -16,7 +16,7 @@
     "zipkin": "^0.18.4"
   },
   "devDependencies": {
-    "node-fetch": "^1.5.3",
-    "restify": "^7.2.3"
+    "node-fetch": "^2.6.0",
+    "restify": "^8.3.3"
   }
 }
