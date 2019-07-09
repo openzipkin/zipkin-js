@@ -225,6 +225,12 @@ describe('connect instrumentation - integration test', () => {
       return fetch(`${baseURL}${path}`)
         .then(() => expectSpan(popSpan(), errorSpan(path, 'securedTown', 401)));
     });
+
+    it('should report 500 in tags', () => {
+      const path = '/weather/bagCity';
+      return fetch(`${baseURL}${path}`)
+        .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
+    });
   });
 
   describe('connect middleware', () => {
@@ -304,6 +310,12 @@ describe('connect instrumentation - integration test', () => {
       const path = '/weather/securedTown';
       return fetch(`${baseURL}${path}`)
         .then(() => expectSpan(popSpan(), errorSpan(path, 'securedTown', 401)));
+    });
+
+    it('should report 500 in tags', () => {
+      const path = '/weather/bagCity';
+      return fetch(`${baseURL}${path}`)
+        .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
     });
 
     it('should work with https', (done) => {
