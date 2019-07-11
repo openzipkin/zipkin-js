@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
-    "test": "mocha --exit --require ../../test/helper.js",
+    "test": "mocha --exit --require ../../test/helper.js --require @babel/register",
     "test-debug": "mocha --inspect-brk --exit --require ../../test/helper.js",
     "prepublish": "npm run build"
   },
@@ -19,7 +19,7 @@
     "zipkin": "^0.18.4"
   },
   "devDependencies": {
-    "@types/hapi": "^17.0.10",
-    "hapi": "^17.3.1"
+    "@types/hapi": "^18.0.2",
+    "hapi": "^18.1.0"
   }
 }
