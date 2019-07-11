@@ -13,6 +13,7 @@ describe('hapi instrumentation - integration test', () => {
 
   let spans;
   let tracer;
+  let sentinelTraceId;
 
   beforeEach(() => {
     spans = [];
@@ -21,6 +22,7 @@ describe('hapi instrumentation - integration test', () => {
       ctxImpl: new ExplicitContext(),
       recorder: newSpanRecorder(spans)
     });
+    sentinelTraceId = tracer.id;
   });
 
   let server;
@@ -76,11 +78,19 @@ describe('hapi instrumentation - integration test', () => {
       path: '/slow',
       config: {
         handler: (request, reply) => new Promise((resolve) => {
-          setTimeout(
-            () => resolve(reply.response(request.headers).code(202)),
-            PAUSE_TIME_MILLIS
-          );
+          setTimeout(() => resolve(reply.response(request.headers).code(202)), PAUSE_TIME_MILLIS);
         })
+      }
+    });
+    server.route({
+      method: 'GET',
+      path: '/abandon',
+      config: {
+        handler: (request, reply) => {
+          request.raw.res.setHeader('content-type', 'text/plain');
+          request.raw.res.end('manual'); // implicitly makes request.raw.res.headersSent true
+          return reply.abandon;
+        }
       }
     });
     server.register({
@@ -95,6 +105,7 @@ describe('hapi instrumentation - integration test', () => {
 
   afterEach(() => {
     if (server) server.stop();
+    expect(tracer.id).to.equal(sentinelTraceId); // no context leaks
     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
@@ -111,7 +122,7 @@ describe('hapi instrumentation - integration test', () => {
       tags: {
         'http.path': path,
         'http.status_code': '200',
-        // city TODO: scoping for the handler function
+        city
       }
     });
   }
@@ -125,7 +136,7 @@ describe('hapi instrumentation - integration test', () => {
         'http.path': path,
         'http.status_code': status.toString(),
         error: status.toString(), // TODO: better error message especially on 500
-        // city TODO: scoping for the handler function
+        city
       }
     });
   }
@@ -141,14 +152,6 @@ describe('hapi instrumentation - integration test', () => {
     const url = `${baseURL}${path}?index=10&count=300`;
     return fetch(url).then(() => expect(popSpan().tags['http.path']).to.equal(path));
   });
-
-  it('should record a reasonably accurate span duration', () => {
-    const path = '/slow';
-    const url = `${baseURL}${path}`;
-    return fetch(url).then(() => {
-      expect(popSpan().duration / 1000.0).to.be.greaterThan(PAUSE_TIME_MILLIS);
-    });
-  }); // TODO: this test isn't anywhere else
 
   it('should receive continue a trace from the client', () => {
     const path = '/weather/wuhan';
@@ -192,4 +195,19 @@ describe('hapi instrumentation - integration test', () => {
     return fetch(`${baseURL}${path}`)
       .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
   });
+
+  it('should handle abandoned requests', () => {
+    // const path = '/abandon';
+    // https://github.com/hapijs/hapi/blob/cb2355c07d969924568b1fd25471e2761b6e9abe/API.md#h.abandon
+    // return fetch(`${baseURL}${path}`)
+    //   .then(() => expectSpan(popSpan(), TODO: handle this));
+  });
+
+  it('should record a reasonably accurate span duration', () => {
+    const path = '/slow';
+    const url = `${baseURL}${path}`;
+    return fetch(url).then(() => {
+      expect(popSpan().duration / 1000.0).to.be.greaterThan(PAUSE_TIME_MILLIS);
+    });
+  }); // TODO: this test isn't anywhere else
 });
