@@ -1,5 +1,7 @@
 # zipkin-instrumentation-request-promise
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-request-promise.svg)
+
 Adds Zipkin tracing to the [request](https://www.npmjs.com/package/request) and [request-promise](https://www.npmjs.com/package/request-promise) libraries.
 
 ## Usage

@@ -1,8 +1,11 @@
 # zipkin-instrumentation-superagent
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-superagent.svg)
+
 Adds Zipkin tracing to the [SuperAgent](https://www.npmjs.com/package/superagent) library.
 
 ## Usage
+
 The library is a SuperAgent plugin and should be used as:
 
 ```javascript

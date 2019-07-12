@@ -1,5 +1,7 @@
 # zipkin-instrumentation-kafkajs
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-kafkajs.svg)
+
 Zipkin instrumentation for [KafkaJS](https://kafka.js.org) producer and consumer.
 
 ### Requirements

@@ -1,4 +1,6 @@
-# zipkin-instrumentation-got
+# zipkin-instrumentation-gotjs
+
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-gotjs.svg)
 
 This library will wrap the [Got client](https://github.com/sindresorhus/got).
 

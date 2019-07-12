@@ -1,5 +1,7 @@
 # zipkin-instrumentation-axiosjs
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-axiosjs.svg)
+
 Adds Zipkin tracing support for the [axios](https://www.npmjs.com/package/axios) JS HTTP client library. It **supports all features of `axios`**.
 
 ## Installation

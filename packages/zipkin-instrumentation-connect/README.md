@@ -1,5 +1,7 @@
 # zipkin-instrumentation-connect
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-connect.svg)
+
 A Connect middleware and instrumentation that adds Zipkin tracing to the application.
 Compatible with any server which uses the connect api (Express and Restify).
 

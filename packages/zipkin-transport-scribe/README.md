@@ -1,8 +1,10 @@
 # Zipkin-transport-scribe
 
+![npm](https://img.shields.io/npm/dm/zipkin-transport-scribe.svg)
+
 This is a module that sends Zipkin trace data from zipkin-js to Scribe or Fluentd.
 
-## Usage:
+## Usage
 
 `npm install zipkin-transport-scribe --save`
 

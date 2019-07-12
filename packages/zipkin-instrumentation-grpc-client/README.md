@@ -1,5 +1,7 @@
 # zipkin-instrumentation-grpc-client
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-grpc-client.svg)
+
 [GRPC client](https://grpc.io/docs/tutorials/basic/node.html) interceptor for Zipkin.
 
 ## Usage
