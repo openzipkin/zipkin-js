@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-grpc-client",
-  "version": "0.18.4",
+  "version": "0.18.5",
   "description": "Zipkin JS Interceptor for gRPC client",
   "main": "lib/grpcClientInterceptor.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.18.4"
+    "zipkin": "^0.18.5"
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.3.0",
