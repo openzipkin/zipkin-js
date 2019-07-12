@@ -39,7 +39,7 @@ declare namespace zipkin {
       localServiceName?: string,
       localEndpoint?: model.Endpoint,
       log?: Console,
-      defaultTags?: {},
+      defaultTags?: {}
     });
 
     /** Returns the current trace ID or a sentinel value indicating its absence. */
