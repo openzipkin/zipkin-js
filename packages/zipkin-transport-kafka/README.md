@@ -1,8 +1,10 @@
 # Zipkin-transport-kafka
 
+![npm](https://img.shields.io/npm/dm/zipkin-transport-kafka.svg)
+
 This is a module that sends Zipkin trace data from zipkin-js to Kafka.
 
-## Usage:
+## Usage
 
 `npm install zipkin-transport-kafka --save`
 

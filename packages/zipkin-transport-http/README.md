@@ -1,7 +1,10 @@
 # Zipkin-transport-http
+
+![npm](https://img.shields.io/npm/dm/zipkin-transport-http.svg)
+
 This is a module that sends Zipkin trace data to a configurable HTTP endpoint.
 
-## Usage:
+## Usage
 
 `npm install zipkin-transport-http --save`
 

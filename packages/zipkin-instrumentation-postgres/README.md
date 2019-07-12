@@ -1,5 +1,7 @@
 # zipkin-instrumentation-postgres
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-postgres.svg)
+
 This library will wrap the [pg client](https://www.npmjs.com/package/pg).
 
 ## Usage

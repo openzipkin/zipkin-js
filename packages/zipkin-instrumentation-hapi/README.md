@@ -1,5 +1,7 @@
 # zipkin-instrumentation-hapi
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-hapi.svg)
+
 A hapi middleware that adds Zipkin tracing to the application.
 
 ## Usage

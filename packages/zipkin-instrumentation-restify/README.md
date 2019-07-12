@@ -1,5 +1,7 @@
 # zipkin-instrumentation-restify
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-restify.svg)
+
 A Restify plugin that adds Zipkin tracing to the application.
 
 ## Usage

@@ -1,5 +1,7 @@
 # zipkin-instrumentation-fetch
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-fetch.svg)
+
 This library will wrap the [fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 You need to provide your own `fetch` implementation; it could for example come from `window.fetch` (in the browser),
 or [node-fetch](https://www.npmjs.com/package/node-fetch) on Node.js.

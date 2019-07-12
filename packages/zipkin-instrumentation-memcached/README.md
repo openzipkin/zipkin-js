@@ -1,5 +1,7 @@
 # zipkin-instrumentation-memcached
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-memcached.svg)
+
 This library will wrap the [memcached client](https://www.npmjs.com/package/memcached).
 
 ## Usage

@@ -1,5 +1,7 @@
 # zipkin-instrumentation-redis
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-redis.svg)
+
 This library will wrap the [redis client](https://www.npmjs.com/package/redis).
 
 ## Usage

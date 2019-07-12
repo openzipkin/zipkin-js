@@ -1,5 +1,7 @@
 # zipkin-instrumentation-express
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-express.svg)
+
 Express middleware and instrumentation that adds Zipkin tracing to the application.
 
 ## Express Middleware
