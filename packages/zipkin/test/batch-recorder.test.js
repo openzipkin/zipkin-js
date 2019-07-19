@@ -212,6 +212,9 @@ describe('Batch Recorder', () => {
       trace.recordAnnotation(new Annotation.ServerSend());
     });
 
+    const loggedSpan = logSpan.getCall(0).args[0];
+    expect(loggedSpan.annotations[0].value).to.equal('zipkin-js.flush');
+
     clock.uninstall();
   });
 
