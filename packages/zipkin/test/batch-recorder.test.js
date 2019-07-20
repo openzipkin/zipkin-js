@@ -172,6 +172,11 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.timestamp).to.equal(12345678000);
       expect(loggedSpan.duration).to.equal(123);
 
+      for (let i = 0; i < loggedSpan.annotations.length; i += 1) {
+        // we make sure it does not include the zipkin-js.flush annotation
+        expect(loggedSpan.annotations[i].value === 'zipkin-js.flush').to.equal(false);
+      }
+
       clock.uninstall();
     });
   });
@@ -211,6 +216,9 @@ describe('Batch Recorder', () => {
       // Span is dropped silently.
       trace.recordAnnotation(new Annotation.ServerSend());
     });
+
+    const loggedSpan = logSpan.getCall(0).args[0];
+    expect(loggedSpan.annotations[0].value).to.equal('zipkin-js.flush');
 
     clock.uninstall();
   });

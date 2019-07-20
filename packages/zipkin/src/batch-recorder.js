@@ -61,7 +61,7 @@ class BatchRecorder {
   /**
    * @constructor
    * @param {Object} options
-   * @property {Logger} logger logs the data to openZipkin
+   * @property {Logger} logger logs the data to zipkin server
    * @property {number} timeout timeout for span in microseconds
    */
   constructor({logger, timeout = defaultTimeout}) {
@@ -75,6 +75,10 @@ class BatchRecorder {
     const timer = setInterval(() => {
       this.partialSpans.forEach((span, id) => {
         if (_timedOut(span)) {
+          // the zipkin-js.flush annotation makes it explicit that
+          // the span has been reported because of a timeout, even
+          // when it is not finished yet (and thus enqueued for reporting)
+          span.delegate.addAnnotation(now(), 'zipkin-js.flush');
           this._writeSpan(id, span);
         }
       });
