@@ -274,6 +274,7 @@ declare namespace zipkin {
   class BatchRecorder implements Recorder {
     constructor(args: { logger: Logger, timeout?: number });
     record: (rec: Record) => void;
+    flush: () => void;
   }
 
   class ConsoleRecorder implements Recorder {
