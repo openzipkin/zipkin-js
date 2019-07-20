@@ -172,6 +172,11 @@ describe('Batch Recorder', () => {
       expect(loggedSpan.timestamp).to.equal(12345678000);
       expect(loggedSpan.duration).to.equal(123);
 
+      for (let i = 0; i < loggedSpan.annotations.length; i += 1) {
+        // we make sure it does not include the zipkin-js.flush annotation
+        expect(loggedSpan.annotations[i].value === 'zipkin-js.flush').to.equal(false);
+      }
+
       clock.uninstall();
     });
   });
