@@ -8,12 +8,6 @@ const {Span, Endpoint} = require('./model');
 const defaultTimeout = 60 * 1000000;
 
 /**
- * default batch interval 1 second (in miliseconds)
- * @type {number}
- */
-const defaultBatchInterval = 1000;
-
-/**
  * defaultTags property name
  * @type {symbol}
  */
@@ -69,18 +63,12 @@ class BatchRecorder {
    * @param {Object} options
    * @property {Logger} logger logs the data to zipkin server
    * @property {number} timeout timeout for span in microseconds
-   * @property {number} batchInterval interval for reporting in miliseconds.
-   * The value -1 means that there won't be batch reporting on interval basis.
    */
-  constructor({logger, timeout = defaultTimeout, batchInterval = defaultBatchInterval}) {
+  constructor({logger, timeout = defaultTimeout}) {
     this.logger = logger;
     this.timeout = timeout;
     this.partialSpans = new Map();
     this[defaultTagsSymbol] = {};
-
-    if (batchInterval === -1) {
-      return;
-    }
 
     // read through the partials spans regularly
     // and collect any timed-out ones
@@ -94,7 +82,7 @@ class BatchRecorder {
           this._writeSpan(id, span);
         }
       });
-    }, batchInterval);
+    }, 1000);
     if (timer.unref) { // unref might not be available in browsers
       timer.unref(); // Allows Node to terminate instead of blocking on timer
     }
@@ -147,6 +135,9 @@ class BatchRecorder {
     }
   }
 
+  /**
+   * Calling this will flush any pending spans to the transport.
+   */
   flush() {
     this.partialSpans.forEach((span, id) => {
       this._writeSpan(id, span);
