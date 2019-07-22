@@ -14,7 +14,7 @@ describe('Http Client Instrumentation', () => {
   let tracer;
   let instrumentation;
 
-  beforeEach(() => { // TODO: extract this logic somewhere
+  beforeEach(() => { // TODO: extract this logic as it is reused in tracer, client and server tests
     spans = [];
     tracer = new Tracer({
       ctxImpl: new ExplicitContext(),

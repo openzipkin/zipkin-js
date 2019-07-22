@@ -21,7 +21,7 @@ describe('Tracer', () => {
   let recorder;
   let ctxImpl;
 
-  beforeEach(() => {
+  beforeEach(() => { // TODO: extract this logic as it is reused in tracer, client and server tests
     spans = [];
     recorder = new BatchRecorder({
       logger: {
