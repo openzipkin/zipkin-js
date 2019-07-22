@@ -1,114 +1,122 @@
-const sinon = require('sinon');
-const Tracer = require('../src/tracer');
+const BatchRecorder = require('../src/batch-recorder');
 const ExplicitContext = require('../src/explicit-context');
 const HttpClient = require('../src/instrumentation/httpClient');
+const {JSON_V2} = require('../src/jsonEncoder');
+const Tracer = require('../src/tracer');
+const {expectB3Headers, expectSpan} = require('../../../test/testFixture');
 
 describe('Http Client Instrumentation', () => {
-  let recorder;
+  const serviceName = 'weather-app';
+  const remoteServiceName = 'weather-api';
+  const baseURL = 'http://127.0.0.1:80';
 
-  beforeEach(() => {
-    const record = sinon.spy();
-    recorder = {record};
+  let spans;
+  let tracer;
+  let instrumentation;
+
+  beforeEach(() => { // TODO: extract this logic somewhere
+    spans = [];
+    tracer = new Tracer({
+      ctxImpl: new ExplicitContext(),
+      localServiceName: serviceName,
+      recorder: new BatchRecorder({
+        logger: {
+          logSpan: (span) => {
+            spans.push(JSON.parse(JSON_V2.encode(span)));
+          }
+        }
+      })
+    });
+    instrumentation = new HttpClient({tracer, remoteServiceName});
   });
+
+  afterEach(() => expect(spans).to.be.empty);
+
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
+
+  function url(path) {
+    return `${baseURL}${path}?index=10&count=300`;
+  }
 
   it('should add headers to requests', () => {
-    const {record} = recorder;
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ctxImpl, recorder});
-    const instrumentation = new HttpClient({
-      tracer,
-      serviceName: 'weather-app',
-      remoteServiceName: 'weather-forecast-service'
-    });
+    const path = '/weather/wuhan';
+    const request = instrumentation.recordRequest({}, url(path), 'GET');
+    instrumentation.recordResponse(tracer.id, '202');
 
-    const port = '80';
-    const host = '127.0.0.1';
-    const urlPath = '/weather';
-    const url = `http://${host}:${port}${urlPath}?index=10&count=300`;
-    tracer.scoped(() => {
-      instrumentation.recordRequest({}, url, 'GET');
-      instrumentation.recordResponse(tracer.id, '202');
-    });
-    const annotations = record.args.map(args => args[0]);
-    const initialTraceId = annotations[0].traceId.traceId;
-    annotations.forEach(ann => expect(ann.traceId.traceId)
-      .to.equal(initialTraceId).and
-      .to.have.lengthOf(16));
-    annotations.forEach(ann => expect(ann.traceId.isShared()).to.equal(false));
-
-    expect(annotations[0].annotation.annotationType).to.equal('ServiceName');
-    expect(annotations[0].annotation.serviceName).to.equal('weather-app');
-
-    expect(annotations[1].annotation.annotationType).to.equal('Rpc');
-    expect(annotations[1].annotation.name).to.equal('GET');
-
-    expect(annotations[2].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[2].annotation.key).to.equal('http.path');
-    expect(annotations[2].annotation.value).to.equal(urlPath);
-
-    expect(annotations[3].annotation.annotationType).to.equal('ClientSend');
-
-    expect(annotations[4].annotation.annotationType).to.equal('ServerAddr');
-    expect(annotations[4].annotation.serviceName).to.equal('weather-forecast-service');
-
-    expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[5].annotation.key).to.equal('http.status_code');
-    expect(annotations[5].annotation.value).to.equal('202');
-
-    expect(annotations[6].annotation.annotationType).to.equal('ClientRecv');
+    expectB3Headers(popSpan(), request.headers, false);
   });
 
-  it('should record an error', () => {
-    const {record} = recorder;
-    const ctxImpl = new ExplicitContext();
-    const tracer = new Tracer({ctxImpl, recorder});
-    const instrumentation = new HttpClient({
-      tracer,
-      serviceName: 'weather-app',
-      remoteServiceName: 'weather-forecast-service'
-    });
+  it('should support get request', () => {
+    const path = '/weather/wuhan';
 
-    const url = 'http://127.0.0.1:80/weather?index=10&count=300';
-    tracer.scoped(() => {
-      instrumentation.recordRequest({}, url, 'GET');
-      instrumentation.recordError(tracer.id, new Error('nasty error'));
-    });
-    const annotations = record.args.map(args => args[0]);
-    const initialTraceId = annotations[0].traceId.traceId;
-    annotations.forEach(ann => expect(ann.traceId.traceId)
-      .to.equal(initialTraceId).and
-      .to.have.lengthOf(16));
+    instrumentation.recordRequest({}, url(path), 'GET');
+    instrumentation.recordResponse(tracer.id, '200');
 
-    expect(annotations[5].annotation.annotationType).to.equal('BinaryAnnotation');
-    expect(annotations[5].annotation.key).to.equal('error');
-    expect(annotations[5].annotation.value).to.equal('Error: nasty error');
+    expectSpan(popSpan(), {
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags: {
+        'http.path': path,
+        'http.status_code': '200' // TODO: It isn't typical to add status on 200
+      }
+    });
   });
 
-  [400, 500].forEach((statusCode) => {
-    it('should record an error on status code >399', () => {
-      const {record} = recorder;
-      const ctxImpl = new ExplicitContext();
-      const tracer = new Tracer({ctxImpl, recorder});
-      const instrumentation = new HttpClient({
-        tracer,
-        serviceName: 'weather-app',
-        remoteServiceName: 'weather-forecast-service'
-      });
+  it('should report 401 in tags', () => {
+    const path = '/weather/securedTown';
+    instrumentation.recordRequest({}, url(path), 'GET');
+    instrumentation.recordResponse(tracer.id, '401');
 
-      const url = 'http://127.0.0.1:80/weather?index=10&count=300';
-      tracer.scoped(() => {
-        instrumentation.recordRequest({}, url, 'GET');
-        instrumentation.recordResponse(tracer.id, statusCode);
-      });
-      const annotations = record.args.map(args => args[0]);
-      const initialTraceId = annotations[0].traceId.traceId;
-      annotations.forEach(ann => expect(ann.traceId.traceId)
-        .to.equal(initialTraceId).and
-        .to.have.lengthOf(16));
+    expectSpan(popSpan(), {
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags: {
+        'http.path': path,
+        'http.status_code': '401',
+        error: '401'
+      }
+    });
+  });
 
-      expect(annotations[6].annotation.annotationType).to.equal('BinaryAnnotation');
-      expect(annotations[6].annotation.key).to.equal('error');
-      expect(annotations[6].annotation.value).to.equal(statusCode.toString());
+  it('should report 500 in tags', () => {
+    const path = '/weather/bagCity';
+    instrumentation.recordRequest({}, url(path), 'GET');
+    instrumentation.recordResponse(tracer.id, '500');
+
+    expectSpan(popSpan(), {
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags: {
+        'http.path': path,
+        'http.status_code': '500',
+        error: '500'
+      }
+    });
+  });
+
+  it('should record an error in tags', () => {
+    const path = '/weather/bagCity';
+    instrumentation.recordRequest({}, url(path), 'GET');
+    instrumentation.recordError(tracer.id, new Error('nasty error'));
+
+    expectSpan(popSpan(), {
+      name: 'get',
+      kind: 'CLIENT',
+      localEndpoint: {serviceName},
+      remoteEndpoint: {serviceName: remoteServiceName},
+      tags: {
+        'http.path': path,
+        error: 'Error: nasty error'
+      }
     });
   });
 });
