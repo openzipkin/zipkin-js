@@ -1,335 +1,468 @@
-const sinon = require('sinon');
+const {expect} = require('chai');
 const lolex = require('lolex');
-const Tracer = require('../src/tracer');
-const BatchRecorder = require('../src/batch-recorder');
-const TraceId = require('../src/tracer/TraceId');
+
 const Annotation = require('../src/annotation');
+const BatchRecorder = require('../src/batch-recorder');
 const InetAddress = require('../src/InetAddress');
+const {JSON_V2} = require('../src/jsonEncoder');
+const {now} = require('../src/time');
+const Record = require('../src/tracer/record');
 const {Some} = require('../src/option');
-const ExplicitContext = require('../src/explicit-context');
+const TraceId = require('../src/tracer/TraceId');
 
-describe('Batch Recorder', () => {
-  it('should accumulate annotations into PartialSpans', () => {
-    const logSpan = sinon.spy();
+// This test makes data bugs easier to spot by representing transformations as v2 JSON
+describe('Batch Recorder - integration test', () => {
+  let spans;
+  let recorder;
 
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        parentId: new Some('a'),
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
-
-      trace.recordServiceName('SmoothieStore');
-      trace.recordRpc('buySmoothie');
-      trace.recordBinary('taste', 'banana');
-      trace.recordAnnotation(new Annotation.ServerRecv());
-      trace.recordAnnotation(new Annotation.LocalAddr({
-        host: new InetAddress('127.0.0.1'),
-        port: 7070
-      }));
-
-      // Should only log after the span is complete
-      expect(logSpan.calledOnce).to.equal(false);
-      trace.recordAnnotation(new Annotation.ServerSend());
-      expect(logSpan.calledOnce).to.equal(true);
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-
-      expect(loggedSpan.traceId).to.equal('a');
-      expect(loggedSpan.parentId).to.equal('a');
-      expect(loggedSpan.id).to.equal('c');
-      expect(loggedSpan.name).to.eql('buysmoothie');
-      expect(loggedSpan.kind).to.equal('SERVER');
-      expect(loggedSpan.localEndpoint.serviceName).to.equal('smoothiestore');
-      expect(loggedSpan.localEndpoint.ipv4).to.equal('127.0.0.1');
-      expect(loggedSpan.localEndpoint.port).to.equal(7070);
-      expect(loggedSpan.tags.taste).to.equal('banana');
-    });
-  });
-
-  // Applications can override the span name via trace.recordRpc
-  it('should record span name as last recordRpc', () => {
-    const logSpan = sinon.spy();
-
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        parentId: new Some('a'),
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
-
-      trace.recordServiceName('SmoothieStore');
-      trace.recordRpc('buySmoothie');
-      trace.recordAnnotation(new Annotation.ServerRecv());
-
-      // some customization code scoped to this trace ID resets the span name
-      trace.recordRpc('rentSmoothie');
-
-      trace.recordAnnotation(new Annotation.ServerSend());
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-
-      expect(loggedSpan.name).to.eql('rentsmoothie');
-    });
-  });
-
-  it('should copy shared flag from trace id', () => {
-    const logSpan = sinon.spy();
-
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        parentId: new Some('a'),
-        spanId: 'c',
-        sampled: new Some(true),
-        shared: true
-      }));
-
-      trace.recordServiceName('SmoothieStore');
-      trace.recordRpc('buySmoothie');
-      trace.recordAnnotation(new Annotation.ServerRecv());
-      trace.recordAnnotation(new Annotation.ServerSend());
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-
-      expect(loggedSpan.shared).to.equal(true);
-    });
-  });
-
-  it('should set Span.timestamp to first record', () => {
-    const clock = lolex.install(12345678);
-    const logSpan = sinon.spy();
-
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
-      trace.recordServiceName('SmoothieStore');
-      trace.recordRpc('buySmoothie');
-      trace.recordBinary('taste', 'banana');
-      trace.recordAnnotation(new Annotation.ServerRecv());
-      trace.recordAnnotation(new Annotation.ServerSend());
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-
-      expect(loggedSpan.timestamp).to.equal(12345678000);
-
-      clock.uninstall();
-    });
-  });
-
-  it('should record duration in microseconds', () => {
-    // This test is failing under the browser zipkin-js/#315
-    if (typeof window !== 'undefined') {
-      return;
-    }
-
-    const clock = lolex.install(12345678);
-    const logSpan = sinon.spy();
-
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
-      trace.recordRpc('GET');
-      trace.recordAnnotation(new Annotation.ClientSend());
-      clock.tick(0.123456);
-      trace.recordAnnotation(new Annotation.ClientRecv());
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-
-      expect(loggedSpan.timestamp).to.equal(12345678000);
-      expect(loggedSpan.duration).to.equal(123);
-
-      for (let i = 0; i < loggedSpan.annotations.length; i += 1) {
-        // we make sure it does not include the zipkin-js.flush annotation
-        expect(loggedSpan.annotations[i].value === 'zipkin-js.flush').to.equal(false);
+  beforeEach(() => {
+    spans = [];
+    recorder = new BatchRecorder({
+      logger: {
+        logSpan: (span) => {
+          spans.push(JSON.parse(JSON_V2.encode(span)));
+        }
       }
-
-      clock.uninstall();
     });
   });
+
+  afterEach(() => expect(spans).to.be.empty);
+
+  function pendingSpan(traceId) {
+    return recorder.partialSpans.get(traceId);
+  }
+
+  function popSpan() {
+    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return spans.pop();
+  }
+
+  const rootId = new TraceId({
+    traceId: '5c7d31940cb80828',
+    spanId: 'cb37670e772e86e2',
+    sampled: new Some(true)
+  });
+
+  const childId = new TraceId({
+    traceId: rootId.traceId,
+    parentId: new Some(rootId.spanId),
+    spanId: '5a4c253bd195eaf9',
+    sampled: new Some(true)
+  });
+
+  function record(traceId, timestamp, annotation) {
+    return new Record({traceId, timestamp, annotation});
+  }
 
   it('should flush Spans not finished within a minute timeout', () => {
     const clock = lolex.install();
-
-    const logSpan = sinon.spy();
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-    const traceId = new TraceId({
-      traceId: 'a',
-      parentId: new Some('a'),
-      spanId: 'c',
-      sampled: new Some(true)
+    recorder = new BatchRecorder({
+      logger: {
+        logSpan: (span) => {
+          spans.push(JSON.parse(JSON_V2.encode(span)));
+        }
+      }
     });
 
-    ctxImpl.scoped(() => {
-      trace.setId(traceId);
-
-      trace.recordServiceName('SmoothieStore');
-      trace.recordAnnotation(new Annotation.ServerRecv());
-    });
+    clock.tick('01');
+    recorder.record(record(rootId, now(), new Annotation.ServerRecv()));
 
     clock.tick('02'); // polling interval is every second
-    expect(logSpan.calledOnce).to.equal(false);
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
 
     clock.tick('01:00'); // 1 minute is the default timeout
-    expect(logSpan.calledOnce).to.equal(true);
-
-    ctxImpl.scoped(() => {
-      trace.setId(traceId);
-
-      // ServerSend terminates the span, but it's already expired.
-      // Span is dropped silently.
-      trace.recordAnnotation(new Annotation.ServerSend());
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'SERVER',
+      timestamp: 1000000,
+      annotations: [{timestamp: 62000000, value: 'zipkin-js.flush'}]
     });
 
-    const loggedSpan = logSpan.getCall(0).args[0];
-    expect(loggedSpan.annotations[0].value).to.equal('zipkin-js.flush');
+    clock.tick('02'); // Late server-send is still reported
+    recorder.record(record(rootId, now(), new Annotation.ServerSend()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'SERVER',
+      annotations: [{timestamp: 65000000, value: 'finish'}]
+    });
 
     clock.uninstall();
   });
 
-  it('should capture ServerAddr event', () => {
-    const logSpan = sinon.spy();
+  it('should start and finish a client span', () => {
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+    recorder.record(record(rootId, 3, new Annotation.ClientRecv()));
 
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        parentId: new Some('a'),
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
-      trace.recordServiceName('client');
-      trace.recordRpc('call');
-      trace.recordAnnotation(new Annotation.ClientSend());
-      trace.recordAnnotation(new Annotation.ServerAddr({
-        serviceName: 'server',
-        host: new InetAddress('127.0.0.2'),
-        port: 7071
-      }));
-      trace.recordAnnotation(new Annotation.ClientRecv());
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-      expect(loggedSpan.remoteEndpoint.serviceName).to.equal('server');
-      expect(loggedSpan.remoteEndpoint.ipv4).to.equal('127.0.0.2');
-      expect(loggedSpan.remoteEndpoint.port).to.equal(7071);
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      timestamp: 1,
+      duration: 2
     });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
-  it('should capture MessageAddr event', () => {
-    const logSpan = sinon.spy();
+  it('should record ServerAddr as remote endpoint in a client span', () => {
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+    recorder.record(record(rootId, 1, new Annotation.ServerAddr({
+      serviceName: 'mysql',
+      host: new InetAddress('54.0.0.101'),
+      port: 3306
+    })));
+    recorder.record(record(rootId, 3, new Annotation.ClientRecv()));
 
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const trace = new Tracer({ctxImpl, recorder});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        parentId: new Some('a'),
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
-      trace.recordServiceName('producer');
-      trace.recordRpc('send-msg');
-      trace.recordAnnotation(new Annotation.ProducerStart());
-      trace.recordAnnotation(new Annotation.MessageAddr({
-        serviceName: 'mq',
-        host: new InetAddress('127.0.0.2'),
-        port: 7072
-      }));
-      trace.recordAnnotation(new Annotation.ProducerStop());
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-      expect(loggedSpan.remoteEndpoint.serviceName).to.equal('mq');
-      expect(loggedSpan.remoteEndpoint.ipv4).to.equal('127.0.0.2');
-      expect(loggedSpan.remoteEndpoint.port).to.equal(7072);
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      timestamp: 1,
+      duration: 2,
+      remoteEndpoint: {
+        ipv4: '54.0.0.101',
+        port: 3306,
+        serviceName: 'mysql'
+      }
     });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
-  it('should capture tracer defaultTags', () => {
-    const logSpan = sinon.spy();
+  it('should start and finish a server span', () => {
+    recorder.record(record(rootId, 1, new Annotation.ServerRecv()));
+    recorder.record(record(rootId, 3, new Annotation.ServerSend()));
 
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
-    const trace = new Tracer({ctxImpl, recorder, defaultTags});
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'SERVER',
+      timestamp: 1,
+      duration: 2
+    });
 
-    trace.recordServiceName('producer');
-    trace.recordRpc('send-msg');
-    trace.recordAnnotation(new Annotation.LocalOperationStart());
-    trace.recordAnnotation(new Annotation.LocalOperationStop());
-
-    const loggedSpan = logSpan.getCall(0).args[0];
-    expect(loggedSpan.tags.instanceId).to.equal(defaultTags.instanceId);
-    expect(loggedSpan.tags.cluster).to.equal(defaultTags.cluster);
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
-  it('should capture tracer defaultTags on local scope', () => {
-    const logSpan = sinon.spy();
+  it('should record ClientAddr as remote endpoint in a server span', () => {
+    recorder.record(record(rootId, 1, new Annotation.ServerRecv()));
+    recorder.record(record(rootId, 1, new Annotation.ClientAddr({
+      host: new InetAddress('54.0.0.101'),
+      port: 36656
+    })));
+    recorder.record(record(rootId, 3, new Annotation.ServerSend()));
 
-    const ctxImpl = new ExplicitContext();
-    const logger = {logSpan};
-    const recorder = new BatchRecorder({logger});
-    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
-    const trace = new Tracer({ctxImpl, recorder, defaultTags});
-
-    ctxImpl.scoped(() => {
-      trace.setId(new TraceId({
-        traceId: 'a',
-        parentId: new Some('a'),
-        spanId: 'c',
-        sampled: new Some(true)
-      }));
-      trace.recordServiceName('producer');
-      trace.recordRpc('send-msg');
-      trace.recordAnnotation(new Annotation.LocalOperationStart());
-      trace.recordAnnotation(new Annotation.LocalOperationStop());
-
-      const loggedSpan = logSpan.getCall(0).args[0];
-      expect(loggedSpan.tags.instanceId).to.equal(defaultTags.instanceId);
-      expect(loggedSpan.tags.cluster).to.equal(defaultTags.cluster);
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'SERVER',
+      timestamp: 1,
+      duration: 2,
+      remoteEndpoint: {
+        ipv4: '54.0.0.101',
+        port: 36656
+      }
     });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should start and finish a shared server span', () => {
+    const sharedId = new TraceId({
+      traceId: '5c7d31940cb80828',
+      spanId: 'cb37670e772e86e2',
+      sampled: new Some(true),
+      shared: true // shared is a context property
+    });
+
+    recorder.record(record(sharedId, 1, new Annotation.ServerRecv()));
+    recorder.record(record(sharedId, 3, new Annotation.ServerSend()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'SERVER',
+      timestamp: 1,
+      duration: 2,
+      shared: true
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should start and finish a producer span', () => {
+    recorder.record(record(rootId, 1, new Annotation.ProducerStart()));
+    recorder.record(record(rootId, 3, new Annotation.ProducerStop()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'PRODUCER',
+      timestamp: 1,
+      duration: 2
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should record MessageAddr as remote endpoint in a producer span', () => {
+    recorder.record(record(rootId, 1, new Annotation.ProducerStart()));
+    recorder.record(record(rootId, 1, new Annotation.MessageAddr({
+      serviceName: 'rabbitmq'
+    })));
+    recorder.record(record(rootId, 3, new Annotation.ProducerStop()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'PRODUCER',
+      timestamp: 1,
+      duration: 2,
+      remoteEndpoint: {serviceName: 'rabbitmq'}
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should start and finish a consumer span', () => {
+    recorder.record(record(rootId, 1, new Annotation.ConsumerStart()));
+    recorder.record(record(rootId, 3, new Annotation.ConsumerStop()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CONSUMER',
+      timestamp: 1,
+      duration: 2
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should start and finish a local span', () => {
+    recorder.record(record(rootId, 1, new Annotation.LocalOperationStart('foo')));
+    recorder.record(record(rootId, 3, new Annotation.LocalOperationStop()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      name: 'foo',
+      timestamp: 1,
+      duration: 2
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should add default tags', () => {
+    const tags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
+    recorder.setDefaultTags(tags);
+
+    recorder.record(record(rootId, 1, new Annotation.LocalOperationStart('foo')));
+    recorder.record(record(rootId, 3, new Annotation.LocalOperationStop()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      name: 'foo',
+      timestamp: 1,
+      duration: 2,
+      tags
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should accommodate late changes to span name', () => {
+    recorder.record(record(rootId, 1, new Annotation.ServiceName('backend')));
+    recorder.record(record(rootId, 1, new Annotation.Rpc('GET')));
+    recorder.record(record(rootId, 1, new Annotation.BinaryAnnotation('http.path', '/api')));
+    recorder.record(record(rootId, 1, new Annotation.ServerRecv()));
+
+    // when the response is ready to send, we have a name change
+    recorder.record(record(rootId, 3, new Annotation.Rpc('GET /api')));
+    recorder.record(record(rootId, 3, new Annotation.BinaryAnnotation('http.status_code', '200')));
+    recorder.record(record(rootId, 3, new Annotation.ServerSend()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      name: 'get /api',
+      kind: 'SERVER',
+      timestamp: 1,
+      duration: 2,
+      localEndpoint: {
+        serviceName: 'backend'
+      },
+      tags: {
+        'http.path': '/api',
+        'http.status_code': '200'
+      }
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should handle overlapping server and client', () => {
+    recorder.record(record(rootId, 1, new Annotation.ServiceName('frontend')));
+    recorder.record(record(rootId, 1, new Annotation.Rpc('GET')));
+    recorder.record(record(rootId, 1, new Annotation.BinaryAnnotation('http.path', '/')));
+    recorder.record(record(rootId, 1, new Annotation.ServerRecv()));
+
+    recorder.record(record(childId, 3, new Annotation.ServiceName('frontend')));
+    recorder.record(record(childId, 3, new Annotation.Rpc('GET')));
+    recorder.record(record(childId, 3, new Annotation.BinaryAnnotation('http.path', '/api')));
+    recorder.record(record(childId, 3, new Annotation.ClientSend()));
+    recorder.record(record(childId, 4, new Annotation.BinaryAnnotation('error', 'ECONNREFUSED')));
+    recorder.record(record(childId, 4, new Annotation.ClientRecv()));
+
+    recorder.record(record(rootId, 6, new Annotation.BinaryAnnotation('http.status_code', '500')));
+    recorder.record(record(rootId, 6, new Annotation.BinaryAnnotation('error', 'client fail')));
+    recorder.record(record(rootId, 6, new Annotation.ServerSend()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      name: 'get',
+      kind: 'SERVER',
+      timestamp: 1,
+      duration: 5,
+      localEndpoint: {
+        serviceName: 'frontend'
+      },
+      tags: {
+        error: 'client fail',
+        'http.path': '/',
+        'http.status_code': '500'
+      }
+    });
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      parentId: rootId.spanId,
+      id: childId.spanId,
+      name: 'get',
+      kind: 'CLIENT',
+      timestamp: 3,
+      duration: 1,
+      localEndpoint: {
+        serviceName: 'frontend'
+      },
+      tags: {
+        error: 'ECONNREFUSED',
+        'http.path': '/api'
+      }
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should keep state until finished', () => {
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+    expect(pendingSpan(rootId)).to.exist; // eslint-disable-line no-unused-expressions
+
+    recorder.record(record(rootId, 3, new Annotation.ClientRecv()));
+    expect(pendingSpan(rootId)).to.not.exist; // eslint-disable-line no-unused-expressions
+
+    popSpan(); // consume the span created above.
+  });
+
+  /**
+   * Due to the code structure of httpClient.js, we can't externally propagate the start timestamp
+   * for the purpose of ensuring duration gets recorded even when flushed.
+   *
+   * This shows that once we refactor or replace this type, we will be able to restore duration by
+   * replaying the start event, and without causing confusion when there is not flush.
+   */
+  it('should allow redundant reporting of start timestamp', () => {
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+
+    // pretend an async callback redundantly replays the send event
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+    recorder.record(record(rootId, 3, new Annotation.ClientRecv()));
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      timestamp: 1,
+      duration: 2
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should report sane data even on timeout', () => {
+    recorder.setDefaultTags({environment: 'production'});
+
+    recorder.record(record(rootId, 1, new Annotation.ServiceName('frontend')));
+    recorder.record(record(rootId, 1, new Annotation.Rpc('GET')));
+    recorder.record(record(rootId, 1, new Annotation.BinaryAnnotation('http.path', '/api')));
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+    recorder._writeSpan(rootId, pendingSpan(rootId)); // simulate timeout
+    expect(pendingSpan(rootId)).to.not.exist; // eslint-disable-line no-unused-expressions
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      timestamp: 1,
+      name: 'get',
+      localEndpoint: {
+        serviceName: 'frontend'
+      },
+      tags: {
+        environment: 'production',
+        'http.path': '/api'
+      }
+    });
+
+    recorder.record(record(rootId, 3, new Annotation.BinaryAnnotation('error', 'timeout')));
+    recorder.record(record(rootId, 3, new Annotation.ClientRecv()));
+    expect(pendingSpan(rootId)).to.not.exist; // eslint-disable-line no-unused-expressions
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      // there's no duration here as start timestamp was lost due to the flush
+      annotations: [{timestamp: 3, value: 'finish'}],
+      // note: default tags are intentionally not redundantly copied
+      tags: {
+        error: 'timeout'
+      }
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  /* This shows that a single finish event can trigger a report after a flush */
+  it('should report sane minimal data even on timeout', () => {
+    recorder.record(record(rootId, 1, new Annotation.ClientSend()));
+    recorder._writeSpan(rootId, pendingSpan(rootId)); // simulate timeout
+    expect(pendingSpan(rootId)).to.not.exist; // eslint-disable-line no-unused-expressions
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      timestamp: 1
+    });
+
+    recorder.record(record(rootId, 3, new Annotation.ClientRecv()));
+    expect(pendingSpan(rootId)).to.not.exist; // eslint-disable-line no-unused-expressions
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'CLIENT',
+      // there's no duration here as start timestamp was lost due to the flush
+      annotations: [{timestamp: 3, value: 'finish'}]
+    });
+
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 });

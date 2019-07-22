@@ -113,15 +113,15 @@ describe('Tracer', () => {
     });
   });
 
-  it('should record binary tags', () => {
+  it('setTags should record tags as binary annotations', () => {
     const {record} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
     const trace = new Tracer({ctxImpl, recorder, localServiceName});
-    const defaultTags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
+    const tags = {instanceId: 'i-1234567890abcdef0', cluster: 'nodeservice-stage'};
 
     ctxImpl.scoped(() => {
-      trace.setTags(defaultTags);
+      trace.setTags(tags);
 
       const annotations = record.args.map(args => args[0]);
 
@@ -416,7 +416,7 @@ describe('Tracer', () => {
     expect(newTraceId.flags).to.eql(rootTraceId.flags);
   });
 
-  it('should record defaultTags', () => {
+  it('should propagate defaultTags to recorder', () => {
     const {setDefaultTags} = recorder;
     const ctxImpl = new ExplicitContext();
     const localServiceName = 'smoothie-store';
