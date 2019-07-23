@@ -16,7 +16,7 @@ describe('SuperAgent instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  setupTestServer();
+  const server = setupTestServer();
 
   let spans;
   let tracer;
@@ -39,10 +39,6 @@ describe('SuperAgent instrumentation - integration test', () => {
     return request.get(urlToGet).use(zipkinPlugin({tracer, remoteServiceName}));
   }
 
-  function url(path) {
-    return `${global.baseURL}${path}?index=10&count=300`;
-  }
-
   function successSpan(path) {
     return ({
       name: 'get',
@@ -58,19 +54,19 @@ describe('SuperAgent instrumentation - integration test', () => {
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
-    return get(url(path))
+    return get(server.url(path))
       .then(response => expectB3Headers(popSpan(), response.body));
   });
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return get(url(path))
+    return get(server.url(path))
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should report 404 in tags', (done) => {
     const path = '/pathno';
-    get(url(path))
+    get(server.url(path))
       .then((response) => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
@@ -92,7 +88,7 @@ describe('SuperAgent instrumentation - integration test', () => {
 
   it('should report 401 in tags', (done) => {
     const path = '/weather/securedTown';
-    get(url(path))
+    get(server.url(path))
       .then((response) => {
         done(new Error(`expected status 401 response to error. status: ${response.status}`));
       })
@@ -114,7 +110,7 @@ describe('SuperAgent instrumentation - integration test', () => {
 
   it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
-    get(url(path))
+    get(server.url(path))
       .then((response) => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
@@ -160,8 +156,8 @@ describe('SuperAgent instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = get(url(beijing));
-    const getWuhanWeather = get(url(wuhan));
+    const getBeijingWeather = get(server.url(beijing));
+    const getWuhanWeather = get(server.url(wuhan));
 
     return getBeijingWeather.then(() => {
       getWuhanWeather.then(() => {
@@ -176,8 +172,8 @@ describe('SuperAgent instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = get(url(beijing));
-    const getWuhanWeather = get(url(wuhan));
+    const getBeijingWeather = get(server.url(beijing));
+    const getWuhanWeather = get(server.url(wuhan));
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order

@@ -15,7 +15,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  setupTestServer();
+  const server = setupTestServer();
 
   let spans;
   let tracer;
@@ -38,10 +38,6 @@ describe('CujoJS/rest instrumentation - integration test', () => {
     return rest.wrap(restInterceptor, {tracer, remoteServiceName});
   }
 
-  function url(path) {
-    return `${global.baseURL}${path}?index=10&count=300`;
-  }
-
   function successSpan(path) {
     return ({
       name: 'get',
@@ -57,19 +53,19 @@ describe('CujoJS/rest instrumentation - integration test', () => {
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
-    return getClient()(url(path))
+    return getClient()(server.url(path))
       .then(response => expectB3Headers(popSpan(), JSON.parse(response.entity)));
   });
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return getClient()(url(path))
+    return getClient()(server.url(path))
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should report 404 in tags', () => {
     const path = '/pathno';
-    return getClient()(url(path))
+    return getClient()(server.url(path))
       .then(() => expectSpan(popSpan(), {
         name: 'get',
         kind: 'CLIENT',
@@ -85,7 +81,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
 
   it('should report 401 in tags', () => {
     const path = '/weather/securedTown';
-    return getClient()(url(path))
+    return getClient()(server.url(path))
       .then(() => expectSpan(popSpan(), {
         name: 'get',
         kind: 'CLIENT',
@@ -101,7 +97,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
 
   it('should report 500 in tags', () => {
     const path = '/weather/bagCity';
-    return getClient()(url(path))
+    return getClient()(server.url(path))
       .then(() => expectSpan(popSpan(), {
         name: 'get',
         kind: 'CLIENT',

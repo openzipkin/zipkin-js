@@ -14,7 +14,7 @@ describe('request-promise instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  setupTestServer();
+  const server = setupTestServer();
 
   let spans;
   let tracer;
@@ -38,10 +38,6 @@ describe('request-promise instrumentation - integration test', () => {
     return new ZipkinRequest(tracer, remoteServiceName);
   }
 
-  function url(path) {
-    return `${global.baseURL}${path}?index=10&count=300`;
-  }
-
   function successSpan(path) {
     return ({
       name: 'get',
@@ -57,19 +53,19 @@ describe('request-promise instrumentation - integration test', () => {
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
-    return getClient().get(url(path))
+    return getClient().get(server.url(path))
       .then(response => expectB3Headers(popSpan(), JSON.parse(response)));
   });
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return getClient().get(url(path))
+    return getClient().get(server.url(path))
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should report 404 in tags', (done) => {
     const path = '/pathno';
-    getClient().get(url(path))
+    getClient().get(server.url(path))
       .then((response) => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
@@ -91,7 +87,7 @@ describe('request-promise instrumentation - integration test', () => {
 
   it('should report 401 in tags', (done) => {
     const path = '/weather/securedTown';
-    getClient().get(url(path))
+    getClient().get(server.url(path))
       .then((response) => {
         done(new Error(`expected status 401 response to error. status: ${response.status}`));
       })
@@ -113,7 +109,7 @@ describe('request-promise instrumentation - integration test', () => {
 
   it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
-    getClient().get(url(path))
+    getClient().get(server.url(path))
       .then((response) => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
@@ -163,8 +159,8 @@ describe('request-promise instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client.get(url(beijing));
-    const getWuhanWeather = client.get(url(wuhan));
+    const getBeijingWeather = client.get(server.url(beijing));
+    const getWuhanWeather = client.get(server.url(wuhan));
 
     return getBeijingWeather.then(() => {
       getWuhanWeather.then(() => {
@@ -181,8 +177,8 @@ describe('request-promise instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client.get(url(beijing));
-    const getWuhanWeather = client.get(url(wuhan));
+    const getBeijingWeather = client.get(server.url(beijing));
+    const getWuhanWeather = client.get(server.url(wuhan));
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order

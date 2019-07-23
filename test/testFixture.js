@@ -1,10 +1,12 @@
+function inBrowser() {
+  return typeof window !== 'undefined' && typeof window.__karma__ !== 'undefined';
+}
+
 // Returns test endpoint middleware or null if in a browser. If in a browser, use relative urls.
 function maybeMiddleware() {
   // First, check if we are running tests inside the web browser. If so, we expect Karma's server
   // host the endpoints we need. This means we use a relative instead of an absolute URL in tests.
-  if (typeof window !== 'undefined' && typeof window.__karma__ !== 'undefined') {
-    return null;
-  }
+  if (inBrowser()) return null;
 
   // Intentionally defer express middleware to avoid attempts to bundle it when in a browser
   // eslint-disable-next-line global-require
@@ -33,6 +35,12 @@ function setupTestServer() {
   after(() => {
     if (this.server) this.server.close();
   });
+
+  return { // these use global references as we are leaving 'this'
+    url(path) {
+      return `${global.baseURL}${path}?index=10&count=300`;
+    }
+  };
 };
 
 // This will make a span recorder that adds to the passed array exactly as they would appear in json
@@ -80,4 +88,4 @@ function expectSpan(span, expected) {
   expect(span).to.deep.equal({...volatileProperties, ...expected});
 }
 
-module.exports = {setupTestServer, newSpanRecorder, expectB3Headers, expectSpan}
+module.exports = {inBrowser, setupTestServer, newSpanRecorder, expectB3Headers, expectSpan}

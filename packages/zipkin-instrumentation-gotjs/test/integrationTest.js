@@ -14,7 +14,7 @@ describe('got instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  setupTestServer();
+  const server = setupTestServer();
 
   let spans;
   let tracer;
@@ -37,10 +37,6 @@ describe('got instrumentation - integration test', () => {
     return wrapGot(got, {tracer, remoteServiceName});
   }
 
-  function url(path) {
-    return `${global.baseURL}${path}?index=10&count=300`;
-  }
-
   function successSpan(path) {
     return ({
       name: 'get',
@@ -57,7 +53,7 @@ describe('got instrumentation - integration test', () => {
   it('should not interfere with errors that precede a call', (done) => {
     // Here we are passing a function instead of the value of it. This ensures our error callback
     // doesn't make assumptions about a span in progress: there won't be if there was a config error
-    wrappedGot()(url)
+    wrappedGot()(server.url)
       .then((response) => {
         done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
       })
@@ -74,25 +70,25 @@ describe('got instrumentation - integration test', () => {
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
-    return wrappedGot()(url(path))
+    return wrappedGot()(server.url(path))
       .then(response => expectB3Headers(popSpan(), JSON.parse(response.body)));
   });
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return wrappedGot()(url(path))
+    return wrappedGot()(server.url(path))
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should support options request', () => {
     const path = '/weather/wuhan';
-    return wrappedGot()({url: url(path), method: 'GET'})
+    return wrappedGot()({url: server.url(path), method: 'GET'})
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should report 404 in tags', (done) => {
     const path = '/pathno';
-    wrappedGot()(url(path))
+    wrappedGot()(server.url(path))
       .then((response) => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
@@ -114,7 +110,7 @@ describe('got instrumentation - integration test', () => {
 
   it('should report 401 in tags', (done) => {
     const path = '/weather/securedTown';
-    wrappedGot()(url(path))
+    wrappedGot()(server.url(path))
       .then((response) => {
         done(new Error(`expected status 401 response to error. status: ${response.status}`));
       })
@@ -136,7 +132,7 @@ describe('got instrumentation - integration test', () => {
 
   it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
-    wrappedGot()(url(path), {retry: 0})
+    wrappedGot()(server.url(path), {retry: 0})
       .then((response) => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
@@ -184,8 +180,8 @@ describe('got instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client(url(beijing));
-    const getWuhanWeather = client(url(wuhan));
+    const getBeijingWeather = client(server.url(beijing));
+    const getWuhanWeather = client(server.url(wuhan));
 
     return getBeijingWeather.then(() => {
       getWuhanWeather.then(() => {
@@ -202,8 +198,8 @@ describe('got instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client(url(beijing));
-    const getWuhanWeather = client(url(wuhan));
+    const getBeijingWeather = client(server.url(beijing));
+    const getWuhanWeather = client(server.url(wuhan));
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
