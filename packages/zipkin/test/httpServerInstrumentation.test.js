@@ -1,6 +1,7 @@
 const BatchRecorder = require('../src/batch-recorder');
 const ExplicitContext = require('../src/explicit-context');
 const HttpServer = require('../src/instrumentation/httpServer');
+const InetAddress = require('../src/InetAddress');
 const {JSON_V2} = require('../src/jsonEncoder');
 const {Some, None} = require('../src/option');
 const Tracer = require('../src/tracer');
@@ -9,6 +10,7 @@ const {expectSpan} = require('../../../test/testFixture');
 describe('Http Server Instrumentation', () => {
   const serviceName = 'weather-api';
   const baseURL = 'http://127.0.0.1:80';
+  const ipv4 = InetAddress.getLocalAddress().ipv4(); // tracer uses this IP for localEndpoint.ipv4
 
   function readHeader(headers) {
     return name => (headers[name] ? new Some(headers[name]) : None);
@@ -45,7 +47,7 @@ describe('Http Server Instrumentation', () => {
     return ({
       name: 'get',
       kind: 'SERVER',
-      localEndpoint: {serviceName, ipv4: '127.0.0.1', port: 80},
+      localEndpoint: {serviceName, ipv4, port: 80},
       tags: {
         'http.path': path,
         'http.status_code': '200',
@@ -58,7 +60,7 @@ describe('Http Server Instrumentation', () => {
     return ({
       name: 'get',
       kind: 'SERVER',
-      localEndpoint: {serviceName, ipv4: '127.0.0.1', port: 80},
+      localEndpoint: {serviceName, ipv4, port: 80},
       tags: {
         'http.path': path,
         'http.status_code': status.toString(),
@@ -185,7 +187,7 @@ describe('Http Server Instrumentation', () => {
     });
   });
 
-  it('should allow the host to be overridden', () => {
+  it('should allow the host to be overridden', () => { // NOTE: this is actually IP as encoded
     instrumentation = new HttpServer({tracer, host: '1.1.1.1', port: 80});
 
     const path = '/weather/wuhan';
