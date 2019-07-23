@@ -140,6 +140,14 @@ class BatchRecorder {
 
     this._updateSpanMap(id, rec.timestamp, (span) => {
       switch (rec.annotation.annotationType) {
+        case 'ClientAddr':
+          span.delegate.setKind('SERVER');
+          span.delegate.setRemoteEndpoint(new Endpoint({
+            serviceName: rec.annotation.serviceName,
+            ipv4: rec.annotation.host && rec.annotation.host.ipv4(),
+            port: rec.annotation.port
+          }));
+          break;
         case 'ClientSend':
           span.delegate.setKind('CLIENT');
           span.delegate.setTimestamp(rec.timestamp);
@@ -154,7 +162,7 @@ class BatchRecorder {
           break;
         case 'ServerRecv':
           span.delegate.setShared(id.isShared());
-          span.delegate.setKind('CLIENT');
+          span.delegate.setKind('SERVER');
           span.delegate.setTimestamp(rec.timestamp);
           break;
         case 'ProducerStart':
