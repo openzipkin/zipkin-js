@@ -14,8 +14,13 @@ function maybeMiddleware() {
   return middleware();
 }
 
-// Sets up a test server appropriate for either normal mocha or browser-based tests
-// exposes ${global.baseURL} for use in client tests.
+// Sets up a test server appropriate for either normal mocha or browser-based tests.
+//
+// Installation should be like this
+//
+// const server = setupTestServer();
+//
+// Later, you can get a url for clients to use via server.url(path)
 //
 // Approach is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
 function setupTestServer() {
