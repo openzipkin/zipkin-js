@@ -305,7 +305,6 @@ describe('Batch Recorder - integration test', () => {
   });
 
   it('should only flush spans when calling flush method', () => {
-    const clock = lolex.install();
     recorder = new BatchRecorder({
       logger: {
         logSpan: (span) => {
@@ -314,11 +313,7 @@ describe('Batch Recorder - integration test', () => {
       }
     });
 
-    recorder.record(record(rootId, now(), new Annotation.ServerRecv()));
-
-    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
-
-    clock.tick(100); // 1000 is de batching interval
+    recorder.record(record(rootId, 1, new Annotation.ServerRecv()));
 
     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
 
@@ -327,10 +322,9 @@ describe('Batch Recorder - integration test', () => {
     expect(popSpan()).to.deep.equal({
       traceId: rootId.traceId,
       id: rootId.spanId,
-      kind: 'SERVER'
+      kind: 'SERVER',
+      timestamp: 1
     });
-
-    clock.uninstall();
   });
 
   it('should handle overlapping server and client', () => {
