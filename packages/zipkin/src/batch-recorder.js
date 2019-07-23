@@ -137,6 +137,8 @@ class BatchRecorder {
 
   /**
    * Calling this will flush any pending spans to the transport.
+   *
+   * Note: the transport itself may be batching, in such case you may need to flush that also.
    */
   flush() {
     this.partialSpans.forEach((span, id) => {
