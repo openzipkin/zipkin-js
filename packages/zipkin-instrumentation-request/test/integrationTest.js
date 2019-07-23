@@ -3,10 +3,10 @@ const {ExplicitContext, Tracer} = require('zipkin');
 
 const request = require('request');
 const {
-  maybeMiddleware,
-  newSpanRecorder,
   expectB3Headers,
-  expectSpan
+  expectSpan,
+  newSpanRecorder,
+  setupTestServer
 } = require('../../../test/testFixture');
 const wrapRequest = require('../src/index');
 
@@ -14,19 +14,7 @@ describe('request instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  let server;
-  let baseURL;
-
-  before((done) => {
-    server = maybeMiddleware().listen(0, () => {
-      baseURL = `http://127.0.0.1:${server.address().port}`;
-      done();
-    });
-  });
-
-  after(() => {
-    if (server) server.close();
-  });
+  const server = setupTestServer();
 
   let spans;
   let tracer;
@@ -49,10 +37,6 @@ describe('request instrumentation - integration test', () => {
     return wrapRequest(request, {tracer, remoteServiceName});
   }
 
-  function url(path) {
-    return `${baseURL}${path}?index=10&count=300`;
-  }
-
   function successSpan(path) {
     return ({
       name: 'get',
@@ -68,23 +52,23 @@ describe('request instrumentation - integration test', () => {
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
-    return getClient().get(url(path))
+    return getClient().get(server.url(path))
       .on('body', body => expectB3Headers(popSpan(), body));
   });
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return getClient().get(url(path), () => expectSpan(popSpan(), successSpan(path)));
+    return getClient().get(server.url(path), () => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should support options request', () => {
     const path = '/weather/wuhan';
-    return getClient()({url: url(path)}, () => expectSpan(popSpan(), successSpan(path)));
+    return getClient()({url: server.url(path)}, () => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should report 404 in tags', (done) => {
     const path = '/pathno';
-    getClient().get(url(path))
+    getClient().get(server.url(path))
       .on('response', () => {
         expectSpan(popSpan(), {
           name: 'get',
@@ -104,7 +88,7 @@ describe('request instrumentation - integration test', () => {
 
   it('should report 401 in tags', (done) => {
     const path = '/weather/securedTown';
-    getClient().get(url(path))
+    getClient().get(server.url(path))
       .on('response', () => {
         expectSpan(popSpan(), {
           name: 'get',
@@ -124,7 +108,7 @@ describe('request instrumentation - integration test', () => {
 
   it('should report 500 in tags', (done) => {
     const path = '/weather/bagCity';
-    getClient().get(url(path))
+    getClient().get(server.url(path))
       .on('response', () => {
         expectSpan(popSpan(), {
           name: 'get',
@@ -168,7 +152,7 @@ describe('request instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    client.get(url(beijing), () => client.get(url(wuhan), () => {
+    client.get(server.url(beijing), () => client.get(server.url(wuhan), () => {
       // since these are sequential, we should have an expected order
       expectSpan(popSpan(), successSpan(wuhan));
       expectSpan(popSpan(), successSpan(beijing));

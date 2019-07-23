@@ -1,10 +1,11 @@
 const {expect} = require('chai');
 const {ExplicitContext, Tracer} = require('zipkin');
 const {
-  maybeMiddleware,
-  newSpanRecorder,
   expectB3Headers,
-  expectSpan
+  expectSpan,
+  inBrowser,
+  newSpanRecorder,
+  setupTestServer
 } = require('../../../test/testFixture');
 
 // defer lookup of node fetch until we know if we are node
@@ -14,24 +15,7 @@ describe('fetch instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  let server;
-  let baseURL = ''; // default to relative path, for browser-based tests
-
-  before((done) => {
-    const middleware = maybeMiddleware();
-    if (middleware !== null) {
-      server = middleware.listen(0, () => {
-        baseURL = `http://127.0.0.1:${server.address().port}`;
-        done();
-      });
-    } else { // Inside a browser
-      done();
-    }
-  });
-
-  after(() => {
-    if (server) server.close();
-  });
+  const server = setupTestServer();
 
   let spans;
   let tracer;
@@ -52,16 +36,12 @@ describe('fetch instrumentation - integration test', () => {
 
   function wrappedFetch() {
     let fetch;
-    if (server) { // defer loading node-fetch
-      fetch = require('node-fetch'); // eslint-disable-line global-require
-    } else {
+    if (inBrowser()) {
       fetch = window.fetch; // eslint-disable-line
+    } else { // defer loading node-fetch
+      fetch = require('node-fetch'); // eslint-disable-line global-require
     }
     return wrapFetch(fetch, {tracer, remoteServiceName});
-  }
-
-  function url(path) {
-    return `${baseURL}${path}?index=10&count=300`;
   }
 
   function successSpan(path) {
@@ -80,7 +60,7 @@ describe('fetch instrumentation - integration test', () => {
   it('should not interfere with errors that precede a call', (done) => {
     // Here we are passing a function instead of the value of it. This ensures our error callback
     // doesn't make assumptions about a span in progress: there won't be if there was a config error
-    wrappedFetch()(url)
+    wrappedFetch()(server.url)
       .then((response) => {
         done(new Error(`expected an invalid url parameter to error. status: ${response.status}`));
       })
@@ -97,7 +77,7 @@ describe('fetch instrumentation - integration test', () => {
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
-    return wrappedFetch()(url(path))
+    return wrappedFetch()(server.url(path))
       .then(response => response.json()) // json() returns a promise
       .then(json => expectB3Headers(popSpan(), json));
   });
@@ -105,19 +85,19 @@ describe('fetch instrumentation - integration test', () => {
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
-    return wrappedFetch()(url(path))
+    return wrappedFetch()(server.url(path))
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should support options request', () => {
     const path = '/weather/wuhan';
-    return wrappedFetch()({url: url(path), method: 'GET'})
+    return wrappedFetch()({url: server.url(path), method: 'GET'})
       .then(() => expectSpan(popSpan(), successSpan(path)));
   });
 
   it('should report 404 in tags', () => {
     const path = '/pathno';
-    return wrappedFetch()(url(path))
+    return wrappedFetch()(server.url(path))
       .then(() => expectSpan(popSpan(), {
         name: 'get',
         kind: 'CLIENT',
@@ -133,7 +113,7 @@ describe('fetch instrumentation - integration test', () => {
 
   it('should report 401 in tags', () => {
     const path = '/weather/securedTown';
-    return wrappedFetch()(url(path))
+    return wrappedFetch()(server.url(path))
       .then(() => expectSpan(popSpan(), {
         name: 'get',
         kind: 'CLIENT',
@@ -149,7 +129,7 @@ describe('fetch instrumentation - integration test', () => {
 
   it('should report 500 in tags', () => {
     const path = '/weather/bagCity';
-    return wrappedFetch()(url(path))
+    return wrappedFetch()(server.url(path))
       .then(() => expectSpan(popSpan(), {
         name: 'get',
         kind: 'CLIENT',
@@ -191,8 +171,8 @@ describe('fetch instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client(url(beijing));
-    const getWuhanWeather = client(url(wuhan));
+    const getBeijingWeather = client(server.url(beijing));
+    const getWuhanWeather = client(server.url(wuhan));
 
     return getBeijingWeather.then(() => {
       getWuhanWeather.then(() => {
@@ -209,8 +189,8 @@ describe('fetch instrumentation - integration test', () => {
     const beijing = '/weather/beijing';
     const wuhan = '/weather/wuhan';
 
-    const getBeijingWeather = client(url(beijing));
-    const getWuhanWeather = client(url(wuhan));
+    const getBeijingWeather = client(server.url(beijing));
+    const getWuhanWeather = client(server.url(wuhan));
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
