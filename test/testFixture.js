@@ -12,6 +12,29 @@ function maybeMiddleware() {
   return middleware();
 }
 
+// Sets up a test server appropriate for either normal mocha or browser-based tests
+// exposes ${global.baseURL} for use in client tests.
+//
+// Approach is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
+function setupTestServer() {
+  before((done) => {
+    const middleware = maybeMiddleware();
+    if (middleware !== null) {
+      this.server = middleware.listen(0, () => {
+        this.baseURL = `http://127.0.0.1:${server.address().port}`;
+        done();
+      });
+    } else { // Inside a browser
+      this.baseURL =  ''; // default to relative path, for browser-based tests
+      done();
+    }
+  });
+
+  after(() => {
+    if (this.server) this.server.close();
+  });
+};
+
 // This will make a span recorder that adds to the passed array exactly as they would appear in json
 function newSpanRecorder(spans) {
   const {BatchRecorder, jsonEncoder: {JSON_V2}} = require('zipkin');
@@ -57,4 +80,4 @@ function expectSpan(span, expected) {
   expect(span).to.deep.equal({...volatileProperties, ...expected});
 }
 
-module.exports = {maybeMiddleware, newSpanRecorder, expectB3Headers, expectSpan}
+module.exports = {setupTestServer, newSpanRecorder, expectB3Headers, expectSpan}

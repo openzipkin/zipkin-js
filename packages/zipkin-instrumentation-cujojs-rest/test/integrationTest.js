@@ -3,10 +3,10 @@ const {ExplicitContext, Tracer} = require('zipkin');
 
 const rest = require('rest');
 const {
-  maybeMiddleware,
-  newSpanRecorder,
   expectB3Headers,
-  expectSpan
+  expectSpan,
+  newSpanRecorder,
+  setupTestServer
 } = require('../../../test/testFixture');
 const restInterceptor = require('../src/restInterceptor');
 
@@ -15,24 +15,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  let server;
-  let baseURL = ''; // default to relative path, for browser-based tests
-
-  before((done) => {
-    const middleware = maybeMiddleware();
-    if (middleware !== null) {
-      server = middleware.listen(0, () => {
-        baseURL = `http://127.0.0.1:${server.address().port}`;
-        done();
-      });
-    } else { // Inside a browser
-      done();
-    }
-  });
-
-  after(() => {
-    if (server) server.close();
-  });
+  setupTestServer();
 
   let spans;
   let tracer;
@@ -56,7 +39,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   }
 
   function url(path) {
-    return `${baseURL}${path}?index=10&count=300`;
+    return `${global.baseURL}${path}?index=10&count=300`;
   }
 
   function successSpan(path) {

@@ -1,10 +1,10 @@
 const {expect} = require('chai');
 const {ExplicitContext, Tracer} = require('zipkin');
 const {
-  maybeMiddleware,
-  newSpanRecorder,
   expectB3Headers,
-  expectSpan
+  expectSpan,
+  newSpanRecorder,
+  setupTestServer
 } = require('../../../test/testFixture');
 
 const ZipkinRequest = require('../src/request').default;
@@ -14,19 +14,7 @@ describe('request-promise instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  let server;
-  let baseURL;
-
-  before((done) => {
-    server = maybeMiddleware().listen(0, () => {
-      baseURL = `http://127.0.0.1:${server.address().port}`;
-      done();
-    });
-  });
-
-  after(() => {
-    if (server) server.close();
-  });
+  setupTestServer();
 
   let spans;
   let tracer;
@@ -51,7 +39,7 @@ describe('request-promise instrumentation - integration test', () => {
   }
 
   function url(path) {
-    return `${baseURL}${path}?index=10&count=300`;
+    return `${global.baseURL}${path}?index=10&count=300`;
   }
 
   function successSpan(path) {
