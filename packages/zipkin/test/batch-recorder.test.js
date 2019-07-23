@@ -302,8 +302,29 @@ describe('Batch Recorder - integration test', () => {
         'http.status_code': '200'
       }
     });
+  });
+
+  it('should only flush spans when calling flush method', () => {
+    recorder = new BatchRecorder({
+      logger: {
+        logSpan: (span) => {
+          spans.push(JSON.parse(JSON_V2.encode(span)));
+        }
+      }
+    });
+
+    recorder.record(record(rootId, 1, new Annotation.ServerRecv()));
 
     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+
+    recorder.flush();
+
+    expect(popSpan()).to.deep.equal({
+      traceId: rootId.traceId,
+      id: rootId.spanId,
+      kind: 'SERVER',
+      timestamp: 1
+    });
   });
 
   it('should handle overlapping server and client', () => {
