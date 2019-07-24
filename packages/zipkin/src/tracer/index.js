@@ -168,9 +168,16 @@ class Tracer {
   }
 
   join(traceId) {
-    if (!(traceId instanceof TraceId)) {
+    if (isUndefinedOrNull(traceId)) {
+      throw new Error('traceId is a required arg');
+    }
+
+    // duck type check until we sort out a better way. We don't want to break
+    // transpiled usage ex. `traceId instanceof TraceId_1: false` See #422
+    if (isUndefinedOrNull(traceId._spanId)) {
       throw new Error('Must be valid TraceId instance');
     }
+
     if (!this.supportsJoin) {
       return this.createChildId(traceId);
     }

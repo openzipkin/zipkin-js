@@ -300,10 +300,22 @@ describe('Tracer', () => {
     expect(newRootId.traceId.length).to.eql(32);
   });
 
-  it('should throw error when joining none TraceId value', () => {
+  it('should throw error when joining non TraceId value', () => {
     const tracer = new Tracer({recorder, ctxImpl});
 
     expect(() => { tracer.join(null); }).to.throw();
+    expect(() => { tracer.join('ice cream'); }).to.throw();
+  });
+
+  it('should not throw error when joining but TraceId type mismatches', () => {
+    const tracer = new Tracer({recorder, ctxImpl});
+
+    // simulate type mismatch due to transpilation
+    const notExactlyTraceId = Object.assign({}, rootId);
+    expect(notExactlyTraceId instanceof TraceId).to.equal(false);
+
+    const newTraceId = tracer.join(notExactlyTraceId);
+    expect(notExactlyTraceId === newTraceId).to.equal(true);
   });
 
   const samplerCases = [
