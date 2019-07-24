@@ -315,7 +315,7 @@ describe('Tracer', () => {
     expect(notExactlyTraceId instanceof TraceId).to.equal(false);
 
     const newTraceId = tracer.join(notExactlyTraceId);
-    expect(notExactlyTraceId == newTraceId).to.equal(true);
+    expect(notExactlyTraceId === newTraceId).to.equal(true);
   });
 
   const samplerCases = [
