@@ -48,14 +48,96 @@ function setupTestServer() {
   };
 };
 
-// This will make a span recorder that adds to the passed array exactly as they would appear in json
-function newSpanRecorder(spans) {
-  const {BatchRecorder, jsonEncoder: {JSON_V2}} = require('zipkin');
+function _expectSpan(span, expected) {
+  expect(span.traceId).to.have.lengthOf(16);
+  expect(span.id).to.have.lengthOf(16);
 
-  return new BatchRecorder({logger: {logSpan: (span) => {
-    spans.push(JSON.parse(JSON_V2.encode(span)));
-  }}});
+  const volatileProperties = {
+    traceId: span.traceId,
+    id: span.id,
+    timestamp: span.timestamp,
+    duration: span.duration
+  }
+
+  if (span.parentId) volatileProperties.parentId = span.parentId;
+
+  expect(span).to.deep.equal({...volatileProperties, ...expected});
 }
+
+class TestTracer {
+  reset({localServiceName}) {
+    // TODO see if we can conditionally load from package because when testing zipkin itself, we want
+    // to use explicit paths
+    const {expect} = require('chai');
+    const {BatchRecorder, ExplicitContext, TraceId, Tracer, jsonEncoder: {JSON_V2}}
+     = require('zipkin');
+
+    this._spans = [];
+    this._tracer = new Tracer({
+      ctxImpl: new ExplicitContext(),
+      localServiceName,
+      recorder: new BatchRecorder({logger: {logSpan: (span) => {
+        this._spans.push(JSON.parse(JSON_V2.encode(span)));
+      }}})
+    });
+    this._sentinelTraceId = this._tracer.id;
+    this._debugId = new TraceId({spanId: this._tracer.id.traceId, debug: true});
+  }
+
+  expectNoLeaks() {
+    expect(this._tracer.id).to.equal(this._sentinelTraceId); // no context leaks
+    expect(this._spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  }
+
+  tracer() {
+    return this._tracer;
+  }
+
+  popSpan() {
+    expect(this._spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
+    return this._spans.pop();
+  }
+
+  popDebugSpan() {
+    const span = this.popSpan();
+    expect(span.debug).to.equal(true);
+    return span;
+  }
+
+  expectSpan(span, expected) {
+    return _expectSpan(span, expected);
+  }
+
+  expectNextSpanToEqual(expected) {
+    const span = this.popSpan();
+    expectSpan(span, expected);
+    return span;
+  }
+
+  runInDebugTrace(callback) {
+    return this._tracer.letId(this._debugId, callback);
+  }
+}
+
+// Sets up a test tracer that records spans as objects that appear as V2 json format.
+//
+// Installation should be like this
+//
+// const tracer = setupTestTracer({localServiceName: serviceName});
+//
+// Later, you can take a span via tracer.popSpan(). If you don't read all spans like this, an error
+// will occur in the afterEach hook.
+//
+// Approach is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
+function setupTestTracer({localServiceName}) {
+  const testTracer = new TestTracer();
+
+  beforeEach(() => testTracer.reset({localServiceName}));
+
+  afterEach(() => testTracer.expectNoLeaks());
+
+  return testTracer;
+};
 
 function expectB3Headers(span, headers, caseInsensitive = true) {
   expect(headers[caseInsensitive ? 'x-b3-traceid' : 'X-B3-TraceId']).to.equal(span.traceId);
@@ -77,20 +159,18 @@ function expectB3Headers(span, headers, caseInsensitive = true) {
   }
 }
 
-function expectSpan(span, expected) {
-  expect(span.traceId).to.have.lengthOf(16);
-  expect(span.id).to.have.lengthOf(16);
+// TODO: remove newSpanRecorder method and export for expectSpan when porting is done
+function newSpanRecorder(spans) {
+  const {BatchRecorder, jsonEncoder: {JSON_V2}} = require('zipkin');
 
-  const volatileProperties = {
-    traceId: span.traceId,
-    id: span.id,
-    timestamp: span.timestamp,
-    duration: span.duration
-  }
-
-  if (span.parentId) volatileProperties.parentId = span.parentId;
-
-  expect(span).to.deep.equal({...volatileProperties, ...expected});
+  return new BatchRecorder({logger: {logSpan: (span) => {
+    spans.push(JSON.parse(JSON_V2.encode(span)));
+  }}});
 }
 
-module.exports = {inBrowser, setupTestServer, newSpanRecorder, expectB3Headers, expectSpan}
+function expectSpan(span, expected) {
+  return _expectSpan(span, expected);
+}
+
+module.exports = {inBrowser, setupTestServer, setupTestTracer, expectB3Headers,
+  expectSpan, newSpanRecorder}
