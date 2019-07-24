@@ -43,6 +43,10 @@ module.exports = function(config) {
     files: ['test/**/*.js'],
     // unless you use the mocha reporter, you won't see test failure details.
     reporters: ['mocha'],
+    mochaReporter: {
+      // unless showDiff, you won't see which properties were unexpected
+      showDiff: true,
+    },
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
