@@ -49,16 +49,16 @@ describe('Annotation types', () => {
                 host: InetAddress.getLocalAddress(),
                 port: 8000
             });
+            const MessageAddr: Annotation.MessageAddr = new Annotation.MessageAddr({
+                serviceName: 'name',
+                host: InetAddress.getLocalAddress(),
+                port: 8000
+            });
             const localAddr: Annotation.LocalAddr = new Annotation.LocalAddr({
                 host: InetAddress.getLocalAddress(),
                 port: 8000
             });
-            const MessageAddr: Annotation.MessageAddr = new Annotation.MessageAddr({
-              serviceName: 'name',
-              host: InetAddress.getLocalAddress(),
-              port: 8000
-          });
-            
+
             expect(clientAddr).to.have.property('annotationType');
             expect(serverAddr).to.have.property('serviceName');
             expect(MessageAddr).to.have.property('serviceName');
