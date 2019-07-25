@@ -1,43 +1,28 @@
 const {expect} = require('chai');
-const {ExplicitContext, InetAddress, Tracer} = require('zipkin');
-
+const {InetAddress} = require('zipkin');
 const fetch = require('node-fetch');
+const https = require('https');
+const fs = require('fs');
+
 const restify = require('restify');
 const express = require('express');
 const connect = require('connect');
-const https = require('https');
-const fs = require('fs');
+
 const middleware = require('../src/middleware');
-const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
+const {setupTestTracer} = require('../../../test/testFixture');
 
 describe('connect instrumentation - integration test', () => {
   const serviceName = 'weather-api';
   const ipv4 = InetAddress.getLocalAddress().ipv4();
 
-  let spans;
-  let tracer;
-
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      localServiceName: serviceName,
-      ctxImpl: new ExplicitContext(),
-      recorder: newSpanRecorder(spans)
-    });
-  });
+  const tracer = setupTestTracer({localServiceName: serviceName});
 
   let server;
   let baseURL;
 
   afterEach(() => {
     if (server) server.close();
-    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
-
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
 
   function successSpan(path, city) {
     return ({
@@ -67,26 +52,32 @@ describe('connect instrumentation - integration test', () => {
   }
 
   describe('restify middleware', () => {
+    // Restify uses async hooks. Until there is a CLS hooked implementation here, we need to be
+    // explicit with trace IDs. See https://github.com/openzipkin/zipkin-js/issues/88
+    function addTag(req, key, value) {
+      tracer.tracer().letId(req._trace_id, () => tracer.tracer().recordBinary(key, value));
+    }
+
     beforeEach((done) => {
       const app = restify.createServer({handleUncaughtExceptions: true});
-      app.use(middleware({tracer}));
+      app.use(middleware({tracer: tracer.tracer()}));
       app.get('/weather/wuhan', (req, res, next) => {
-        tracer.recordBinary('city', 'wuhan');
+        addTag(req, 'city', 'wuhan');
         res.send(200, req.headers);
         return next();
       });
       app.get('/weather/beijing', (req, res, next) => {
-        tracer.recordBinary('city', 'beijing');
+        addTag(req, 'city', 'beijing');
         res.send(200, req.headers);
         return next();
       });
       app.get('/weather/securedTown', (req, res, next) => {
-        tracer.recordBinary('city', 'securedTown');
+        addTag(req, 'city', 'securedTown');
         res.send(401, req.headers);
         return next();
       });
-      app.get('/weather/bagCity', () => {
-        tracer.recordBinary('city', 'bagCity');
+      app.get('/weather/bagCity', (req) => {
+        addTag(req, 'city', 'bagCity');
         throw new Error('service is dead');
       });
       server = app.listen(0, () => {
@@ -98,13 +89,13 @@ describe('connect instrumentation - integration test', () => {
     it('should start a new trace', () => {
       const path = '/weather/wuhan';
       const url = `${baseURL}${path}`;
-      return fetch(url).then(() => expectSpan(popSpan(), successSpan(path, 'wuhan')));
+      return fetch(url).then(() => tracer.expectNextSpanToEqual(successSpan(path, 'wuhan')));
     });
 
     it('http.path tag should not include query parameters', () => {
       const path = '/weather/wuhan';
       const url = `${baseURL}${path}?index=10&count=300`;
-      return fetch(url).then(() => expect(popSpan().tags['http.path']).to.equal(path));
+      return fetch(url).then(() => expect(tracer.popSpan().tags['http.path']).to.equal(path));
     });
 
     it('should receive continue a trace from the client', () => {
@@ -117,11 +108,11 @@ describe('connect instrumentation - integration test', () => {
           'X-B3-Flags': '1'
         }
       }).then(() => {
-        const span = popSpan();
+        const span = tracer.expectNextSpanToEqual(
+          {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}}
+        );
         expect(span.traceId).to.equal('863ac35c9f6413ad');
         expect(span.id).to.equal('48485a3953bb6124');
-
-        expectSpan(span, {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}});
       });
     });
 
@@ -135,40 +126,40 @@ describe('connect instrumentation - integration test', () => {
           'X-B3-SpanId': '48485a3953bb6124',
           'X-B3-Sampled': '1'
         }
-      }).then(() => expect(popSpan().traceId).to.equal(traceId));
+      }).then(() => expect(tracer.popSpan().traceId).to.equal(traceId));
     });
 
     it('should report 401 in tags', () => {
       const path = '/weather/securedTown';
       return fetch(`${baseURL}${path}`)
-        .then(() => expectSpan(popSpan(), errorSpan(path, 'securedTown', 401)));
+        .then(() => tracer.expectNextSpanToEqual(errorSpan(path, 'securedTown', 401)));
     });
 
     it('should report 500 in tags', () => {
       const path = '/weather/bagCity';
       return fetch(`${baseURL}${path}`)
-        .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
+        .then(() => tracer.expectNextSpanToEqual(errorSpan(path, 'bagCity', 500)));
     });
   });
 
   describe('express middleware', () => {
     beforeEach((done) => {
       const app = express();
-      app.use(middleware({tracer}));
+      app.use(middleware({tracer: tracer.tracer()}));
       app.get('/weather/wuhan', (req, res) => {
-        tracer.recordBinary('city', 'wuhan');
+        tracer.tracer().recordBinary('city', 'wuhan');
         res.status(200).json(req.headers);
       });
       app.get('/weather/beijing', (req, res) => {
-        tracer.recordBinary('city', 'beijing');
+        tracer.tracer().recordBinary('city', 'beijing');
         res.status(200).json(req.headers);
       });
       app.get('/weather/securedTown', (req, res) => {
-        tracer.recordBinary('city', 'securedTown');
+        tracer.tracer().recordBinary('city', 'securedTown');
         res.status(401).json(req.headers);
       });
       app.get('/weather/bagCity', () => {
-        tracer.recordBinary('city', 'bagCity');
+        tracer.tracer().recordBinary('city', 'bagCity');
         throw new Error('service is dead');
       });
       server = app.listen(0, () => {
@@ -180,13 +171,13 @@ describe('connect instrumentation - integration test', () => {
     it('should start a new trace', () => {
       const path = '/weather/wuhan';
       const url = `${baseURL}${path}`;
-      return fetch(url).then(() => expectSpan(popSpan(), successSpan(path, 'wuhan')));
+      return fetch(url).then(() => tracer.expectNextSpanToEqual(successSpan(path, 'wuhan')));
     });
 
     it('http.path tag should not include query parameters', () => {
       const path = '/weather/wuhan';
       const url = `${baseURL}${path}?index=10&count=300`;
-      return fetch(url).then(() => expect(popSpan().tags['http.path']).to.equal(path));
+      return fetch(url).then(() => expect(tracer.popSpan().tags['http.path']).to.equal(path));
     });
 
     it('should receive continue a trace from the client', () => {
@@ -199,11 +190,11 @@ describe('connect instrumentation - integration test', () => {
           'X-B3-Flags': '1'
         }
       }).then(() => {
-        const span = popSpan();
+        const span = tracer.expectNextSpanToEqual(
+          {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}}
+        );
         expect(span.traceId).to.equal('863ac35c9f6413ad');
         expect(span.id).to.equal('48485a3953bb6124');
-
-        expectSpan(span, {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}});
       });
     });
 
@@ -217,19 +208,19 @@ describe('connect instrumentation - integration test', () => {
           'X-B3-SpanId': '48485a3953bb6124',
           'X-B3-Sampled': '1'
         }
-      }).then(() => expect(popSpan().traceId).to.equal(traceId));
+      }).then(() => expect(tracer.popSpan().traceId).to.equal(traceId));
     });
 
     it('should report 401 in tags', () => {
       const path = '/weather/securedTown';
       return fetch(`${baseURL}${path}`)
-        .then(() => expectSpan(popSpan(), errorSpan(path, 'securedTown', 401)));
+        .then(() => tracer.expectNextSpanToEqual(errorSpan(path, 'securedTown', 401)));
     });
 
     it('should report 500 in tags', () => {
       const path = '/weather/bagCity';
       return fetch(`${baseURL}${path}`)
-        .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
+        .then(() => tracer.expectNextSpanToEqual(errorSpan(path, 'bagCity', 500)));
     });
   });
 
@@ -238,24 +229,24 @@ describe('connect instrumentation - integration test', () => {
 
     beforeEach((done) => {
       app = connect();
-      app.use(middleware({tracer}));
+      app.use(middleware({tracer: tracer.tracer()}));
       app.use('/weather/wuhan', (req, res) => {
-        tracer.recordBinary('city', 'wuhan');
+        tracer.tracer().recordBinary('city', 'wuhan');
         res.statusCode = 200; // eslint-disable-line no-param-reassign
         res.end(JSON.stringify(req.headers));
       });
       app.use('/weather/beijing', (req, res) => {
-        tracer.recordBinary('city', 'beijing');
+        tracer.tracer().recordBinary('city', 'beijing');
         res.statusCode = 200; // eslint-disable-line no-param-reassign
         res.end(JSON.stringify(req.headers));
       });
       app.use('/weather/securedTown', (req, res) => {
-        tracer.recordBinary('city', 'securedTown');
+        tracer.tracer().recordBinary('city', 'securedTown');
         res.statusCode = 401; // eslint-disable-line no-param-reassign
         res.end(JSON.stringify(req.headers));
       });
       app.use('/weather/bagCity', () => {
-        tracer.recordBinary('city', 'bagCity');
+        tracer.tracer().recordBinary('city', 'bagCity');
         throw new Error('service is dead');
       });
       server = app.listen(0, () => {
@@ -266,13 +257,14 @@ describe('connect instrumentation - integration test', () => {
 
     it('should start a new trace', () => {
       const path = '/weather/wuhan';
-      return fetch(`${baseURL}${path}`).then(() => expectSpan(popSpan(), successSpan(path, 'wuhan')));
+      return fetch(`${baseURL}${path}`)
+        .then(() => tracer.expectNextSpanToEqual(successSpan(path, 'wuhan')));
     });
 
     it('http.path tag should not include query parameters', () => {
       const path = '/weather/wuhan';
       const url = `${baseURL}${path}?index=10&count=300`;
-      return fetch(url).then(() => expect(popSpan().tags['http.path']).to.equal(path));
+      return fetch(url).then(() => expect(tracer.popSpan().tags['http.path']).to.equal(path));
     });
 
     it('should receive continue a trace from the client', () => {
@@ -285,11 +277,11 @@ describe('connect instrumentation - integration test', () => {
           'X-B3-Flags': '1'
         }
       }).then(() => {
-        const span = popSpan();
+        const span = tracer.expectNextSpanToEqual(
+          {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}}
+        );
         expect(span.traceId).to.equal('863ac35c9f6413ad');
         expect(span.id).to.equal('48485a3953bb6124');
-
-        expectSpan(span, {...successSpan(path, 'wuhan'), ...{debug: true, shared: true}});
       });
     });
 
@@ -303,19 +295,19 @@ describe('connect instrumentation - integration test', () => {
           'X-B3-SpanId': '48485a3953bb6124',
           'X-B3-Sampled': '1'
         }
-      }).then(() => expect(popSpan().traceId).to.equal(traceId));
+      }).then(() => expect(tracer.popSpan().traceId).to.equal(traceId));
     });
 
     it('should report 401 in tags', () => {
       const path = '/weather/securedTown';
       return fetch(`${baseURL}${path}`)
-        .then(() => expectSpan(popSpan(), errorSpan(path, 'securedTown', 401)));
+        .then(() => tracer.expectNextSpanToEqual(errorSpan(path, 'securedTown', 401)));
     });
 
     it('should report 500 in tags', () => {
       const path = '/weather/bagCity';
       return fetch(`${baseURL}${path}`)
-        .then(() => expectSpan(popSpan(), errorSpan(path, 'bagCity', 500)));
+        .then(() => tracer.expectNextSpanToEqual(errorSpan(path, 'bagCity', 500)));
     });
 
     it('should work with https', (done) => {
@@ -333,7 +325,7 @@ describe('connect instrumentation - integration test', () => {
         }).then(() => {
           tlsServer.close(); // closing here because in travis env, finally syntax doesn't work.
 
-          expectSpan(popSpan(), successSpan(path, 'wuhan'));
+          tracer.expectNextSpanToEqual(successSpan(path, 'wuhan'));
           done();
         })
           .catch(err => done(err));
