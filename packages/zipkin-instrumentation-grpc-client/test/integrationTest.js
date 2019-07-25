@@ -1,8 +1,7 @@
-import grpc from 'grpc';
-import tracingInterceptor from '../src/grpcClientInterceptor';
+const grpc = require('grpc');
+const tracingInterceptor = require('../src/grpcClientInterceptor');
 
-import {mockServer, weather} from './utils';
-
+const {mockServer, weather} = require('./utils');
 const {expectB3Headers, setupTestTracer} = require('../../../test/testFixture');
 
 describe('gRPC client instrumentation (integration test)', () => {
@@ -62,13 +61,13 @@ describe('gRPC client instrumentation (integration test)', () => {
   it('should record successful request', done => getClient().getTemperature({location: 'Tahoe'}, (err) => {
     if (err) return done(err);
 
-    tracer.popSpanAndExpect(successSpan(temperature));
+    tracer.expectNextSpanToEqual(successSpan(temperature));
     return done();
   }));
 
   it('should report error in tags', done => getClient().getTemperature({location: 'Las Vegas'}, (err, res) => {
     if (err) {
-      tracer.popSpanAndExpect({
+      tracer.expectNextSpanToEqual({
         name: temperature,
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -86,7 +85,7 @@ describe('gRPC client instrumentation (integration test)', () => {
 
   it('should report error in tags on transport error', done => getClient('localhost:12345').getTemperature({location: 'Las Vegas'}, (err, res) => {
     if (err) {
-      tracer.popSpanAndExpect({
+      tracer.expectNextSpanToEqual({
         name: temperature,
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -113,8 +112,8 @@ describe('gRPC client instrumentation (integration test)', () => {
           if (err2) done(err2);
 
           // since these are sequential, we should have an expected order
-          tracer.popSpanAndExpect(successSpan(locations));
-          tracer.popSpanAndExpect(successSpan(temperature));
+          tracer.expectNextSpanToEqual(successSpan(locations));
+          tracer.expectNextSpanToEqual(successSpan(temperature));
           done();
         });
       }
@@ -138,7 +137,7 @@ describe('gRPC client instrumentation (integration test)', () => {
       const secondName = firstName === temperature ? locations : temperature;
 
       tracer.expectSpan(firstSpan, successSpan(firstName));
-      tracer.popSpanAndExpect(successSpan(secondName));
+      tracer.expectNextSpanToEqual(successSpan(secondName));
     });
   });
 });
