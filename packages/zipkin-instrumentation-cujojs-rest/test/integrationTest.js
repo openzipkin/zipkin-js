@@ -1,14 +1,7 @@
-const {expect} = require('chai');
-const {ExplicitContext, Tracer} = require('zipkin');
-
 const rest = require('rest');
-const {
-  expectB3Headers,
-  expectSpan,
-  newSpanRecorder,
-  setupTestServer
-} = require('../../../test/testFixture');
 const restInterceptor = require('../src/restInterceptor');
+
+const {expectB3Headers, setupTestServer, setupTestTracer} = require('../../../test/testFixture');
 
 // NOTE: CujoJS/rest sends all http status to success callback
 describe('CujoJS/rest instrumentation - integration test', () => {
@@ -16,26 +9,10 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   const remoteServiceName = 'weather-api';
 
   const server = setupTestServer();
-
-  let spans;
-  let tracer;
-
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      ctxImpl: new ExplicitContext(),
-      localServiceName: serviceName,
-      recorder: newSpanRecorder(spans)
-    });
-  });
-
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
+  const tracer = setupTestTracer({localServiceName: serviceName});
 
   function getClient() {
-    return rest.wrap(restInterceptor, {tracer, remoteServiceName});
+    return rest.wrap(restInterceptor, {tracer: tracer.tracer(), remoteServiceName});
   }
 
   function successSpan(path) {
@@ -54,19 +31,19 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
     return getClient()(server.url(path))
-      .then(response => expectB3Headers(popSpan(), JSON.parse(response.entity)));
+      .then(response => expectB3Headers(tracer.popSpan(), JSON.parse(response.entity)));
   });
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
     return getClient()(server.url(path))
-      .then(() => expectSpan(popSpan(), successSpan(path)));
+      .then(() => tracer.expectNextSpanToEqual(successSpan(path)));
   });
 
   it('should report 404 in tags', () => {
     const path = '/pathno';
     return getClient()(server.url(path))
-      .then(() => expectSpan(popSpan(), {
+      .then(() => tracer.expectNextSpanToEqual({
         name: 'get',
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -82,7 +59,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   it('should report 401 in tags', () => {
     const path = '/weather/securedTown';
     return getClient()(server.url(path))
-      .then(() => expectSpan(popSpan(), {
+      .then(() => tracer.expectNextSpanToEqual({
         name: 'get',
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -98,7 +75,7 @@ describe('CujoJS/rest instrumentation - integration test', () => {
   it('should report 500 in tags', () => {
     const path = '/weather/bagCity';
     return getClient()(server.url(path))
-      .then(() => expectSpan(popSpan(), {
+      .then(() => tracer.expectNextSpanToEqual({
         name: 'get',
         kind: 'CLIENT',
         localEndpoint: {serviceName},
