@@ -32,13 +32,13 @@ const Request = class {
       const wrappedOptions = this.instrumentation.recordRequest(options, url, method);
       const traceId = tracer.id;
 
-      const recordResponse = (response) => {
-        this.instrumentation.recordResponse(traceId, response.statusCode);
-      };
+      const recordResponse = response => tracer.scoped( // TODO: scoped bc recordResponse leaks
+        () => this.instrumentation.recordResponse(traceId, response.statusCode)
+      );
 
-      const recordError = (error) => {
-        this.instrumentation.recordError(traceId, error);
-      };
+      const recordError = error => tracer.scoped( // TODO: scoped bc recordError leaks
+        () => this.instrumentation.recordError(traceId, error)
+      );
 
       return request(wrappedOptions, callback)
         .on('response', recordResponse)
