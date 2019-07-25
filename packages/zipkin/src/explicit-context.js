@@ -12,10 +12,12 @@ module.exports = class ExplicitContext {
   }
 
   scoped(callable) {
-    const prevCtx = this.currentCtx;
-    const result = callable();
-    this.currentCtx = prevCtx;
-    return result;
+    const prevCtx = this.getContext();
+    try {
+      return callable();
+    } finally {
+      this.setContext(prevCtx);
+    }
   }
 
   letContext(ctx, callable) {

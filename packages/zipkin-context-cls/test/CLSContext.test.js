@@ -36,6 +36,25 @@ describe('CLSContext', () => {
     expect(ctx.getContext()).to.equal(null);
   });
 
+  it('should reset after error in callback', () => {
+    const ctx = new CLSContext();
+
+    let error;
+    try {
+      ctx.letContext('buy-smoothie', () => {
+        throw new Error('no smoothies. try our cake');
+      });
+    } catch (err) {
+      error = err; // error wasn't swallowed
+    }
+
+    // sanity check
+    expect(error.message).to.eql('no smoothies. try our cake');
+
+    // context wasn't leaked
+    expect(ctx.getContext()).to.equal(null);
+  });
+
   it('support nested contexts', () => {
     const ctx = new CLSContext();
     const finalReturnValue = ctx.letContext('foo', () => {
