@@ -1,15 +1,12 @@
-const {expect} = require('chai');
-const {ExplicitContext, Tracer} = require('zipkin');
-const {
-  expectB3Headers,
-  expectSpan,
-  inBrowser,
-  newSpanRecorder,
-  setupTestServer
-} = require('../../../test/testFixture');
-
 // defer lookup of node fetch until we know if we are node
 const wrapFetch = require('../src/wrapFetch');
+
+const {
+  expectB3Headers,
+  inBrowser,
+  setupTestServer,
+  setupTestTracer
+} = require('../../../test/testFixture');
 
 describe('fetch instrumentation - integration test', () => {
   const serviceName = 'weather-app';
@@ -17,22 +14,7 @@ describe('fetch instrumentation - integration test', () => {
 
   const server = setupTestServer();
 
-  let spans;
-  let tracer;
-
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      ctxImpl: new ExplicitContext(),
-      localServiceName: serviceName,
-      recorder: newSpanRecorder(spans)
-    });
-  });
-
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
+  const tracer = setupTestTracer({localServiceName: serviceName});
 
   function wrappedFetch() {
     let fetch;
@@ -41,7 +23,7 @@ describe('fetch instrumentation - integration test', () => {
     } else { // defer loading node-fetch
       fetch = require('node-fetch'); // eslint-disable-line global-require
     }
-    return wrapFetch(fetch, {tracer, remoteServiceName});
+    return wrapFetch(fetch, {tracer: tracer.tracer(), remoteServiceName});
   }
 
   function successSpan(path) {
@@ -79,26 +61,26 @@ describe('fetch instrumentation - integration test', () => {
     const path = '/weather/wuhan';
     return wrappedFetch()(server.url(path))
       .then(response => response.json()) // json() returns a promise
-      .then(json => expectB3Headers(popSpan(), json));
+      .then(json => expectB3Headers(tracer.popSpan(), json));
   });
 
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
     return wrappedFetch()(server.url(path))
-      .then(() => expectSpan(popSpan(), successSpan(path)));
+      .then(() => tracer.expectNextSpanToEqual(successSpan(path)));
   });
 
   it('should support options request', () => {
     const path = '/weather/wuhan';
     return wrappedFetch()({url: server.url(path), method: 'GET'})
-      .then(() => expectSpan(popSpan(), successSpan(path)));
+      .then(() => tracer.expectNextSpanToEqual(successSpan(path)));
   });
 
   it('should report 404 in tags', () => {
     const path = '/pathno';
     return wrappedFetch()(server.url(path))
-      .then(() => expectSpan(popSpan(), {
+      .then(() => tracer.expectNextSpanToEqual({
         name: 'get',
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -114,7 +96,7 @@ describe('fetch instrumentation - integration test', () => {
   it('should report 401 in tags', () => {
     const path = '/weather/securedTown';
     return wrappedFetch()(server.url(path))
-      .then(() => expectSpan(popSpan(), {
+      .then(() => tracer.expectNextSpanToEqual({
         name: 'get',
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -130,7 +112,7 @@ describe('fetch instrumentation - integration test', () => {
   it('should report 500 in tags', () => {
     const path = '/weather/bagCity';
     return wrappedFetch()(server.url(path))
-      .then(() => expectSpan(popSpan(), {
+      .then(() => tracer.expectNextSpanToEqual({
         name: 'get',
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -151,7 +133,7 @@ describe('fetch instrumentation - integration test', () => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
       .catch((error) => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -174,13 +156,16 @@ describe('fetch instrumentation - integration test', () => {
     const getBeijingWeather = client(server.url(beijing));
     const getWuhanWeather = client(server.url(wuhan));
 
-    return getBeijingWeather.then(() => {
-      getWuhanWeather.then(() => {
-        // since these are sequential, we should have an expected order
-        expectSpan(popSpan(), successSpan(wuhan));
-        expectSpan(popSpan(), successSpan(beijing));
-      });
-    });
+    return getBeijingWeather.then(() => getWuhanWeather.then(() => {
+      // While requests are sequential, some runtimes report out-of-order for unknown reasons.
+      // This defensiveness prevents CI flakes.
+      const firstSpan = tracer.popSpan();
+      const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
+      const secondPath = firstPath === wuhan ? beijing : wuhan;
+
+      tracer.expectSpan(firstSpan, successSpan(firstPath));
+      tracer.expectNextSpanToEqual(successSpan(secondPath));
+    }));
   });
 
   it('should support parallel get requests', () => {
@@ -194,10 +179,12 @@ describe('fetch instrumentation - integration test', () => {
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
-      const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
+      const firstSpan = tracer.popSpan();
+      const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
       const secondPath = firstPath === wuhan ? beijing : wuhan;
-      expectSpan(popSpan(), successSpan(firstPath));
-      expectSpan(popSpan(), successSpan(secondPath));
+
+      tracer.expectSpan(firstSpan, successSpan(firstPath));
+      tracer.expectNextSpanToEqual(successSpan(secondPath));
     });
   });
 });
