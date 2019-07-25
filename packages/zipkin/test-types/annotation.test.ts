@@ -2,18 +2,26 @@ import {expect} from 'chai';
 import { Annotation, InetAddress } from 'zipkin';
 
 describe('Annotation types', () => {
-    describe('[ClientSend, ClientRecv, ServerSend, ServerRecv, LocalOperationStop]', () => {
+    describe('[ClientSend, ClientRecv, ServerSend, ServerRecv, ProducerStart, ProducerStop, ConsumerStart, ConsumerStop, LocalOperationStop]', () => {
         it('should return correct type', () => {
             const clientSend: Annotation.ClientSend = new Annotation.ClientSend();
             const clientRecv: Annotation.ClientRecv = new Annotation.ClientRecv();
             const serverSend: Annotation.ServerSend = new Annotation.ServerSend();
             const serverRecv: Annotation.ServerRecv = new Annotation.ServerRecv();
+            const ProducerStart: Annotation.ProducerStart = new Annotation.ProducerStart();
+            const ProducerStop: Annotation.ProducerStop = new Annotation.ProducerStop();
+            const ConsumerStart: Annotation.ConsumerStart = new Annotation.ConsumerStart();
+            const ConsumerStop: Annotation.ConsumerStop = new Annotation.ConsumerStop();
             const localOperationStop: Annotation.LocalOperationStop = new Annotation.LocalOperationStop();
 
             expect(clientSend).to.have.property('annotationType');
             expect(clientRecv).to.have.property('annotationType');
             expect(serverSend).to.have.property('annotationType');
             expect(serverRecv).to.have.property('annotationType');
+            expect(ProducerStart).to.have.property('annotationType');
+            expect(ProducerStop).to.have.property('annotationType');
+            expect(ConsumerStart).to.have.property('annotationType');
+            expect(ConsumerStop).to.have.property('annotationType');
             expect(localOperationStop).to.have.property('annotationType');
         });
     });
