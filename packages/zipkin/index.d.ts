@@ -201,6 +201,9 @@ declare namespace zipkin {
     class ConsumerStop implements IAnnotation {
       readonly annotationType: string;
     }
+    class MessageAddr implements IAnnotation {
+      readonly annotationType: string;
+    }
     class LocalOperationStart implements IAnnotation {
       constructor(name: string);
       readonly annotationType: string;

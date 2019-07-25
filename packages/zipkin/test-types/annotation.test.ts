@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import { Annotation, InetAddress } from 'zipkin';
 
 describe('Annotation types', () => {
-    describe('[ClientSend, ClientRecv, ServerSend, ServerRecv, ProducerStart, ProducerStop, ConsumerStart, ConsumerStop, LocalOperationStop]', () => {
+    describe('[ClientSend, ClientRecv, ServerSend, ServerRecv, ProducerStart, ProducerStop, ConsumerStart, ConsumerStop, MessageAddr, LocalOperationStop]', () => {
         it('should return correct type', () => {
             const clientSend: Annotation.ClientSend = new Annotation.ClientSend();
             const clientRecv: Annotation.ClientRecv = new Annotation.ClientRecv();
@@ -12,6 +12,7 @@ describe('Annotation types', () => {
             const ProducerStop: Annotation.ProducerStop = new Annotation.ProducerStop();
             const ConsumerStart: Annotation.ConsumerStart = new Annotation.ConsumerStart();
             const ConsumerStop: Annotation.ConsumerStop = new Annotation.ConsumerStop();
+            const MessageAddr: Annotation.MessageAddr = new Annotation.MessageAddr();
             const localOperationStop: Annotation.LocalOperationStop = new Annotation.LocalOperationStop();
 
             expect(clientSend).to.have.property('annotationType');
@@ -22,6 +23,7 @@ describe('Annotation types', () => {
             expect(ProducerStop).to.have.property('annotationType');
             expect(ConsumerStart).to.have.property('annotationType');
             expect(ConsumerStop).to.have.property('annotationType');
+            expect(MessageAddr).to.have.property('annotationType');
             expect(localOperationStop).to.have.property('annotationType');
         });
     });
