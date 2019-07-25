@@ -1,15 +1,7 @@
 import request from 'superagent';
-
 import zipkinPlugin from '../src/superagentPlugin';
 
-const {expect} = require('chai');
-const {ExplicitContext, Tracer} = require('zipkin');
-const {
-  expectB3Headers,
-  expectSpan,
-  newSpanRecorder,
-  setupTestServer
-} = require('../../../test/testFixture');
+const {expectB3Headers, setupTestServer, setupTestTracer} = require('../../../test/testFixture');
 
 // NOTE: axiosjs raises an error on non 2xx status instead of passing to the normal callback.
 describe('SuperAgent instrumentation - integration test', () => {
@@ -17,26 +9,10 @@ describe('SuperAgent instrumentation - integration test', () => {
   const remoteServiceName = 'weather-api';
 
   const server = setupTestServer();
-
-  let spans;
-  let tracer;
-
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      ctxImpl: new ExplicitContext(),
-      localServiceName: serviceName,
-      recorder: newSpanRecorder(spans)
-    });
-  });
-
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
+  const tracer = setupTestTracer({localServiceName: serviceName});
 
   function get(urlToGet) {
-    return request.get(urlToGet).use(zipkinPlugin({tracer, remoteServiceName}));
+    return request.get(urlToGet).use(zipkinPlugin({tracer: tracer.tracer(), remoteServiceName}));
   }
 
   function successSpan(path) {
@@ -55,13 +31,13 @@ describe('SuperAgent instrumentation - integration test', () => {
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
     return get(server.url(path))
-      .then(response => expectB3Headers(popSpan(), response.body));
+      .then(response => expectB3Headers(tracer.popSpan(), response.body));
   });
 
   it('should support get request', () => {
     const path = '/weather/wuhan';
     return get(server.url(path))
-      .then(() => expectSpan(popSpan(), successSpan(path)));
+      .then(() => tracer.expectNextSpanToEqual(successSpan(path)));
   });
 
   it('should report 404 in tags', (done) => {
@@ -71,7 +47,7 @@ describe('SuperAgent instrumentation - integration test', () => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -93,7 +69,7 @@ describe('SuperAgent instrumentation - integration test', () => {
         done(new Error(`expected status 401 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -115,7 +91,7 @@ describe('SuperAgent instrumentation - integration test', () => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -138,7 +114,7 @@ describe('SuperAgent instrumentation - integration test', () => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
       .catch((error) => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -159,13 +135,16 @@ describe('SuperAgent instrumentation - integration test', () => {
     const getBeijingWeather = get(server.url(beijing));
     const getWuhanWeather = get(server.url(wuhan));
 
-    return getBeijingWeather.then(() => {
-      getWuhanWeather.then(() => {
-        // since these are sequential, we should have an expected order
-        expectSpan(popSpan(), successSpan(wuhan));
-        expectSpan(popSpan(), successSpan(beijing));
-      });
-    });
+    return getBeijingWeather.then(() => getWuhanWeather.then(() => {
+      // While requests are sequential, some runtimes report out-of-order for unknown reasons.
+      // This defensiveness prevents CI flakes.
+      const firstSpan = tracer.popSpan();
+      const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
+      const secondPath = firstPath === wuhan ? beijing : wuhan;
+
+      tracer.expectSpan(firstSpan, successSpan(firstPath));
+      tracer.expectNextSpanToEqual(successSpan(secondPath));
+    }));
   });
 
   it('should support parallel get requests', () => {
@@ -177,10 +156,12 @@ describe('SuperAgent instrumentation - integration test', () => {
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
-      const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
+      const firstSpan = tracer.popSpan();
+      const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
       const secondPath = firstPath === wuhan ? beijing : wuhan;
-      expectSpan(popSpan(), successSpan(firstPath));
-      expectSpan(popSpan(), successSpan(secondPath));
+
+      tracer.expectSpan(firstSpan, successSpan(firstPath));
+      tracer.expectNextSpanToEqual(successSpan(secondPath));
     });
   });
 });
