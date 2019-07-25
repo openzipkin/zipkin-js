@@ -106,7 +106,7 @@ declare namespace zipkin {
     interface INone<T> extends Option<T> {
       readonly type: 'None';
       readonly present: false;
-   }
+    }
 
     type IOption<T> = Some<T> | INone<T>;
 
@@ -188,6 +188,25 @@ declare namespace zipkin {
     }
     class ServerRecv implements IAnnotation {
       readonly annotationType: string;
+    }
+    class ProducerStart implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class ProducerStop implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class ConsumerStart implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class ConsumerStop implements IAnnotation {
+      readonly annotationType: string;
+    }
+    class MessageAddr implements IAnnotation {
+      constructor(args: { serviceName: string, host?: InetAddress, port?: number });
+      readonly annotationType: string;
+      serviceName: string;
+      host: InetAddress;
+      port: number;
     }
     class LocalOperationStart implements IAnnotation {
       constructor(name: string);
