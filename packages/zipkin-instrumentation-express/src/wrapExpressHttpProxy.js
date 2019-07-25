@@ -50,13 +50,13 @@ class ExpressHttpProxyInstrumentation {
 
 function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
   return function zipkinProxy(host, options = {}) {
-    function wrapDecorateRequest(instrumentation, decorateFunction) {
+    function wrapDecorateRequest(instrumentation, decorateRequest) {
       return (proxyReq, serverReq) => {
         const serverTraceId = serverReq._trace_id;
         let wrappedProxyReq = proxyReq;
-        if (typeof decorateFunction === 'function') {
+        if (typeof decorateRequest === 'function') {
           tracer.letId(serverTraceId, () => {
-            wrappedProxyReq = decorateFunction(proxyReq, serverReq);
+            wrappedProxyReq = decorateRequest(proxyReq, serverReq);
           });
         }
 
@@ -64,7 +64,7 @@ function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
       };
     }
 
-    function wrapIntercept(instrumentation, interceptFunction) {
+    function wrapIntercept(instrumentation, intercept) {
       return (rsp, data, serverReq, res, callback) => {
         const instrumentedCallback = (err, rspd, sent) => {
           instrumentation.recordResponse(rsp, serverReq._trace_id_proxy);
@@ -72,9 +72,9 @@ function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
         };
 
         const serverTraceId = serverReq._trace_id;
-        if (typeof interceptFunction === 'function') {
+        if (typeof intercept === 'function') {
           tracer.letId(serverTraceId,
-            () => interceptFunction(rsp, data, serverReq, res, instrumentedCallback));
+            () => intercept(rsp, data, serverReq, res, instrumentedCallback));
         } else {
           instrumentedCallback(null, data);
         }
@@ -87,11 +87,11 @@ function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
 
     const wrappedOptions = options;
 
-    const serverReq = wrappedOptions.decorateRequest;
-    wrappedOptions.decorateRequest = wrapDecorateRequest(instrumentation, serverReq);
+    const {decorateRequest} = wrappedOptions;
+    wrappedOptions.decorateRequest = wrapDecorateRequest(instrumentation, decorateRequest);
 
-    const serverIntercept = wrappedOptions.intercept;
-    wrappedOptions.intercept = wrapIntercept(instrumentation, serverIntercept);
+    const {intercept} = wrappedOptions;
+    wrappedOptions.intercept = wrapIntercept(instrumentation, intercept);
 
     return proxy(host, wrappedOptions);
   };
