@@ -202,7 +202,11 @@ declare namespace zipkin {
       readonly annotationType: string;
     }
     class MessageAddr implements IAnnotation {
+      constructor(args: { serviceName: string, host?: InetAddress, port?: number });
       readonly annotationType: string;
+      serviceName: string;
+      host: InetAddress;
+      port: number;
     }
     class LocalOperationStart implements IAnnotation {
       constructor(name: string);
