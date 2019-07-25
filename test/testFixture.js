@@ -28,11 +28,11 @@ function setupTestServer() {
     const middleware = maybeMiddleware();
     if (middleware !== null) {
       this.server = middleware.listen(0, () => {
-        this.baseURL = `http://127.0.0.1:${server.address().port}`;
+        this.baseURL = `http://127.0.0.1:${this.server.address().port}`;
         done();
       });
     } else { // Inside a browser
-      this.baseURL =  ''; // default to relative path, for browser-based tests
+      this.baseURL = ''; // default to relative path, for browser-based tests
       done();
     }
   });
@@ -57,18 +57,18 @@ function _expectSpan(span, expected) {
     id: span.id,
     timestamp: span.timestamp,
     duration: span.duration
-  }
+  };
 
   if (span.parentId) volatileProperties.parentId = span.parentId;
 
   expect(span).to.deep.equal({...volatileProperties, ...expected});
 }
 
+// This initially holds no state as we need to await beforeEach hook to set it up.
 class TestTracer {
   reset({localServiceName}) {
-    // TODO see if we can conditionally load from package because when testing zipkin itself, we want
+    // TODO see if we can conditionally load from package because when testing zipkin itself we want
     // to use explicit paths
-    const {expect} = require('chai');
     const {BatchRecorder, ExplicitContext, TraceId, Tracer, jsonEncoder: {JSON_V2}}
      = require('zipkin');
 
@@ -110,7 +110,7 @@ class TestTracer {
 
   expectNextSpanToEqual(expected) {
     const span = this.popSpan();
-    expectSpan(span, expected);
+    _expectSpan(span, expected);
     return span;
   }
 
@@ -137,7 +137,7 @@ function setupTestTracer({localServiceName}) {
   afterEach(() => testTracer.expectNoLeaks());
 
   return testTracer;
-};
+}
 
 function expectB3Headers(span, headers, caseInsensitive = true) {
   expect(headers[caseInsensitive ? 'x-b3-traceid' : 'X-B3-TraceId']).to.equal(span.traceId);
@@ -159,18 +159,9 @@ function expectB3Headers(span, headers, caseInsensitive = true) {
   }
 }
 
-// TODO: remove newSpanRecorder method and export for expectSpan when porting is done
-function newSpanRecorder(spans) {
-  const {BatchRecorder, jsonEncoder: {JSON_V2}} = require('zipkin');
-
-  return new BatchRecorder({logger: {logSpan: (span) => {
-    spans.push(JSON.parse(JSON_V2.encode(span)));
-  }}});
-}
-
+// TODO: remove expectSpan when porting is done
 function expectSpan(span, expected) {
   return _expectSpan(span, expected);
 }
 
-module.exports = {inBrowser, setupTestServer, setupTestTracer, expectB3Headers,
-  expectSpan, newSpanRecorder}
+module.exports = {inBrowser, setupTestServer, setupTestTracer, expectB3Headers, expectSpan};
