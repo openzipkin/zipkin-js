@@ -1,13 +1,7 @@
-const {expect} = require('chai');
-const {ExplicitContext, Tracer} = require('zipkin');
 const axios = require('axios');
-const {
-  expectB3Headers,
-  expectSpan,
-  newSpanRecorder,
-  setupTestServer
-} = require('../../../test/testFixture');
 const wrapAxios = require('../src/index');
+
+const {expectB3Headers, setupTestServer, setupTestTracer} = require('../../../test/testFixture');
 
 // NOTE: axiosjs raises an error on non 2xx status instead of passing to the normal callback.
 describe('axios instrumentation - integration test', () => {
@@ -15,30 +9,14 @@ describe('axios instrumentation - integration test', () => {
   const remoteServiceName = 'weather-api';
 
   const server = setupTestServer();
-
-  let spans;
-  let tracer;
-
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      ctxImpl: new ExplicitContext(),
-      localServiceName: serviceName,
-      recorder: newSpanRecorder(spans)
-    });
-  });
-
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
+  const tracer = setupTestTracer({localServiceName: serviceName});
 
   function getClient() {
     const instance = axios.create({
       timeout: 300 // this avoids flakes in CI
     });
 
-    return wrapAxios(instance, {tracer, remoteServiceName});
+    return wrapAxios(instance, {tracer: tracer.tracer(), remoteServiceName});
   }
 
   function successSpan(path) {
@@ -57,7 +35,7 @@ describe('axios instrumentation - integration test', () => {
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
     return getClient().get(server.url(path))
-      .then(response => expectB3Headers(popSpan(), response.data));
+      .then(response => expectB3Headers(tracer.popSpan(), response.data));
   });
 
   it('should not interfere with errors that precede a call', (done) => {
@@ -81,13 +59,13 @@ describe('axios instrumentation - integration test', () => {
   it('should support get request', () => {
     const path = '/weather/wuhan';
     return getClient().get(server.url(path))
-      .then(() => expectSpan(popSpan(), successSpan(path)));
+      .then(() => tracer.expectNextSpanToEqual(successSpan(path)));
   });
 
   it('should support options request', () => {
     const path = '/weather/wuhan';
     return getClient()({url: server.url(path)})
-      .then(() => expectSpan(popSpan(), successSpan(path)));
+      .then(() => tracer.expectNextSpanToEqual(successSpan(path)));
   });
 
   it('should report 404 in tags', (done) => {
@@ -97,7 +75,7 @@ describe('axios instrumentation - integration test', () => {
         done(new Error(`expected status 404 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -119,7 +97,7 @@ describe('axios instrumentation - integration test', () => {
         done(new Error(`expected status 401 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -141,7 +119,7 @@ describe('axios instrumentation - integration test', () => {
         done(new Error(`expected status 500 response to error. status: ${response.status}`));
       })
       .catch(() => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -164,7 +142,7 @@ describe('axios instrumentation - integration test', () => {
         done(new Error(`expected an invalid host to error. status: ${response.status}`));
       })
       .catch((error) => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           name: 'get',
           kind: 'CLIENT',
           localEndpoint: {serviceName},
@@ -187,13 +165,16 @@ describe('axios instrumentation - integration test', () => {
     const getBeijingWeather = client.get(server.url(beijing));
     const getWuhanWeather = client.get(server.url(wuhan));
 
-    return getBeijingWeather.then(() => {
-      getWuhanWeather.then(() => {
-        // since these are sequential, we should have an expected order
-        expectSpan(popSpan(), successSpan(wuhan));
-        expectSpan(popSpan(), successSpan(beijing));
-      });
-    });
+    return getBeijingWeather.then(() => getWuhanWeather.then(() => {
+      // While requests are sequential, some runtimes report out-of-order for unknown reasons.
+      // This defensiveness prevents CI flakes.
+      const firstSpan = tracer.popSpan();
+      const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
+      const secondPath = firstPath === wuhan ? beijing : wuhan;
+
+      tracer.expectSpan(firstSpan, successSpan(firstPath));
+      tracer.expectNextSpanToEqual(successSpan(secondPath));
+    }));
   });
 
   it('should support parallel get requests', () => {
@@ -207,10 +188,12 @@ describe('axios instrumentation - integration test', () => {
 
     return Promise.all([getBeijingWeather, getWuhanWeather]).then(() => {
       // since these are parallel, we have an unexpected order
-      const firstPath = spans[0].tags['http.path'] === wuhan ? beijing : wuhan;
+      const firstSpan = tracer.popSpan();
+      const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
       const secondPath = firstPath === wuhan ? beijing : wuhan;
-      expectSpan(popSpan(), successSpan(firstPath));
-      expectSpan(popSpan(), successSpan(secondPath));
+
+      tracer.expectSpan(firstSpan, successSpan(firstPath));
+      tracer.expectNextSpanToEqual(successSpan(secondPath));
     });
   });
 });
