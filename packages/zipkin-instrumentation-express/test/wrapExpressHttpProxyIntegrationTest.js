@@ -1,32 +1,21 @@
 const {expect} = require('chai');
-const {ExplicitContext, InetAddress, Tracer} = require('zipkin');
-
+const {InetAddress} = require('zipkin');
 const fetch = require('node-fetch');
+
 const express = require('express');
 const proxy = require('express-http-proxy');
 const middleware = require('../src/expressMiddleware');
 const wrapProxy = require('../src/wrapExpressHttpProxy');
-const addTestRoutes = require('./testMiddleware');
 
-const {newSpanRecorder, expectSpan} = require('../../../test/testFixture');
+const addTestRoutes = require('./testMiddleware');
+const {setupTestTracer} = require('../../../test/testFixture');
 
 describe('express proxy instrumentation - integration test', () => {
   const serviceName = 'weather-app';
   const remoteServiceName = 'weather-api';
-
   const ipv4 = InetAddress.getLocalAddress().ipv4();
 
-  let spans;
-  let tracer;
-
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      localServiceName: serviceName,
-      ctxImpl: new ExplicitContext(),
-      recorder: newSpanRecorder(spans)
-    });
-  });
+  const tracer = setupTestTracer({localServiceName: serviceName});
 
   let backend;
   let frontend;
@@ -34,18 +23,18 @@ describe('express proxy instrumentation - integration test', () => {
 
   beforeEach((done) => {
     const backendApp = express();
-    addTestRoutes(backendApp, tracer);
+    addTestRoutes(backendApp); // intentionally not traced
     backend = backendApp.listen(0, () => {
       const frontendApp = express();
-      const zipkinProxy = wrapProxy(proxy, {tracer, serviceName, remoteServiceName});
-      frontendApp.use(middleware({tracer}));
+      const zipkinProxy = wrapProxy(proxy, {tracer: tracer.tracer(), remoteServiceName});
+      frontendApp.use(middleware({tracer: tracer.tracer()}));
       frontendApp.use(zipkinProxy(`127.0.0.1:${backend.address().port}`, {
         decorateRequest: (proxyReq) => {
-          tracer.recordBinary('decorateRequest', '');
+          tracer.tracer().recordBinary('decorateRequest', '');
           return proxyReq;
         },
-        intercept: (rsp, data, originalReq, res, callback) => {
-          tracer.recordBinary('intercept', '');
+        intercept: (rsp, data, serverReq, res, callback) => {
+          tracer.tracer().recordBinary('intercept', '');
           callback(null, data);
         }
       }));
@@ -60,15 +49,9 @@ describe('express proxy instrumentation - integration test', () => {
   afterEach(() => {
     if (frontend) frontend.close();
     if (backend) backend.close();
-    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
-
-  function successServerSpan(path, city) {
+  function successServerSpan(path) {
     return ({
       name: 'get',
       kind: 'SERVER',
@@ -76,14 +59,13 @@ describe('express proxy instrumentation - integration test', () => {
       tags: {
         'http.path': path,
         'http.status_code': '200',
-        decorateRequest: '',
         intercept: '',
-        city
+        decorateRequest: ''
       }
     });
   }
 
-  function successClientSpan(path, parentId) {
+  function successProxySpan(path, parentId) {
     return ({
       parentId,
       name: 'get',
@@ -92,7 +74,7 @@ describe('express proxy instrumentation - integration test', () => {
       remoteEndpoint: {serviceName: remoteServiceName, port: backend.address().port},
       tags: {
         'http.path': path,
-        'http.status_code': '200',
+        'http.status_code': '200'
       }
     });
   }
@@ -101,9 +83,12 @@ describe('express proxy instrumentation - integration test', () => {
     const path = '/weather/wuhan';
     const url = `${baseURL}${path}`;
     return fetch(url).then(() => {
-      const serverSpan = popSpan();
-      expectSpan(serverSpan, successServerSpan(path, 'wuhan'));
-      expectSpan(popSpan(), successClientSpan(path, serverSpan.id));
+      const firstSpan = tracer.popSpan();
+      const secondSpan = tracer.popSpan();
+      const clientSpan = firstSpan.kind === 'CLIENT' ? firstSpan : secondSpan;
+      const serverSpan = firstSpan === clientSpan ? secondSpan : firstSpan;
+      tracer.expectSpan(serverSpan, successServerSpan(path));
+      tracer.expectSpan(clientSpan, successProxySpan(path, serverSpan.id));
     });
   });
 
@@ -111,8 +96,8 @@ describe('express proxy instrumentation - integration test', () => {
     const path = '/weather/wuhan';
     const url = `${baseURL}${path}?index=10&count=300`;
     return fetch(url).then(() => {
-      expect(popSpan().tags['http.path']).to.equal(path); // server
-      expect(popSpan().tags['http.path']).to.equal(path); // client
+      expect(tracer.popSpan().tags['http.path']).to.equal(path); // server
+      expect(tracer.popSpan().tags['http.path']).to.equal(path); // client
     });
   });
 
@@ -126,13 +111,13 @@ describe('express proxy instrumentation - integration test', () => {
         'X-B3-Flags': '1'
       }
     }).then(() => {
-      const serverSpan = popSpan();
+      const serverSpan = tracer.popSpan();
       expect(serverSpan.traceId).to.equal('863ac35c9f6413ad');
       expect(serverSpan.id).to.equal('48485a3953bb6124');
       expect(serverSpan.debug).to.equal(true);
       expect(serverSpan.shared).to.equal(true);
 
-      const clientSpan = popSpan();
+      const clientSpan = tracer.popSpan();
       expect(clientSpan.traceId).to.equal(serverSpan.traceId);
       expect(clientSpan.parentId).to.equal(serverSpan.id);
       expect(clientSpan.debug).to.equal(true);
@@ -151,15 +136,15 @@ describe('express proxy instrumentation - integration test', () => {
         'X-B3-Sampled': '1'
       }
     }).then(() => {
-      expect(popSpan().traceId).to.equal(traceId); // server
-      expect(popSpan().traceId).to.equal(traceId); // client
+      expect(tracer.popSpan().traceId).to.equal(traceId); // server
+      expect(tracer.popSpan().traceId).to.equal(traceId); // client
     });
   });
 
   it('should report 500 in tags', () => {
     backend.close();
     const path = '/weather/wuhan';
-    return fetch(`${baseURL}${path}`).then(() => expectSpan(popSpan(), {
+    return fetch(`${baseURL}${path}`).then(() => tracer.expectNextSpanToEqual({
       name: 'get',
       kind: 'SERVER',
       localEndpoint: {serviceName, ipv4},

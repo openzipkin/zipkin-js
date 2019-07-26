@@ -1,17 +1,12 @@
-require('promise.prototype.finally').shim();
 const {expect} = require('chai');
-const {ExplicitContext, Tracer} = require('zipkin');
+require('promise.prototype.finally').shim();
+
 const {Kafka} = require('kafkajs');
-const {
-  newSpanRecorder,
-  expectB3Headers,
-  expectSpan
-} = require('../../../test/testFixture');
+const instrumentKafkaJs = require('../src/zipkin-instrumentation-kafkajs');
 
 // In order to verify Kafka headers, which have buffer values
 const {bufferToAscii} = require('../src/kafka-recorder');
-
-const instrumentKafkaJs = require('../src/zipkin-instrumentation-kafkajs');
+const {expectB3Headers, setupTestTracer} = require('../../../test/testFixture');
 
 describe('KafkaJS instrumentation - integration test', function() { // => doesn't allow this.X
   this.slow(15 * 1000);
@@ -20,68 +15,48 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
   const serviceName = 'weather-app';
   const remoteServiceName = 'kafka';
 
-  let spans;
-  let tracer;
+  const tracer = setupTestTracer({localServiceName: serviceName});
+
   let rawKafka;
   let kafka;
+  let testTopic;
   let testMessage;
 
   function newKafka() {
     return new Kafka({clientId: serviceName, brokers: ['localhost:9092']});
   }
 
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      localServiceName: serviceName,
-      ctxImpl: new ExplicitContext(),
-      recorder: newSpanRecorder(spans)
-    });
+  beforeEach(function() { // => doesn't allow this.X
     rawKafka = newKafka();
-    kafka = instrumentKafkaJs(newKafka(), {tracer, remoteServiceName});
+    kafka = instrumentKafkaJs(newKafka(), {tracer: tracer.tracer(), remoteServiceName});
+    testTopic = this.test.ctx.currentTest.title.replace(/\s+/g, '-').toLowerCase();
     testMessage = {key: 'mykey', value: 'myvalue'};
   });
 
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
-
-  function getTestTopic(ref) {
-    return ref.test.title.replace(/\s+/g, '-').toLowerCase();
-  }
-
-  function send(producer, topic, message) {
+  function send(producer) {
     return producer.connect()
-      .then(() => producer.send({topic, messages: [message]}))
+      .then(() => producer.send({topic: testTopic, messages: [testMessage]}))
       .finally(() => producer.disconnect());
   }
 
   describe('Producer', () => {
-    it('should record a producer span on send', function() { // => doesn't allow this.X
-      const testTopic = getTestTopic(this);
+    it('should record a producer span on send', () => send(kafka.producer())
+      .then(() => tracer.expectNextSpanToEqual({
+        kind: 'PRODUCER',
+        name: 'send',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'kafka.topic': testTopic
+          // TODO: we also tag kafka.key
+        }
+      })));
 
-      return send(kafka.producer(), testTopic, testMessage).then(() => {
-        expectSpan(popSpan(), {
-          kind: 'PRODUCER',
-          name: 'send',
-          localEndpoint: {serviceName},
-          remoteEndpoint: {serviceName: remoteServiceName},
-          tags: {
-            'kafka.topic': testTopic
-            // TODO: we also tag kafka.key
-          }
-        });
-        expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
-      });
-    });
-
-    it('should add B3 headers to the message on send', function(done) { // => doesn't allow this.X
-      const testTopic = getTestTopic(this);
+    it('should add B3 headers to the message on send', (done) => {
       const producer = kafka.producer();
       const consumer = rawKafka.consumer({groupId: testTopic});
 
-      send(producer, testTopic, testMessage)
+      send(producer)
         .then(() => consumer.connect())
         .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
         .then(() => consumer.run({
@@ -93,7 +68,7 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
                   Object.entries(message.headers),
                   ([k, buffer]) => ({[k]: bufferToAscii(buffer)})
                 ));
-                expectB3Headers(popSpan(), headers, false);
+                expectB3Headers(tracer.popSpan(), headers, false);
                 done();
               }).catch(err => done(err));
             }, 0);
@@ -105,19 +80,18 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
   });
 
   describe('Consumer', () => {
-    it('should record a consumer span on eachMessage', function(done) { // => doesn't allow this.X
-      const testTopic = getTestTopic(this);
+    it('should record a consumer span on eachMessage', (done) => {
       const producer = rawKafka.producer();
       const consumer = kafka.consumer({groupId: testTopic});
 
-      send(producer, testTopic, testMessage)
+      send(producer)
         .then(() => consumer.connect())
         .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
         .then(() => consumer.run({
           eachMessage: ({partition}) => {
             setTimeout(() => {
               consumer.disconnect().then(() => {
-                expectSpan(popSpan(), {
+                tracer.expectNextSpanToEqual({
                   kind: 'CONSUMER', // TODO: this should be a child of the consumer span
                   name: 'each-message',
                   localEndpoint: {serviceName},
@@ -127,7 +101,6 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
                     'kafka.topic': testTopic
                   }
                 });
-                expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
                 done();
               }).catch(err => done(err));
             }, 0);
@@ -137,8 +110,7 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
         .catch(err => done(err));
     });
 
-    it('should resume trace from headers', function(done) { // => doesn't allow this.X
-      const testTopic = getTestTopic(this);
+    it('should resume trace from headers', (done) => {
       const producer = rawKafka.producer();
       const consumer = kafka.consumer({groupId: testTopic});
 
@@ -154,17 +126,14 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
         }
       };
 
-      send(producer, testTopic, testMessage)
+      send(producer)
         .then(() => consumer.connect())
         .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
         .then(() => consumer.run({
           eachMessage: ({partition}) => {
             setTimeout(() => {
               consumer.disconnect().then(() => {
-                const span = popSpan();
-                expect(span.traceId).to.equal(traceId);
-                expect(span.id).to.not.equal(producerSpanId);
-                expectSpan(span, {
+                const span = tracer.expectNextSpanToEqual({
                   parentId: producerSpanId,
                   kind: 'CONSUMER', // TODO: should be a child of the consumer span
                   name: 'each-message',
@@ -175,7 +144,9 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
                     'kafka.topic': testTopic
                   },
                 });
-                expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+
+                expect(span.traceId).to.equal(traceId);
+                expect(span.id).to.not.equal(producerSpanId);
                 done();
               }).catch(err => done(err));
             }, 0);
@@ -185,13 +156,12 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
         .catch(err => done(err));
     });
 
-    it('should tag a consumer span with error', function(done) { // => doesn't allow this.X
-      const testTopic = getTestTopic(this);
+    it('should tag a consumer span with error', (done) => {
       const producer = rawKafka.producer();
       const consumer = kafka.consumer({groupId: testTopic});
 
       const verifyErrorSpan = () => {
-        expectSpan(popSpan(), {
+        tracer.expectNextSpanToEqual({
           kind: 'CONSUMER', // TODO: this should be a child of the consumer span
           name: 'each-message',
           localEndpoint: {serviceName},
@@ -204,7 +174,7 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
         });
       };
 
-      send(producer, testTopic, testMessage)
+      send(producer)
         .then(() => consumer.connect())
         .then(() => consumer.subscribe({topic: testTopic, fromBeginning: true}))
         .then(() => {
@@ -216,7 +186,6 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
                 consumer.disconnect().then(() => {
                   if (isError) {
                     verifyErrorSpan();
-                    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
                     done();
                   }
                 }).catch((err) => {

@@ -1,14 +1,8 @@
-import grpc from 'grpc';
-import tracingInterceptor from '../src/grpcClientInterceptor';
+const grpc = require('grpc');
+const tracingInterceptor = require('../src/grpcClientInterceptor');
 
-import {mockServer, weather} from './utils';
-
-const {ExplicitContext, Tracer} = require('zipkin');
-const {
-  newSpanRecorder,
-  expectB3Headers,
-  expectSpan
-} = require('../../../test/testFixture');
+const {mockServer, weather} = require('./utils');
+const {expectB3Headers, setupTestTracer} = require('../../../test/testFixture');
 
 describe('gRPC client instrumentation (integration test)', () => {
   const serviceName = 'weather-app';
@@ -25,25 +19,7 @@ describe('gRPC client instrumentation (integration test)', () => {
 
   after(() => server.forceShutdown());
 
-  let spans;
-  let tracer;
-
-  beforeEach(() => {
-    spans = [];
-    tracer = new Tracer({
-      localServiceName: serviceName,
-      ctxImpl: new ExplicitContext(),
-      recorder: newSpanRecorder(spans)
-    });
-  });
-
-  // TODO: pull into http tests also
-  afterEach(() => expect(spans).to.be.empty);
-
-  function popSpan() {
-    expect(spans).to.not.be.empty; // eslint-disable-line no-unused-expressions
-    return spans.pop();
-  }
+  const tracer = setupTestTracer({localServiceName: serviceName});
 
   function successSpan(name) {
     return ({
@@ -56,7 +32,7 @@ describe('gRPC client instrumentation (integration test)', () => {
   }
 
   function getClient(host = 'localhost:50051') {
-    const interceptor = tracingInterceptor(grpc, {tracer, remoteServiceName});
+    const interceptor = tracingInterceptor(grpc, {tracer: tracer.tracer(), remoteServiceName});
     return new weather.WeatherService(
       host,
       grpc.credentials.createInsecure(),
@@ -68,34 +44,30 @@ describe('gRPC client instrumentation (integration test)', () => {
     if (err) return done(err);
 
     const {metadata} = res;
-    expectB3Headers(popSpan(), metadata);
+    expectB3Headers(tracer.popSpan(), metadata);
     return done();
   }));
 
-  // TODO: this test needs to be pulled up also to the other clients
-  it('should send "x-b3-flags" header', (done) => {
-    // enables debug
-    tracer.setId(tracer.createRootId(undefined, true));
-
-    getClient().getTemperature({location: 'Tahoe'}, (err, res) => {
+  it('should send "x-b3-flags" header when debug', (done) => {
+    tracer.runInDebugTrace(() => getClient().getTemperature({location: 'Tahoe'}, (err, res) => {
       if (err) return done(err);
 
       const {metadata} = res;
-      expectB3Headers(popSpan(), metadata);
+      expectB3Headers(tracer.popDebugSpan(), metadata);
       return done();
-    });
+    }));
   });
 
   it('should record successful request', done => getClient().getTemperature({location: 'Tahoe'}, (err) => {
     if (err) return done(err);
 
-    expectSpan(popSpan(), successSpan(temperature));
+    tracer.expectNextSpanToEqual(successSpan(temperature));
     return done();
   }));
 
   it('should report error in tags', done => getClient().getTemperature({location: 'Las Vegas'}, (err, res) => {
     if (err) {
-      expectSpan(popSpan(), {
+      tracer.expectNextSpanToEqual({
         name: temperature,
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -113,7 +85,7 @@ describe('gRPC client instrumentation (integration test)', () => {
 
   it('should report error in tags on transport error', done => getClient('localhost:12345').getTemperature({location: 'Las Vegas'}, (err, res) => {
     if (err) {
-      expectSpan(popSpan(), {
+      tracer.expectNextSpanToEqual({
         name: temperature,
         kind: 'CLIENT',
         localEndpoint: {serviceName},
@@ -140,8 +112,8 @@ describe('gRPC client instrumentation (integration test)', () => {
           if (err2) done(err2);
 
           // since these are sequential, we should have an expected order
-          expectSpan(popSpan(), successSpan(locations));
-          expectSpan(popSpan(), successSpan(temperature));
+          tracer.expectNextSpanToEqual(successSpan(locations));
+          tracer.expectNextSpanToEqual(successSpan(temperature));
           done();
         });
       }
@@ -160,12 +132,12 @@ describe('gRPC client instrumentation (integration test)', () => {
 
     return Promise.all([getTemperature, getLocations]).then(() => {
       // since these are parallel, we have an unexpected order
-      const firstSpan = popSpan(); // TODO: move this race condition fix to http
+      const firstSpan = tracer.popSpan();
       const firstName = firstSpan.name === temperature ? temperature : locations;
       const secondName = firstName === temperature ? locations : temperature;
 
-      expectSpan(firstSpan, successSpan(firstName));
-      expectSpan(popSpan(), successSpan(secondName));
+      tracer.expectSpan(firstSpan, successSpan(firstName));
+      tracer.expectNextSpanToEqual(successSpan(secondName));
     });
   });
 });

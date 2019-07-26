@@ -53,23 +53,25 @@ module.exports = function middleware({tracer, serviceName, port = 0}) {
   return function zipkinMiddleware(req, res, next) {
     const readHeader = header => headerOption(req, header);
 
-    const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
-    Object.defineProperty(req, '_trace_id', {configurable: false, get: () => id});
+    tracer.scoped(() => {
+      const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
+      Object.defineProperty(req, '_trace_id', {configurable: false, get: () => id});
 
-    /**
-     * records response on finish or close (whichever happens first)
-     * @listens close
-     * @listens finish
-     */
-    const onCloseOrFinish = () => {
-      res.removeListener('close', onCloseOrFinish);
-      res.removeListener('finish', onCloseOrFinish);
-      tracer.scoped(() => instrumentation.recordResponse(id, res.statusCode));
-    };
+      /**
+       * records response on finish or close (whichever happens first)
+       * @listens close
+       * @listens finish
+       */
+      const onCloseOrFinish = () => {
+        res.removeListener('close', onCloseOrFinish);
+        res.removeListener('finish', onCloseOrFinish);
+        tracer.scoped(() => instrumentation.recordResponse(id, res.statusCode));
+      };
 
-    res.once('close', onCloseOrFinish);
-    res.once('finish', onCloseOrFinish);
+      res.once('close', onCloseOrFinish);
+      res.once('finish', onCloseOrFinish);
 
-    next();
+      next();
+    });
   };
 };

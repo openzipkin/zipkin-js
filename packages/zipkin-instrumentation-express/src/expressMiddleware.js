@@ -47,20 +47,20 @@ module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
       }
     }
 
-    const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
-    Object.defineProperty(req, '_trace_id', {configurable: false, get: () => id});
+    tracer.scoped(() => {
+      const id = instrumentation.recordRequest(req.method, formatRequestUrl(req), readHeader);
 
-    res.on('finish', () => {
-      tracer.scoped(() => {
-        tracer.setId(id);
+      Object.defineProperty(req, '_trace_id', {configurable: false, get: () => id});
+
+      res.on('finish', () => tracer.letId(id, () => {
         // if route is terminated on middleware req.route won't be available
         if (req.route) {
           tracer.recordRpc(`${req.method} ${req.route.path}`);
         }
         instrumentation.recordResponse(id, res.statusCode);
-      });
-    });
+      }));
 
-    next();
+      next();
+    }); // don't leak the trace ID from recordRequest
   };
 };
