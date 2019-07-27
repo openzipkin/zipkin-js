@@ -5,7 +5,8 @@ const clientFixture = require('../../../test/httpClientTestFixture');
 
 describe('request instrumentation - integration test', () => {
   function clientFunction({tracer, remoteServiceName}) {
-    const wrapped = wrapRequest(request, {tracer, remoteServiceName});
+    const baseRequest = request.defaults({followRedirect: false});
+    const wrapped = wrapRequest(baseRequest, {tracer, remoteServiceName});
     // Intentionally doesn't use node.js promisify to work in browser and to be explicit.
     return ({
       get(url) {
@@ -29,6 +30,5 @@ describe('request instrumentation - integration test', () => {
     });
   }
 
-  const testClient = clientFixture.setupHttpClientTests({clientFunction});
-  clientFixture.testOptionsArgument(testClient);
+  clientFixture.setupAllHttpClientTests({clientFunction});
 });

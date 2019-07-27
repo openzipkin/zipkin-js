@@ -16,5 +16,5 @@ describe('CujoJS/rest instrumentation - integration test', () => {
     });
   }
 
-  clientFixture.setupHttpClientTests({clientFunction});
+  clientFixture.setupBasicHttpClientTests({clientFunction});
 });

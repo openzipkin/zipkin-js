@@ -1,17 +1,15 @@
 const {expectB3Headers, setupTestServer, setupTestTracer} = require('./testFixture');
 
-// This initially holds no state as we need to await beforeEach hook to set it up.
 class TestClient {
+  // This doesn't eagerly reference the server URL, as it isn't available until "before all"
   constructor({
-    server,
     tracer,
-    localServiceName,
     remoteServiceName,
     clientFunction,
   }) {
-    this._server = server;
+    this._server = setupTestServer();
     this._tracer = tracer;
-    this._localServiceName = localServiceName;
+    this._localServiceName = tracer.tracer().localEndpoint.serviceName;
     this._remoteServiceName = remoteServiceName;
     this._client = clientFunction({tracer: tracer.tracer(), remoteServiceName});
   }
@@ -28,7 +26,7 @@ class TestClient {
     return this._client.getOptions(this._server.url(path));
   }
 
-  successSpan(path) {
+  successSpan({path, code = 200}) {
     return ({
       name: 'get',
       kind: 'CLIENT',
@@ -36,7 +34,7 @@ class TestClient {
       remoteEndpoint: {serviceName: this._remoteServiceName},
       tags: {
         'http.path': path,
-        'http.status_code': '200'
+        'http.status_code': code.toString()
       }
     });
   }
@@ -53,7 +51,13 @@ class TestClient {
 // ```javascript
 // const clientFixture = require('../../../test/httpClientTestFixture');
 //
-// clientFixture.setupHttpClientTests({clientFunction});
+// clientFixture.setupAllHttpClientTests({clientFunction});
+// ```
+//
+// If some tests fail, you can instead install only the basic tests first.
+//
+// ```javascript
+// clientFixture.setupBasicHttpClientTests({clientFunction});
 // ```
 //
 // ## Implementing the client function
@@ -64,9 +68,23 @@ class TestClient {
 // * get(url) - returns a promise of an http response
 // * getJson(url) - returns a promise of an object representing json
 //
+// *Note* Ensure `get(url)` neither follows redirects nor retries on error
+//
+// ### Redirects (302)
+//
+// The ability to disable automatic redirects should be a common feature, but notably cujojs has no
+// option to disable this. If you can disable redirect handling, but cannot run all tests, add in
+// the redirect test in like so:
+//
+// ```javascript
+// const testClient = clientFixture.setupBasicHttpClientTests({clientFunction});
+// clientFixture.setupRedirectTest(testClient);
+// ```
+//
 // ### Options requests (ex. client({url})
 //
-// If your client supports options requests, implement getOptions(url), and set supportsOptions true
+// If your client supports options requests, implement `getOptions(url)` and use all tests or add
+// options tests explicitly via `setupOptionsArgumentTest`
 //
 // Ex.
 // ```javascript
@@ -85,26 +103,19 @@ class TestClient {
 //  });
 // }
 //
-// const testClient = clientFixture.setupHttpClientTests({clientFunction});
+// const testClient = clientFixture.setupBasicHttpClientTests({clientFunction});
 // clientFixture.setupOptionsArgumentTest(testClient);
 // ```
 //
 // ## Composition approach
 //
 // Approach to compose tests is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
-function setupHttpClientTests({clientFunction, requestScoped = false}) {
+function setupBasicHttpClientTests({clientFunction, requestScoped = false}) {
   const localServiceName = 'weather-app';
   const remoteServiceName = 'weather-api';
 
-  const server = setupTestServer();
   const tracer = setupTestTracer({localServiceName});
-  const testClient = new TestClient({
-    server,
-    tracer,
-    localServiceName,
-    remoteServiceName,
-    clientFunction
-  });
+  const testClient = new TestClient({tracer, remoteServiceName, clientFunction});
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';
@@ -115,7 +126,7 @@ function setupHttpClientTests({clientFunction, requestScoped = false}) {
   it('should support get request', () => {
     const path = '/weather/wuhan';
     return testClient.get({path})
-      .then(() => tracer.expectNextSpanToEqual(testClient.successSpan(path)));
+      .then(() => tracer.expectNextSpanToEqual(testClient.successSpan({path})));
   });
 
   it('should report 401 in tags', () => {
@@ -208,8 +219,8 @@ function setupHttpClientTests({clientFunction, requestScoped = false}) {
       const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
       const secondPath = firstPath === wuhan ? beijing : wuhan;
 
-      tracer.expectSpan(firstSpan, testClient.successSpan(firstPath));
-      tracer.expectNextSpanToEqual(testClient.successSpan(secondPath));
+      tracer.expectSpan(firstSpan, testClient.successSpan({path: firstPath}));
+      tracer.expectNextSpanToEqual(testClient.successSpan({path: secondPath}));
     }));
   });
 
@@ -226,8 +237,8 @@ function setupHttpClientTests({clientFunction, requestScoped = false}) {
       const firstPath = firstSpan.tags['http.path'] === wuhan ? wuhan : beijing;
       const secondPath = firstPath === wuhan ? beijing : wuhan;
 
-      tracer.expectSpan(firstSpan, testClient.successSpan(firstPath));
-      tracer.expectNextSpanToEqual(testClient.successSpan(secondPath));
+      tracer.expectSpan(firstSpan, testClient.successSpan({path: firstPath}));
+      tracer.expectNextSpanToEqual(testClient.successSpan({path: secondPath}));
     });
   });
 
@@ -266,12 +277,33 @@ function setupHttpClientTests({clientFunction, requestScoped = false}) {
   return testClient;
 }
 
-function testOptionsArgument(testClient) {
-  it('should support options argument', () => {
-    const path = '/weather/wuhan';
-    return testClient.getOptions(path)
-      .then(() => testClient.tracer().expectNextSpanToEqual(testClient.successSpan(path)));
+// Almost all clients can disable redirect handling. Sadly, the abandoned CujoJS cannot.
+function setupRedirectTest(testClient) {
+  it('should report 302 in tags, but not as error', () => {
+    const path = '/weather/peking';
+    const expected = testClient.successSpan({path, code: 302});
+    return testClient.get({path})
+      .then(() => testClient.tracer().expectNextSpanToEqual(expected));
   });
 }
 
-module.exports = {setupHttpClientTests, testOptionsArgument};
+function setupOptionsArgumentTest(testClient) {
+  it('should support options argument', () => {
+    const path = '/weather/wuhan';
+    return testClient.getOptions(path)
+      .then(() => testClient.tracer().expectNextSpanToEqual(testClient.successSpan({path})));
+  });
+}
+
+function setupAllHttpClientTests({clientFunction}) {
+  const testClient = setupBasicHttpClientTests({clientFunction});
+  setupOptionsArgumentTest(testClient);
+  return testClient;
+}
+
+module.exports = {
+  setupAllHttpClientTests,
+  setupBasicHttpClientTests,
+  setupOptionsArgumentTest,
+  setupRedirectTest
+};

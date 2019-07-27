@@ -6,7 +6,8 @@ const clientFixture = require('../../../test/httpClientTestFixture');
 describe('axios instrumentation - integration test', () => {
   function clientFunction({tracer, remoteServiceName}) {
     const instance = axios.create({
-      timeout: 300 // this avoids flakes in CI
+      timeout: 300, // this avoids flakes in CI
+      maxRedirects: 0
     });
 
     const wrapped = wrapAxios(instance, {tracer, remoteServiceName});
@@ -27,6 +28,5 @@ describe('axios instrumentation - integration test', () => {
     });
   }
 
-  const testClient = clientFixture.setupHttpClientTests({clientFunction});
-  clientFixture.testOptionsArgument(testClient);
+  clientFixture.setupAllHttpClientTests({clientFunction});
 });

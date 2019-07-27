@@ -8,8 +8,11 @@ function middleware() {
   api.get('/weather/beijing', (req, res) => {
     res.status(200).json(req.headers);
   });
+  api.get('/weather/peking', (req, res) => {
+    res.redirect('/weather/beijing');
+  });
   api.get('/weather/securedTown', (req, res) => {
-    res.status(401).json(req.headers);
+    res.send(401);
   });
   api.get('/weather/bagCity', (req, res, next) => {
     next(new Error('service is dead'));

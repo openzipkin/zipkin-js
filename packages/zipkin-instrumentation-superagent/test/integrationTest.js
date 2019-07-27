@@ -9,7 +9,7 @@ describe('SuperAgent instrumentation - integration test', () => {
     const plugin = zipkinPlugin({tracer, remoteServiceName});
     return ({
       get(url) {
-        return request.get(url).use(plugin).catch((error) => {
+        return request.get(url).redirects(0).use(plugin).catch((error) => {
           // Handle SuperAgent throwing on non 2xx status instead of passing to the normal callback.
           if (error.response && error.response.status) return error.response;
           throw error;
@@ -21,5 +21,6 @@ describe('SuperAgent instrumentation - integration test', () => {
     });
   }
 
-  clientFixture.setupHttpClientTests({clientFunction, requestScoped: true});
+  const testClient = clientFixture.setupBasicHttpClientTests({clientFunction, requestScoped: true});
+  clientFixture.setupRedirectTest(testClient);
 });

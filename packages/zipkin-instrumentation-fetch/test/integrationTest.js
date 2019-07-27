@@ -16,7 +16,7 @@ describe('fetch instrumentation - integration test', () => {
     const wrapped = wrapFetch(fetch, {tracer, remoteServiceName});
     return ({
       get(url) {
-        return wrapped(url);
+        return wrapped(url, {redirect: 'manual'});
       },
       getOptions(url) {
         return wrapped({url});
@@ -27,6 +27,5 @@ describe('fetch instrumentation - integration test', () => {
     });
   }
 
-  const testClient = clientFixture.setupHttpClientTests({clientFunction});
-  clientFixture.testOptionsArgument(testClient);
+  clientFixture.setupAllHttpClientTests({clientFunction});
 });

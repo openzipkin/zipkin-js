@@ -8,7 +8,7 @@ describe('got instrumentation - integration test', () => {
     const wrapped = wrapGot(got, {tracer, remoteServiceName});
     return ({
       get(url) {
-        return wrapped(url, {retry: 0}).catch((error) => {
+        return wrapped(url, {retry: 0, followRedirect: false}).catch((error) => {
           // Handle gotjs throwing on non 2xx status instead of passing to the normal callback.
           if (error.response && error.response.statusCode) return error.response;
           throw error;
@@ -23,6 +23,5 @@ describe('got instrumentation - integration test', () => {
     });
   }
 
-  const testClient = clientFixture.setupHttpClientTests({clientFunction});
-  clientFixture.testOptionsArgument(testClient);
+  clientFixture.setupAllHttpClientTests({clientFunction});
 });

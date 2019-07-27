@@ -8,7 +8,7 @@ describe('request-promise instrumentation - integration test', () => {
     const client = new ZipkinRequest(tracer, remoteServiceName);
     return ({
       get(url) {
-        return client.get(url).catch((error) => {
+        return client.get({url, followRedirect: false}).catch((error) => {
           // Handle request-promise throwing on non 2xx instead of passing to the normal callback.
           if (error.response && error.response.statusCode) return error.response;
           throw error;
@@ -20,5 +20,6 @@ describe('request-promise instrumentation - integration test', () => {
     });
   }
 
-  clientFixture.setupHttpClientTests({clientFunction});
+  const testClient = clientFixture.setupBasicHttpClientTests({clientFunction});
+  clientFixture.setupRedirectTest(testClient);
 });
