@@ -64,9 +64,9 @@ function _expectSpan(span, expected) {
   expect(span).to.deep.equal({...volatileProperties, ...expected});
 }
 
-// This initially holds no state as we need to await beforeEach hook to set it up.
+// This initially holds no state as we need to await before hook to set it up.
 class TestTracer {
-  reset({localServiceName}) {
+  constructor({localServiceName}) {
     // TODO see if we can conditionally load from package because when testing zipkin itself we want
     // to use explicit paths
     const {BatchRecorder, ExplicitContext, TraceId, Tracer, jsonEncoder: {JSON_V2}}
@@ -84,6 +84,8 @@ class TestTracer {
     this._debugId = new TraceId({spanId: this._tracer.id.traceId, debug: true});
   }
 
+  // As long as we call this on afterEach, and tests are executed sequentially.
+  // we can reuse this tracer for any number of tests
   expectNoLeaks() {
     expect(this._tracer.id).to.equal(this._sentinelTraceId); // no context leaks
     expect(this._spans).to.be.empty; // eslint-disable-line no-unused-expressions
@@ -129,11 +131,10 @@ class TestTracer {
 // will occur in the afterEach hook.
 //
 // Approach is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
-function setupTestTracer({localServiceName}) {
-  const testTracer = new TestTracer();
+function setupTestTracer(options) {
+  const testTracer = new TestTracer(options);
 
-  beforeEach(() => testTracer.reset({localServiceName}));
-
+  // Checking for leaks helps us avoid lazy instantiation.
   afterEach(() => testTracer.expectNoLeaks());
 
   return testTracer;

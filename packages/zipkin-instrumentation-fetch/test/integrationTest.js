@@ -5,17 +5,14 @@ const {inBrowser} = require('../../../test/testFixture');
 const clientFixture = require('../../../test/httpClientTestFixture');
 
 describe('fetch instrumentation - integration test', () => {
-  let fetch;
-
-  before(() => {
+  function clientFunction({tracer, remoteServiceName}) {
+    let fetch;
     if (inBrowser()) {
       fetch = window.fetch; // eslint-disable-line
     } else { // defer loading node-fetch
       fetch = require('node-fetch'); // eslint-disable-line global-require
     }
-  });
 
-  function clientFunction({tracer, remoteServiceName}) {
     const wrapped = wrapFetch(fetch, {tracer, remoteServiceName});
     return ({
       get(url) {

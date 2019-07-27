@@ -12,15 +12,8 @@ class TestClient {
     this._server = server;
     this._tracer = tracer;
     this._localServiceName = localServiceName;
-    this._clientFunction = clientFunction;
     this._remoteServiceName = remoteServiceName;
-  }
-
-  reset() {
-    this._client = this._clientFunction({
-      tracer: this._tracer.tracer(),
-      remoteServiceName: this._remoteServiceName
-    });
+    this._client = clientFunction({tracer: tracer.tracer(), remoteServiceName});
   }
 
   getJson(path) {
@@ -112,8 +105,6 @@ function setupHttpClientTests({clientFunction, requestScoped = false}) {
     remoteServiceName,
     clientFunction
   });
-
-  beforeEach(() => testClient.reset());
 
   it('should add headers to requests', () => {
     const path = '/weather/wuhan';

@@ -17,7 +17,7 @@ describe('hapi instrumentation - integration test', () => {
   let server;
   let baseURL;
 
-  beforeEach((done) => {
+  before((done) => {
     server = new Hapi.Server({
       host: 'localhost',
       port: 0
@@ -92,7 +92,7 @@ describe('hapi instrumentation - integration test', () => {
       });
   });
 
-  afterEach(() => {
+  after(() => {
     if (server) server.stop();
   });
 

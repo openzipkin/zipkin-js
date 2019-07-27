@@ -22,7 +22,7 @@ describe('restify instrumentation - integration test', () => {
     tracer.tracer().letId(req._trace_id, () => tracer.tracer().recordBinary(key, value));
   }
 
-  beforeEach((done) => {
+  before((done) => {
     const app = restify.createServer({handleUncaughtExceptions: true});
     app.use(middleware({tracer: tracer.tracer()}));
     app.get('/weather/wuhan', (req, res, next) => {
@@ -50,7 +50,7 @@ describe('restify instrumentation - integration test', () => {
     });
   });
 
-  afterEach(() => {
+  after(() => {
     if (server) server.close();
   });
 
