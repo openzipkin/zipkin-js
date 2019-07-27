@@ -7,16 +7,24 @@ const {setupTestTracer} = require('./testFixture');
 
 class TestServer {
   // This doesn't eagerly reference the server URL, as it isn't available until "before all"
-  constructor({app, tracer}) {
+  constructor({app, tracer, routeBasedSpanName}) {
     this._app = app;
     this._tracer = tracer;
+    this._routeBasedSpanName = routeBasedSpanName;
     this._localServiceName = tracer.tracer().localEndpoint.serviceName;
     this._ipv4 = InetAddress.getLocalAddress().ipv4();
   }
 
+  _spanName(route) {
+    if (!this._routeBasedSpanName) return 'get';
+    if (route === '/weather/peking') return 'get redirected';
+    if (route === '/pathno') return 'get not_found';
+    return `get ${route}`.toLowerCase();
+  }
+
   successSpan({path, city, status = 200}) {
     return ({
-      name: 'get',
+      name: this._spanName(path),
       kind: 'SERVER',
       localEndpoint: {serviceName: this._localServiceName, ipv4: this._ipv4},
       tags: {
@@ -29,7 +37,7 @@ class TestServer {
 
   errorSpan({path, city, status}) {
     const result = {
-      name: 'get',
+      name: this._spanName(path),
       kind: 'SERVER',
       localEndpoint: {serviceName: this._localServiceName, ipv4: this._ipv4},
       tags: {
@@ -127,12 +135,12 @@ class TestServer {
 // ## Composition approach
 //
 // Approach to compose tests is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
-function setupBasicHttpServerTests({serverFunction}) {
+function setupBasicHttpServerTests({serverFunction, routeBasedSpanName = false}) {
   const serviceName = 'weather-api';
 
   const tracer = setupTestTracer({localServiceName: serviceName});
   const app = serverFunction({tracer: tracer.tracer()});
-  const testServer = new TestServer({app, tracer});
+  const testServer = new TestServer({app, tracer, routeBasedSpanName});
 
   let server;
   let baseURL;
@@ -260,8 +268,8 @@ function setupHttpsServerTest(testServer) {
   });
 }
 
-function setupAllHttpServerTests({serverFunction}) {
-  const testServer = setupBasicHttpServerTests({serverFunction});
+function setupAllHttpServerTests(options) {
+  const testServer = setupBasicHttpServerTests(options);
   setupHttpsServerTest(testServer);
   setupNotFoundTest(testServer);
   return testServer;

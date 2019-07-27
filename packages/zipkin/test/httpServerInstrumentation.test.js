@@ -141,6 +141,23 @@ describe('Http Server Instrumentation', () => {
     expectSpan(popSpan(), errorSpan(path, 'bagCity', 500));
   });
 
+  it('should make span name from route on success when routing available', () => {
+    expect(instrumentation.spanNameFromRoute('GET', '/users/:userId', 200))
+      .to.equal('GET /users/:userId'); // zipkin will implicitly lowercase this
+  });
+
+  // source of redirect can be unlimited cardinality
+  it('should make fixed span name for redirect when routing available', () => {
+    expect(instrumentation.spanNameFromRoute('GET', '', 307))
+      .to.equal('GET redirected'); // zipkin will implicitly lowercase this
+  });
+
+  // source of 404 can be unlimited cardinality
+  it('should make fixed span name for not found when routing available', () => {
+    expect(instrumentation.spanNameFromRoute('DELETE', '/bears and trees', 404))
+      .to.equal('DELETE not_found'); // zipkin will implicitly lowercase this
+  });
+
   const samplingFlagCases = [
     {headers: {'X-B3-Flags': '0'}, shouldSample: true}, // because this is meaningless
     {headers: {'X-B3-Flags': '1'}, shouldSample: true},
