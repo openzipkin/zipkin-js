@@ -21,7 +21,7 @@ describe('express proxy instrumentation - integration test', () => {
   let frontend;
   let baseURL;
 
-  beforeEach((done) => {
+  before((done) => {
     const backendApp = express();
     addTestRoutes(backendApp); // intentionally not traced
     backend = backendApp.listen(0, () => {
@@ -46,7 +46,7 @@ describe('express proxy instrumentation - integration test', () => {
     });
   });
 
-  afterEach(() => {
+  after(() => {
     if (frontend) frontend.close();
     if (backend) backend.close();
   });

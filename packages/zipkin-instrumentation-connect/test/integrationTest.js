@@ -20,7 +20,7 @@ describe('connect instrumentation - integration test', () => {
   let server;
   let baseURL;
 
-  afterEach(() => {
+  after(() => {
     if (server) server.close();
   });
 
@@ -58,7 +58,7 @@ describe('connect instrumentation - integration test', () => {
       tracer.tracer().letId(req._trace_id, () => tracer.tracer().recordBinary(key, value));
     }
 
-    beforeEach((done) => {
+    before((done) => {
       const app = restify.createServer({handleUncaughtExceptions: true});
       app.use(middleware({tracer: tracer.tracer()}));
       app.get('/weather/wuhan', (req, res, next) => {
@@ -143,7 +143,7 @@ describe('connect instrumentation - integration test', () => {
   });
 
   describe('express middleware', () => {
-    beforeEach((done) => {
+    before((done) => {
       const app = express();
       app.use(middleware({tracer: tracer.tracer()}));
       app.get('/weather/wuhan', (req, res) => {
@@ -227,7 +227,7 @@ describe('connect instrumentation - integration test', () => {
   describe('connect middleware', () => {
     let app; // exposed for TLS test
 
-    beforeEach((done) => {
+    before((done) => {
       app = connect();
       app.use(middleware({tracer: tracer.tracer()}));
       app.use('/weather/wuhan', (req, res) => {

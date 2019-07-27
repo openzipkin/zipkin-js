@@ -26,11 +26,14 @@ describe('KafkaJS instrumentation - integration test', function() { // => doesn'
     return new Kafka({clientId: serviceName, brokers: ['localhost:9092']});
   }
 
-  beforeEach(function() { // => doesn't allow this.X
+  before(() => {
     rawKafka = newKafka();
     kafka = instrumentKafkaJs(newKafka(), {tracer: tracer.tracer(), remoteServiceName});
-    testTopic = this.test.ctx.currentTest.title.replace(/\s+/g, '-').toLowerCase();
     testMessage = {key: 'mykey', value: 'myvalue'};
+  });
+
+  beforeEach(function() { // => doesn't allow this.X
+    testTopic = this.test.ctx.currentTest.title.replace(/\s+/g, '-').toLowerCase();
   });
 
   function send(producer) {

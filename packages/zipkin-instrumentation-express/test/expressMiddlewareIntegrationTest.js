@@ -17,7 +17,7 @@ describe('express instrumentation - integration test', () => {
   let server;
   let baseURL;
 
-  beforeEach((done) => {
+  before((done) => {
     const app = express();
     app.use(middleware({tracer: tracer.tracer()}));
     addTestRoutes(app, tracer.tracer());
@@ -27,7 +27,7 @@ describe('express instrumentation - integration test', () => {
     });
   });
 
-  afterEach(() => {
+  after(() => {
     if (server) server.close();
   });
 
