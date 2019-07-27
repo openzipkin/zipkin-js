@@ -25,7 +25,11 @@ function request(req, {tracer, serviceName, remoteServiceName}) {
 
 function response(res, {tracer}) {
   tracer.scoped(() => {
-    this.instrumentation.recordResponse(this.traceId, res.status.code);
+    if (res.error) { // check error, not status because in chrome it is sometimes zero!
+      this.instrumentation.recordError(this.traceId, res.error);
+    } else {
+      this.instrumentation.recordResponse(this.traceId, res.status.code);
+    }
   });
   return res;
 }
