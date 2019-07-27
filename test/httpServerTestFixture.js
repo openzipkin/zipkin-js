@@ -87,6 +87,12 @@ class TestServer {
 //   tracer.recordBinary('city', 'peking');
 //   res.redirect('/weather/beijing');
 // });
+// app.get('/weather/shenzhen', (req, res) => new Promise(done => setTimeout(() => {
+//   tracer.letId(req._trace_id, () => {
+//     tracer.recordBinary('city', 'shenzhen');
+//     done();
+//   });
+// }, 10)).then(() => res.send(200)));
 // app.get('/weather/securedTown', (req, res) => {
 //   tracer.recordBinary('city', 'securedTown');
 //   res.send(401);
@@ -155,7 +161,15 @@ function setupBasicHttpServerTests({serverFunction}) {
       .then(() => expect(tracer.popSpan().tags['http.path']).to.equal(path));
   });
 
-  it('should receive continue a trace from the client', () => {
+  // Until there is a CLS hooked implementation here, we need to be explicit with trace IDs.
+  // See https://github.com/openzipkin/zipkin-js/issues/88
+  it('should add _trace_id to request for explicit instrumentation', () => {
+    const path = '/weather/shenzhen';
+    return fetch(`${baseURL}${path}`)
+      .then(() => tracer.expectNextSpanToEqual(testServer.successSpan({path, city: 'shenzhen'})));
+  });
+
+  it('should continue a trace from the client', () => {
     const path = '/weather/wuhan';
     return fetch(`${baseURL}${path}`, {
       method: 'get',

@@ -30,6 +30,12 @@ describe('connect instrumentation - integration test', () => {
         addTag(req, 'city', 'peking');
         res.redirect('/weather/peking', next);
       });
+      app.get('/weather/shenzhen', (req, res) => new Promise(done => setTimeout(() => {
+        tracer.letId(req._trace_id, () => {
+          tracer.recordBinary('city', 'shenzhen');
+          done();
+        });
+      }, 10)).then(() => res.send(200)));
       app.get('/weather/securedTown', (req, res, next) => {
         addTag(req, 'city', 'securedTown');
         res.send(401);
@@ -61,6 +67,12 @@ describe('connect instrumentation - integration test', () => {
         tracer.recordBinary('city', 'peking');
         res.redirect('/weather/beijing');
       });
+      app.get('/weather/shenzhen', (req, res) => new Promise(done => setTimeout(() => {
+        tracer.letId(req._trace_id, () => {
+          tracer.recordBinary('city', 'shenzhen');
+          done();
+        });
+      }, 10)).then(() => res.send(200)));
       app.get('/weather/securedTown', (req, res) => {
         tracer.recordBinary('city', 'securedTown');
         res.send(401);
@@ -81,12 +93,10 @@ describe('connect instrumentation - integration test', () => {
       app.use(middleware({tracer}));
       app.use('/weather/wuhan', (req, res) => {
         tracer.recordBinary('city', 'wuhan');
-        res.statusCode = 200; // eslint-disable-line no-param-reassign
         res.end(JSON.stringify(req.headers));
       });
       app.use('/weather/beijing', (req, res) => {
         tracer.recordBinary('city', 'beijing');
-        res.statusCode = 200; // eslint-disable-line no-param-reassign
         res.end(JSON.stringify(req.headers));
       });
       app.use('/weather/peking', (req, res) => {
@@ -94,6 +104,12 @@ describe('connect instrumentation - integration test', () => {
         res.writeHead(302, {Location: '/weather/beijing'});
         res.end();
       });
+      app.use('/weather/shenzhen', (req, res) => new Promise(done => setTimeout(() => {
+        tracer.letId(req._trace_id, () => {
+          tracer.recordBinary('city', 'shenzhen');
+          done();
+        });
+      }, 10)).then(() => res.end()));
       app.use('/weather/securedTown', (req, res) => {
         tracer.recordBinary('city', 'securedTown');
         res.statusCode = 401; // eslint-disable-line no-param-reassign
