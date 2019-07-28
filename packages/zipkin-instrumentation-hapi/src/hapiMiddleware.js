@@ -1,7 +1,4 @@
-const {
-  option: {Some, None},
-  Instrumentation
-} = require('zipkin');
+const {option: {Some, None}, Instrumentation} = require('zipkin');
 const url = require('url');
 const pkg = require('../package.json');
 
@@ -16,15 +13,13 @@ function headerOption(headers, header) {
 
 exports.register = (server, {tracer, serviceName, port = 0}) => {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
-  if (tracer == null) {
-    throw new Error('No tracer specified');
-  }
+  if (tracer == null) throw new Error('No tracer specified');
+
   const sentinelTraceId = tracer.id;
 
   server.ext('onRequest', (request, h) => {
     const {headers} = request;
     const readHeader = headerOption.bind(null, headers);
-    const {plugins} = request;
 
     const traceId = tracer.scoped(
       () => instrumentation.recordRequest(request.method, url.format(request.url), readHeader)
