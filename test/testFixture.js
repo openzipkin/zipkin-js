@@ -46,7 +46,7 @@ function setupTestServer() {
       return `${global.baseURL}${path}?index=10&count=300`;
     }
   };
-};
+}
 
 function _expectSpan(span, expected) {
   expect(span.traceId).to.have.lengthOf(16);
@@ -69,16 +69,22 @@ class TestTracer {
   constructor({localServiceName}) {
     // TODO see if we can conditionally load from package because when testing zipkin itself we want
     // to use explicit paths
-    const {BatchRecorder, ExplicitContext, TraceId, Tracer, jsonEncoder: {JSON_V2}}
+    const {
+      BatchRecorder, ExplicitContext, TraceId, Tracer, jsonEncoder: {JSON_V2}
+    }
      = require('zipkin');
 
     this._spans = [];
     this._tracer = new Tracer({
       ctxImpl: new ExplicitContext(),
       localServiceName,
-      recorder: new BatchRecorder({logger: {logSpan: (span) => {
-        this._spans.push(JSON.parse(JSON_V2.encode(span)));
-      }}})
+      recorder: new BatchRecorder({
+        logger: {
+          logSpan: (span) => {
+            this._spans.push(JSON.parse(JSON_V2.encode(span)));
+          }
+        }
+      })
     });
     this._sentinelTraceId = this._tracer.id;
     this._debugId = new TraceId({spanId: this._tracer.id.traceId, debug: true});
@@ -165,4 +171,6 @@ function expectSpan(span, expected) {
   return _expectSpan(span, expected);
 }
 
-module.exports = {inBrowser, setupTestServer, setupTestTracer, expectB3Headers, expectSpan};
+module.exports = {
+  inBrowser, setupTestServer, setupTestTracer, expectB3Headers, expectSpan
+};

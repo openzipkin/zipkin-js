@@ -295,8 +295,8 @@ function setupOptionsArgumentTest(testClient) {
   });
 }
 
-function setupAllHttpClientTests({clientFunction}) {
-  const testClient = setupBasicHttpClientTests({clientFunction});
+function setupAllHttpClientTests(options) {
+  const testClient = setupBasicHttpClientTests(options);
   setupOptionsArgumentTest(testClient);
   return testClient;
 }

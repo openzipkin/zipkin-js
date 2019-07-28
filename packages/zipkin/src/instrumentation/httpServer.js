@@ -66,6 +66,13 @@ class HttpServerInstrumentation {
     }
   }
 
+  spanNameFromRoute(method, route, code) { // eslint-disable-line class-methods-use-this
+    if (code > 299 && code < 400) return `${method} redirected`;
+    if (code === 404) return `${method} not_found`;
+    if (!route || route === '') return method;
+    return `${method} ${route}`;
+  }
+
   recordRequest(method, requestUrl, readHeader) {
     this._createIdFromHeaders(readHeader).ifPresent(id => this.tracer.setId(id));
     const {id} = this.tracer;
