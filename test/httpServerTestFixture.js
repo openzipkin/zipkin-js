@@ -7,11 +7,17 @@ const {setupTestTracer} = require('./testFixture');
 
 class TestServer {
   // This doesn't eagerly reference the server URL, as it isn't available until "before all"
-  constructor({app, tracer, routeBasedSpanName}) {
+  constructor({
+    app,
+    testTracer,
+    routeBasedSpanName,
+    addTag
+  }) {
     this._app = app;
-    this._tracer = tracer;
+    this._testTracer = testTracer;
     this._routeBasedSpanName = routeBasedSpanName;
-    this._localServiceName = tracer.tracer().localEndpoint.serviceName;
+    this._addTag = addTag;
+    this._localServiceName = testTracer.tracer().localEndpoint.serviceName;
     this._ipv4 = InetAddress.getLocalAddress().ipv4();
   }
 
@@ -55,7 +61,7 @@ class TestServer {
   }
 
   tracer() {
-    return this._tracer;
+    return this._testTracer;
   }
 }
 
@@ -77,40 +83,30 @@ class TestServer {
 // serverFixture.setupBasicHttpServerTests({middlewareFunction});
 // ```
 //
-// ## Implementing the server function
+// ## Implementing the middleware function
 //
-// The middlewareFunction takes options of {tracer} and returns middleware object that serves the
-// following paths in the corresponding syntax of the library in use.
+// The middlewareFunction takes options of {tracer, routes} and returns middleware object that
+// serves routes corresponding to the inputs.
 //
+// Ex. for express
 // ```javascript
-// app.get('/weather/wuhan', (req, res) => {
-//   tracer.recordBinary('city', 'wuhan');
-//   res.json(req.headers);
-// });
-// app.get('/weather/beijing', (req, res) => {
-//   tracer.recordBinary('city', 'beijing');
-//   res.json(req.headers);
-// });
-// app.get('/weather/peking', (req, res) => {
-//   tracer.recordBinary('city', 'peking');
-//   res.redirect('/weather/beijing');
-// });
-// app.get('/weather/shenzhen', (req, res) => new Promise(done => setTimeout(() => {
-//   tracer.letId(req._trace_id, () => {
-//     tracer.recordBinary('city', 'shenzhen');
-//     done();
+// function middlewareFunction({tracer, routes}) {
+//   const app = express();
+//   app.use(middleware({tracer}));
+//   routes.forEach((route) => {
+//     app.get(route.path, (req, res) => route.handle(req, ({redirect, body, code}) => {
+//       if (redirect) {
+//         return res.redirect(redirect);
+//       } else if (body) {
+//         return res.json(body);
+//       } else if (code) {
+//         return res.send(code);
+//       }
+//       return res.send();
+//     }));
 //   });
-// }, 10)).then(() => res.send()));
-// app.get('/weather/siping',
-//   (req, res) => new Promise(done => setTimeout(() => done(res.send()), 4)));
-// app.get('/weather/securedTown', (req, res) => {
-//   tracer.recordBinary('city', 'securedTown');
-//   res.send(401);
-// });
-// app.get('/weather/bagCity', () => {
-//   tracer.recordBinary('city', 'bagCity');
-//   throw new Error('service is dead');
-// });
+//   return app;
+// }
 // ```
 //
 // ### Not found (404) handling
@@ -143,13 +139,93 @@ function setupBasicHttpServerTests({
   serverFunction = (app, onListen) => {
     const server = app.listen(0, () => onListen(server.address().port));
     return server;
-  }
+  },
+  addTag = (tracer, request, key, value) => tracer.recordBinary(key, value)
 }) {
   const serviceName = 'weather-api';
 
-  const tracer = setupTestTracer({localServiceName: serviceName});
-  const app = middlewareFunction({tracer: tracer.tracer()});
-  const testServer = new TestServer({app, tracer, routeBasedSpanName});
+  const testTracer = setupTestTracer({localServiceName: serviceName});
+  const tracer = testTracer.tracer();
+  const routes = [];
+
+  const wuhan = {
+    city: 'wuhan',
+    path: '/weather/wuhan',
+    handle: (request, responseCallback) => {
+      addTag(tracer, request, 'city', 'wuhan');
+      return responseCallback({body: request.headers});
+    }
+  };
+  routes.push(wuhan);
+
+  const beijing = {
+    city: 'beijing',
+    path: '/weather/beijing',
+    handle: (request, responseCallback) => {
+      addTag(tracer, request, 'city', 'beijing');
+      return responseCallback({body: request.headers});
+    }
+  };
+  routes.push(beijing);
+
+  const peking = {
+    city: 'peking',
+    path: '/weather/peking',
+    handle: (request, responseCallback) => {
+      addTag(tracer, request, 'city', 'peking');
+      return responseCallback({redirect: beijing.path});
+    }
+  };
+  routes.push(peking);
+
+  const shenzhen = {
+    city: 'shenzhen',
+    path: '/weather/shenzhen',
+    handle: (request, responseCallback) => new Promise(done => setTimeout(() => {
+      tracer.letId(request._trace_id, () => {
+        addTag(tracer, request, 'city', 'shenzhen');
+        done();
+      });
+    }, 10)).then(() => responseCallback({}))
+  };
+  routes.push(shenzhen);
+
+  const siping = {
+    city: 'siping',
+    path: '/weather/siping',
+    handle: (request, responseCallback) => new Promise(done => setTimeout(() => {
+      responseCallback({body: done()});
+    }, 4))
+  };
+  routes.push(siping);
+
+  const securedTown = {
+    city: 'securedTown',
+    path: '/weather/securedTown',
+    handle: (request, responseCallback) => {
+      addTag(tracer, request, 'city', 'securedTown');
+      return responseCallback({code: 401});
+    }
+  };
+  routes.push(securedTown);
+
+  const bagCity = {
+    city: 'bagCity',
+    path: '/weather/bagCity',
+    handle: (request) => {
+      addTag(tracer, request, 'city', 'bagCity');
+      throw new Error('service is dead');
+    }
+  };
+  routes.push(bagCity);
+
+  const app = middlewareFunction({tracer, routes});
+  const testServer = new TestServer({
+    app,
+    testTracer,
+    routeBasedSpanName,
+    addTag
+  });
 
   let server;
   let baseURL;
@@ -167,37 +243,36 @@ function setupBasicHttpServerTests({
   });
 
   it('should start a new trace', () => {
-    const path = '/weather/wuhan';
-    return fetch(`${baseURL}${path}`)
-      .then(() => tracer.expectNextSpanToEqual(testServer.successSpan({path, city: 'wuhan'})));
+    const {path, city} = wuhan;
+    fetch(`${baseURL}${path}`)
+      .then(() => testTracer.expectNextSpanToEqual(testServer.successSpan({path, city})));
   });
 
   it('should record a reasonably accurate span duration', () => {
-    const path = '/weather/siping';
-    const url = `${baseURL}${path}`;
-    return fetch(url).then(() => {
-      // 50 years ago, Changchun, the capital of Jinlin province, had only one railway to south.
+    const {path} = siping;
+    return fetch(`${baseURL}${path}`).then(() => {
+      // 50 years ago, Changchun, the capital of Jilin province, had only one railway to south.
       // Siping (四平) is the city at fourth stop station, hence stopping 4ms.
-      expect(tracer.popSpan().duration / 1000.0).to.be.greaterThan(4);
+      expect(testTracer.popSpan().duration / 1000.0).to.be.greaterThan(4);
     });
   });
 
   it('http.path tag should not include query parameters', () => {
-    const path = '/weather/wuhan';
+    const {path} = wuhan;
     return fetch(`${baseURL}${path}?index=10&count=300`)
-      .then(() => expect(tracer.popSpan().tags['http.path']).to.equal(path));
+      .then(() => expect(testTracer.popSpan().tags['http.path']).to.equal(path));
   });
 
   // Until there is a CLS hooked implementation here, we need to be explicit with trace IDs.
   // See https://github.com/openzipkin/zipkin-js/issues/88
   it('should add _trace_id to request for explicit instrumentation', () => {
-    const path = '/weather/shenzhen';
+    const {path, city} = shenzhen;
     return fetch(`${baseURL}${path}`)
-      .then(() => tracer.expectNextSpanToEqual(testServer.successSpan({path, city: 'shenzhen'})));
+      .then(() => testTracer.expectNextSpanToEqual(testServer.successSpan({path, city})));
   });
 
   it('should continue a trace from the client', () => {
-    const path = '/weather/wuhan';
+    const {path, city} = wuhan;
     return fetch(`${baseURL}${path}`, {
       method: 'get',
       headers: {
@@ -206,8 +281,8 @@ function setupBasicHttpServerTests({
         'X-B3-Flags': '1'
       }
     }).then(() => {
-      const baseSpan = testServer.successSpan({path, city: 'wuhan'});
-      const span = tracer.expectNextSpanToEqual({...baseSpan, ...{debug: true, shared: true}});
+      const baseSpan = testServer.successSpan({path, city});
+      const span = testTracer.expectNextSpanToEqual({...baseSpan, ...{debug: true, shared: true}});
       expect(span.traceId).to.equal('863ac35c9f6413ad');
       expect(span.id).to.equal('48485a3953bb6124');
     });
@@ -215,7 +290,7 @@ function setupBasicHttpServerTests({
 
   it('should accept a 128bit X-B3-TraceId', () => {
     const traceId = '863ac35c9f6413ad48485a3953bb6124';
-    const path = '/weather/wuhan';
+    const {path} = wuhan;
     return fetch(`${baseURL}${path}`, {
       method: 'get',
       headers: {
@@ -223,26 +298,26 @@ function setupBasicHttpServerTests({
         'X-B3-SpanId': '48485a3953bb6124',
         'X-B3-Sampled': '1'
       }
-    }).then(() => expect(tracer.popSpan().traceId).to.equal(traceId));
+    }).then(() => expect(testTracer.popSpan().traceId).to.equal(traceId));
   });
 
   it('should report 302 in tags, but not as error', () => {
-    const path = '/weather/peking';
-    const expectedSpan = testServer.successSpan({path, city: 'peking', status: 302});
+    const {path, city} = peking;
+    const expectedSpan = testServer.successSpan({path, city, status: 302});
     return fetch(`${baseURL}${path}`, {redirect: 'manual'})
-      .then(() => tracer.expectNextSpanToEqual(expectedSpan));
+      .then(() => testTracer.expectNextSpanToEqual(expectedSpan));
   });
 
   it('should report 401 in tags', () => {
-    const path = '/weather/securedTown';
-    const expectedSpan = testServer.errorSpan({path, city: 'securedTown', status: 401});
-    return fetch(`${baseURL}${path}`).then(() => tracer.expectNextSpanToEqual(expectedSpan));
+    const {path, city} = securedTown;
+    const expectedSpan = testServer.errorSpan({path, city, status: 401});
+    return fetch(`${baseURL}${path}`).then(() => testTracer.expectNextSpanToEqual(expectedSpan));
   });
 
   it('should report 500 in tags', () => {
-    const path = '/weather/bagCity';
-    const expectedSpan = testServer.errorSpan({path, city: 'bagCity', status: 500});
-    return fetch(`${baseURL}${path}`).then(() => tracer.expectNextSpanToEqual(expectedSpan));
+    const {path, city} = bagCity;
+    const expectedSpan = testServer.errorSpan({path, city, status: 500});
+    return fetch(`${baseURL}${path}`).then(() => testTracer.expectNextSpanToEqual(expectedSpan));
   });
 
   return testServer;
@@ -265,7 +340,7 @@ function setupHttpsServerTest({
     return httpsServer;
   }
 }) {
-  const tracer = testServer.tracer();
+  const testTracer = testServer.tracer();
   let httpsServer;
   let baseHttpsURL;
 
@@ -289,7 +364,7 @@ function setupHttpsServerTest({
     const path = '/weather/wuhan';
     return fetch(`${baseHttpsURL}${path}`, {
       agent: new https.Agent({rejectUnauthorized: false})
-    }).then(() => tracer.expectNextSpanToEqual(testServer.successSpan({path, city: 'wuhan'})));
+    }).then(() => testTracer.expectNextSpanToEqual(testServer.successSpan({path, city: 'wuhan'})));
   });
 }
 

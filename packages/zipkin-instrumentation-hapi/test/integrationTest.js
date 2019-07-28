@@ -16,73 +16,27 @@ describe('hapi instrumentation - integration test', () => {
     return ({close: () => server.stop()});
   }
 
-  function middlewareFunction({tracer}) {
+  function middlewareFunction({tracer, routes}) {
     return (server) => {
-      server.route({
-        method: 'GET',
-        path: '/weather/wuhan',
-        config: {
-          handler: (request, h) => {
-            tracer.recordBinary('city', 'wuhan');
-            return h.response(request.headers);
+      routes.forEach((route) => {
+        server.route({
+          method: 'GET',
+          path: route.path,
+          config: {
+            handler: (request, h) => route.handle(request, ({redirect, body, code}) => {
+              if (redirect) {
+                return h.redirect(redirect);
+              } else if (body) {
+                return h.response(JSON.stringify(body));
+              } else if (code) {
+                return h.response().code(code);
+              }
+              return h.response();
+            })
           }
-        }
+        });
       });
-      server.route({
-        method: 'GET',
-        path: '/weather/beijing',
-        config: {
-          handler: (request, h) => {
-            tracer.recordBinary('city', 'beijing');
-            return h.response(request.headers);
-          }
-        }
-      });
-      server.route({
-        method: 'GET',
-        path: '/weather/peking',
-        handler: (request, h) => {
-          tracer.recordBinary('city', 'peking');
-          return h.redirect('/weather/beijing');
-        }
-      });
-      server.route({
-        method: 'GET',
-        path: '/weather/shenzhen',
-        handler: (request, h) => new Promise(done => setTimeout(() => {
-          tracer.letId(request._trace_id, () => {
-            tracer.recordBinary('city', 'shenzhen');
-            done();
-          });
-        }, 10)).then(() => h.response())
-      });
-      server.route({
-        method: 'GET',
-        path: '/weather/siping',
-        config: {
-          handler: (request, h) => new Promise(done => setTimeout(() => done(h.response()), 4))
-        }
-      });
-      server.route({
-        method: 'GET',
-        path: '/weather/securedTown',
-        config: {
-          handler: (request, h) => {
-            tracer.recordBinary('city', 'securedTown');
-            return h.response().code(401);
-          }
-        }
-      });
-      server.route({
-        method: 'GET',
-        path: '/weather/bagCity',
-        config: {
-          handler: () => {
-            tracer.recordBinary('city', 'bagCity');
-            throw new Error('service is dead');
-          }
-        }
-      });
+
       server.route({
         method: 'GET',
         path: '/abandon',

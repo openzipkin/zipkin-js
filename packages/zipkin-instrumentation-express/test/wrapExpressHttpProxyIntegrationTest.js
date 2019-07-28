@@ -7,7 +7,6 @@ const proxy = require('express-http-proxy');
 const middleware = require('../src/expressMiddleware');
 const wrapProxy = require('../src/wrapExpressHttpProxy');
 
-const addTestRoutes = require('./testMiddleware');
 const {setupTestTracer} = require('../../../test/testFixture');
 
 describe('express proxy instrumentation - integration test', () => {
@@ -22,8 +21,11 @@ describe('express proxy instrumentation - integration test', () => {
   let baseURL;
 
   before((done) => {
-    const backendApp = express();
-    addTestRoutes(backendApp); // intentionally not traced
+    const backendApp = express(); // backend is intentionally not traced
+    backendApp.get('/weather/wuhan', (req, res) => res.json(req.headers));
+    backendApp.get('/weather/bagCity', () => {
+      throw new Error('service is dead');
+    });
     backend = backendApp.listen(0, () => {
       const frontendApp = express();
       const zipkinProxy = wrapProxy(proxy, {tracer: tracer.tracer(), remoteServiceName});
@@ -143,7 +145,7 @@ describe('express proxy instrumentation - integration test', () => {
 
   it('should report 500 in tags', () => {
     backend.close();
-    const path = '/weather/wuhan';
+    const path = '/weather/bagCity';
     return fetch(`${baseURL}${path}`).then(() => tracer.expectNextSpanToEqual({
       name: 'get',
       kind: 'SERVER',

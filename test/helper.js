@@ -1,11 +1,12 @@
 require('@babel/register')();
 const chai = require('chai');
+
 chai.config.includeStack = true;
 global.expect = chai.expect;
 
 // Otherwise assertion failures in async tests are wrapped, which prevents mocha from
 // being able to interpret them (such as displaying a diff).
-process.on('unhandledRejection', err => {
+process.on('unhandledRejection', (err) => {
   throw err;
 });
 
