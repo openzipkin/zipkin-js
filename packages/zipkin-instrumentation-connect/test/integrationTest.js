@@ -7,7 +7,7 @@ const serverFixture = require('../../../test/httpServerTestFixture');
 
 describe('connect instrumentation - integration test', () => {
   describe('restify middleware', () => {
-    function serverFunction({tracer}) {
+    function middlewareFunction({tracer}) {
       // Restify uses async hooks. Until there is a CLS hooked implementation here, we need to be
       // explicit with trace IDs. See https://github.com/openzipkin/zipkin-js/issues/88
       function addTag(req, key, value) {
@@ -36,6 +36,8 @@ describe('connect instrumentation - integration test', () => {
           done();
         });
       }, 10)).then(() => res.send(200)));
+      app.get('/weather/siping',
+        (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
       app.get('/weather/securedTown', (req, res, next) => {
         addTag(req, 'city', 'securedTown');
         res.send(401);
@@ -48,11 +50,11 @@ describe('connect instrumentation - integration test', () => {
       return app;
     }
 
-    serverFixture.setupBasicHttpServerTests({serverFunction});
+    serverFixture.setupBasicHttpServerTests({middlewareFunction});
   });
 
   describe('express middleware', () => {
-    function serverFunction({tracer}) {
+    function middlewareFunction({tracer}) {
       const app = express();
       app.use(middleware({tracer}));
       app.get('/weather/wuhan', (req, res) => {
@@ -73,6 +75,8 @@ describe('connect instrumentation - integration test', () => {
           done();
         });
       }, 10)).then(() => res.send(200)));
+      app.get('/weather/siping',
+        (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
       app.get('/weather/securedTown', (req, res) => {
         tracer.recordBinary('city', 'securedTown');
         res.send(401);
@@ -84,11 +88,11 @@ describe('connect instrumentation - integration test', () => {
       return app;
     }
 
-    serverFixture.setupAllHttpServerTests({serverFunction});
+    serverFixture.setupAllHttpServerTests({middlewareFunction});
   });
 
   describe('connect middleware', () => {
-    function serverFunction({tracer}) {
+    function middlewareFunction({tracer}) {
       const app = connect();
       app.use(middleware({tracer}));
       app.use('/weather/wuhan', (req, res) => {
@@ -110,6 +114,7 @@ describe('connect instrumentation - integration test', () => {
           done();
         });
       }, 10)).then(() => res.end()));
+      app.use('/weather/siping', (req, res) => new Promise(() => setTimeout(() => res.end(), 4)));
       app.use('/weather/securedTown', (req, res) => {
         tracer.recordBinary('city', 'securedTown');
         res.statusCode = 401; // eslint-disable-line no-param-reassign
@@ -122,6 +127,6 @@ describe('connect instrumentation - integration test', () => {
       return app;
     }
 
-    serverFixture.setupAllHttpServerTests({serverFunction});
+    serverFixture.setupAllHttpServerTests({middlewareFunction});
   });
 });

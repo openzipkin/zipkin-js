@@ -17,6 +17,7 @@ function addTestRoutes(app, tracer) {
       done();
     });
   }, 10)).then(() => res.send(200)));
+  app.get('/weather/siping', (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
   app.get('/weather/securedTown', (req, res) => {
     if (tracer) tracer.recordBinary('city', 'securedTown');
     res.send(401);

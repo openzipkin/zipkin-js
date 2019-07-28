@@ -66,7 +66,7 @@ class TestServer {
 // ```javascript
 // const serverFixture = require('../../../test/httpServerTestFixture');
 //
-// serverFixture.setupAllHttpServerTests({serverFunction});
+// serverFixture.setupAllHttpServerTests({middlewareFunction});
 // ```
 //
 // If some tests fail, you can instead install only the basic tests first.
@@ -74,12 +74,12 @@ class TestServer {
 // ```javascript
 // const serverFixture = require('../../../test/httpServerTestFixture');
 //
-// serverFixture.setupBasicHttpServerTests({serverFunction});
+// serverFixture.setupBasicHttpServerTests({middlewareFunction});
 // ```
 //
 // ## Implementing the server function
 //
-// The serverFunction takes options of {tracer} and returns middleware object that serves the
+// The middlewareFunction takes options of {tracer} and returns middleware object that serves the
 // following paths in the corresponding syntax of the library in use.
 //
 // ```javascript
@@ -101,6 +101,7 @@ class TestServer {
 //     done();
 //   });
 // }, 10)).then(() => res.send(200)));
+// app.get('/weather/siping', (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
 // app.get('/weather/securedTown', (req, res) => {
 //   tracer.recordBinary('city', 'securedTown');
 //   res.send(401);
@@ -118,7 +119,7 @@ class TestServer {
 //
 // Ex.
 // ```javascript
-// const testServer = serverFixture.setupBasicHttpServerTests({serverFunction});
+// const testServer = serverFixture.setupBasicHttpServerTests({middlewareFunction});
 // serverFixture.setupNotFoundTest(testServer);
 // ```
 //
@@ -128,18 +129,18 @@ class TestServer {
 //
 // Ex.
 // ```javascript
-// const testServer = serverFixture.setupBasicHttpServerTests({serverFunction});
+// const testServer = serverFixture.setupBasicHttpServerTests({middlewareFunction});
 // serverFixture.setupHttpsServerTest(testServer);
 // ```
 //
 // ## Composition approach
 //
 // Approach to compose tests is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
-function setupBasicHttpServerTests({serverFunction, routeBasedSpanName = false}) {
+function setupBasicHttpServerTests({middlewareFunction, routeBasedSpanName = false}) {
   const serviceName = 'weather-api';
 
   const tracer = setupTestTracer({localServiceName: serviceName});
-  const app = serverFunction({tracer: tracer.tracer()});
+  const app = middlewareFunction({tracer: tracer.tracer()});
   const testServer = new TestServer({app, tracer, routeBasedSpanName});
 
   let server;
@@ -161,6 +162,16 @@ function setupBasicHttpServerTests({serverFunction, routeBasedSpanName = false})
     const path = '/weather/wuhan';
     return fetch(`${baseURL}${path}`)
       .then(() => tracer.expectNextSpanToEqual(testServer.successSpan({path, city: 'wuhan'})));
+  });
+
+  it('should record a reasonably accurate span duration', () => {
+    const path = '/weather/siping';
+    const url = `${baseURL}${path}`;
+    return fetch(url).then(() => {
+      // 50 years ago, Changchun, the capital of Jinlin province, had only one railway to south.
+      // Siping (四平) is the city at fourth stop station, hence stopping 4ms.
+      expect(tracer.popSpan().duration / 1000.0).to.be.greaterThan(4);
+    });
   });
 
   it('http.path tag should not include query parameters', () => {
