@@ -85,11 +85,11 @@ class TestServer {
 // ```javascript
 // app.get('/weather/wuhan', (req, res) => {
 //   tracer.recordBinary('city', 'wuhan');
-//   res.status(200).json(req.headers);
+//   res.json(req.headers);
 // });
 // app.get('/weather/beijing', (req, res) => {
 //   tracer.recordBinary('city', 'beijing');
-//   res.status(200).json(req.headers);
+//   res.json(req.headers);
 // });
 // app.get('/weather/peking', (req, res) => {
 //   tracer.recordBinary('city', 'peking');
@@ -100,8 +100,9 @@ class TestServer {
 //     tracer.recordBinary('city', 'shenzhen');
 //     done();
 //   });
-// }, 10)).then(() => res.send(200)));
-// app.get('/weather/siping', (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
+// }, 10)).then(() => res.send()));
+// app.get('/weather/siping',
+//   (req, res) => new Promise(done => setTimeout(() => done(res.send()), 4)));
 // app.get('/weather/securedTown', (req, res) => {
 //   tracer.recordBinary('city', 'securedTown');
 //   res.send(401);
@@ -136,7 +137,14 @@ class TestServer {
 // ## Composition approach
 //
 // Approach to compose tests is from https://github.com/mochajs/mocha/wiki/Shared-Behaviours
-function setupBasicHttpServerTests({middlewareFunction, routeBasedSpanName = false}) {
+function setupBasicHttpServerTests({
+  middlewareFunction,
+  routeBasedSpanName = false,
+  serverFunction = (app, onListen) => {
+    const server = app.listen(0, () => onListen(server.address().port));
+    return server;
+  }
+}) {
   const serviceName = 'weather-api';
 
   const tracer = setupTestTracer({localServiceName: serviceName});
@@ -147,8 +155,8 @@ function setupBasicHttpServerTests({middlewareFunction, routeBasedSpanName = fal
   let baseURL;
 
   before((done) => { // eslint-disable-line no-undef
-    server = app.listen(0, () => {
-      baseURL = `http://127.0.0.1:${server.address().port}`;
+    server = serverFunction(app, (listenPort) => {
+      baseURL = `http://127.0.0.1:${listenPort}`;
       testServer._baseURL = baseURL;
       done();
     });
@@ -249,31 +257,37 @@ function setupNotFoundTest(testServer) {
   });
 }
 
-function setupHttpsServerTest(testServer) {
+function setupHttpsServerTest({
+  testServer,
+  httpsServerFunction = (options, app, onListen) => {
+    const httpsServer = https.createServer(options, app)
+      .listen(0, () => onListen(httpsServer.address().port));
+    return httpsServer;
+  }
+}) {
   const tracer = testServer.tracer();
-  let tlsServer;
-  let baseTlsURL;
+  let httpsServer;
+  let baseHttpsURL;
 
   before((done) => { // eslint-disable-line no-undef
-    const tlsOptions = {
+    const options = {
       rejectUnauthorized: false,
       key: fs.readFileSync(fsPath.join(__dirname, 'keys', 'server.key'), 'utf8'),
       cert: fs.readFileSync(fsPath.join(__dirname, 'keys', 'server.crt'), 'utf8'),
     };
-
-    tlsServer = https.createServer(tlsOptions, testServer._app).listen(0, () => {
-      baseTlsURL = `https://localhost:${tlsServer.address().port}`;
+    httpsServer = httpsServerFunction(options, testServer._app, (listenPort) => {
+      baseHttpsURL = `https://localhost:${listenPort}`;
       done();
     });
   });
 
   after(() => { // eslint-disable-line no-undef
-    if (tlsServer) tlsServer.close();
+    if (httpsServer) httpsServer.close();
   });
 
   it('should work with https', () => {
     const path = '/weather/wuhan';
-    return fetch(`${baseTlsURL}${path}`, {
+    return fetch(`${baseHttpsURL}${path}`, {
       agent: new https.Agent({rejectUnauthorized: false})
     }).then(() => tracer.expectNextSpanToEqual(testServer.successSpan({path, city: 'wuhan'})));
   });
@@ -281,7 +295,7 @@ function setupHttpsServerTest(testServer) {
 
 function setupAllHttpServerTests(options) {
   const testServer = setupBasicHttpServerTests(options);
-  setupHttpsServerTest(testServer);
+  setupHttpsServerTest({...{testServer}, ...options});
   setupNotFoundTest(testServer);
   return testServer;
 }

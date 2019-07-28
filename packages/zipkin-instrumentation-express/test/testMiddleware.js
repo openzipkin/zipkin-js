@@ -1,11 +1,11 @@
 function addTestRoutes(app, tracer) {
   app.get('/weather/wuhan', (req, res) => {
     if (tracer) tracer.recordBinary('city', 'wuhan');
-    res.status(200).json(req.headers);
+    res.json(req.headers);
   });
   app.get('/weather/beijing', (req, res) => {
     if (tracer) tracer.recordBinary('city', 'beijing');
-    res.status(200).json(req.headers);
+    res.json(req.headers);
   });
   app.get('/weather/peking', (req, res) => {
     if (tracer) tracer.recordBinary('city', 'peking');
@@ -16,8 +16,9 @@ function addTestRoutes(app, tracer) {
       tracer.recordBinary('city', 'shenzhen');
       done();
     });
-  }, 10)).then(() => res.send(200)));
-  app.get('/weather/siping', (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
+  }, 10)).then(() => res.send()));
+  app.get('/weather/siping',
+    (req, res) => new Promise(done => setTimeout(() => done(res.send()), 4)));
   app.get('/weather/securedTown', (req, res) => {
     if (tracer) tracer.recordBinary('city', 'securedTown');
     res.send(401);

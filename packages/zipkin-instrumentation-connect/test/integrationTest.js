@@ -18,12 +18,12 @@ describe('connect instrumentation - integration test', () => {
       app.use(middleware({tracer}));
       app.get('/weather/wuhan', (req, res, next) => {
         addTag(req, 'city', 'wuhan');
-        res.send(200, req.headers);
+        res.send(req.headers);
         return next();
       });
       app.get('/weather/beijing', (req, res, next) => {
         addTag(req, 'city', 'beijing');
-        res.send(200, req.headers);
+        res.send(req.headers);
         return next();
       });
       app.get('/weather/peking', (req, res, next) => {
@@ -35,9 +35,9 @@ describe('connect instrumentation - integration test', () => {
           tracer.recordBinary('city', 'shenzhen');
           done();
         });
-      }, 10)).then(() => res.send(200)));
+      }, 10)).then(() => res.send()));
       app.get('/weather/siping',
-        (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
+        (req, res) => new Promise(done => setTimeout(() => done(res.send()), 4)));
       app.get('/weather/securedTown', (req, res, next) => {
         addTag(req, 'city', 'securedTown');
         res.send(401);
@@ -59,11 +59,11 @@ describe('connect instrumentation - integration test', () => {
       app.use(middleware({tracer}));
       app.get('/weather/wuhan', (req, res) => {
         tracer.recordBinary('city', 'wuhan');
-        res.status(200).json(req.headers);
+        res.json(req.headers);
       });
       app.get('/weather/beijing', (req, res) => {
         tracer.recordBinary('city', 'beijing');
-        res.status(200).json(req.headers);
+        res.json(req.headers);
       });
       app.get('/weather/peking', (req, res) => {
         tracer.recordBinary('city', 'peking');
@@ -74,9 +74,9 @@ describe('connect instrumentation - integration test', () => {
           tracer.recordBinary('city', 'shenzhen');
           done();
         });
-      }, 10)).then(() => res.send(200)));
+      }, 10)).then(() => res.send()));
       app.get('/weather/siping',
-        (req, res) => new Promise(() => setTimeout(() => res.send(200), 4)));
+        (req, res) => new Promise(done => setTimeout(() => done(res.send()), 4)));
       app.get('/weather/securedTown', (req, res) => {
         tracer.recordBinary('city', 'securedTown');
         res.send(401);
@@ -114,7 +114,8 @@ describe('connect instrumentation - integration test', () => {
           done();
         });
       }, 10)).then(() => res.end()));
-      app.use('/weather/siping', (req, res) => new Promise(() => setTimeout(() => res.end(), 4)));
+      app.use('/weather/siping',
+        (req, res) => new Promise(done => setTimeout(() => done(res.end()), 4)));
       app.use('/weather/securedTown', (req, res) => {
         tracer.recordBinary('city', 'securedTown');
         res.statusCode = 401; // eslint-disable-line no-param-reassign
