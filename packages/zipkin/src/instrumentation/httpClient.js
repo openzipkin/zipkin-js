@@ -40,8 +40,14 @@ class HttpClientInstrumentation {
   recordResponse(traceId, statusCode) {
     this.tracer.setId(traceId);
     this.tracer.recordBinary('http.status_code', statusCode.toString());
-    if (statusCode < 200 || statusCode > 399) {
-      this.tracer.recordBinary('error', statusCode.toString());
+    // Instrumentation error should not make span errors. We don't know the
+    // difference between a library being unable to get the http status and
+    // a bad status (0). We don't classify zero as error in case instrumentation
+    // cannot read the status. This prevents tagging every response as error
+    if (statusCode !== 0) {
+      if (statusCode < 100 || statusCode > 399) {
+        this.tracer.recordBinary('error', statusCode.toString());
+      }
     }
     this.tracer.recordAnnotation(new Annotation.ClientRecv());
   }
