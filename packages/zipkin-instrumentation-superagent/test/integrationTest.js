@@ -9,11 +9,12 @@ describe('SuperAgent instrumentation - integration test', () => {
     const plugin = zipkinPlugin({tracer, remoteServiceName});
     return ({
       get(url) {
-        return request.get(url).redirects(0).use(plugin).catch((error) => {
+        return request.get(url).redirects(0).use(plugin)
+          .catch((error) => {
           // Handle SuperAgent throwing on non 2xx status instead of passing to the normal callback.
-          if (error.response && error.response.status) return error.response;
-          throw error;
-        });
+            if (error.response && error.response.status) return error.response;
+            throw error;
+          });
       },
       getJson(url) {
         return request.get(url).use(plugin).then(response => response.body);
