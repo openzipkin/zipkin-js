@@ -357,4 +357,26 @@ describe('Tracer', () => {
     const tracer = new Tracer({ctxImpl, recorder: mockRecorder});
     expect(setDefaultTags.called).to.eql(true);
   });
+
+  it('should make a childId by passing parent traceId to createChildId', () => {
+    const tracer = new Tracer({ctxImpl, recorder});
+
+    const parentTraceId = rootId;
+
+    const childTraceId = tracer.createChildId(parentTraceId);
+
+    expect(childTraceId.traceId).to.eql(parentTraceId.traceId);
+    expect(childTraceId.parentSpanId).to.eql(new Some(parentTraceId.spanId));
+    expect(childTraceId.spanId).to.not.eql(parentTraceId.spanId);
+    expect(childTraceId.sampled).to.eql(parentTraceId.sampled);
+    expect(childTraceId.flags).to.eql(parentTraceId.flags);
+  });
+
+  it('should make a new rootId by calling createChildId with empty parameter', () => {
+    const tracer = new Tracer({ctxImpl, recorder});
+
+    const newTraceId = tracer.createChildId();
+
+    expect(newTraceId.parentSpanId.getOrElse(null)).to.equal(null);
+  });
 });
