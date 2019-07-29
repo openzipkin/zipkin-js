@@ -141,7 +141,11 @@ function setupBasicHttpClientTests({clientFunction, requestScoped = false}) {
           'http.path': path,
           'http.status_code': '101',
         }
-      }));
+      }))
+      .catch((err) => {
+        /* eslint-disable no-console */
+        console.log(err);
+      });
   });
 
   it('should report 401 in tags', () => {
