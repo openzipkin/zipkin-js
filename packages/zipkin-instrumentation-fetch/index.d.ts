@@ -1,6 +1,6 @@
 import {Tracer} from 'zipkin';
 
-declare function wrapFetch(got: any, {
+declare function wrapFetch(fetch: any, {
   tracer: Tracer,
   serviceName: string,
   remoteServiceName: string
