@@ -2,7 +2,7 @@ const {
   Instrumentation
 } = require('zipkin');
 
-function wrapFetch(fetch, {tracer, serviceName, remoteServiceName}) {
+function wrapFetch(fetch, {tracer, serviceName, remoteServiceName, responseReader}) {
   const instrumentation = new Instrumentation.HttpClient({tracer, serviceName, remoteServiceName});
   return function zipkinfetch(input, opts = {}) {
     return new Promise((resolve, reject) => {
@@ -17,6 +17,11 @@ function wrapFetch(fetch, {tracer, serviceName, remoteServiceName}) {
             instrumentation.recordResponse(traceId, res.status);
           });
           resolve(res);
+          if (responseReader) {
+            tracer.scoped(() => {
+              responseReader.bind(instrumentation)(traceId, res);
+            });
+          }
         }).catch((err) => {
           tracer.scoped(() => {
             instrumentation.recordError(traceId, err);
