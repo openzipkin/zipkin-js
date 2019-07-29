@@ -83,24 +83,23 @@ describe('gRPC client instrumentation (integration test)', () => {
     }
   }));
 
-  it('should report error in tags on transport error', done =>
-    getClient('localhost:12345').getTemperature({location: 'Las Vegas'}, (err, res) => {
-      if (err) {
-        tracer.expectNextSpanToEqual({
-          name: temperature,
-          kind: 'CLIENT',
-          localEndpoint: {serviceName},
-          remoteEndpoint: {serviceName: remoteServiceName},
-          tags: {
-            'grpc.status_code': '14', // NOTE: in brave this code is text, like UNAVAILABLE
-            error: 'failed to connect to all addresses'
-          }
-        });
-        done();
-      } else {
-        done(new Error(`expected response to error: ${res}`));
-      }
-    }));
+  it('should report error in tags on transport error', done => getClient('localhost:12345').getTemperature({location: 'Las Vegas'}, (err, res) => {
+    if (err) {
+      tracer.expectNextSpanToEqual({
+        name: temperature,
+        kind: 'CLIENT',
+        localEndpoint: {serviceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'grpc.status_code': '14', // NOTE: in brave this code is text, like UNAVAILABLE
+          error: 'failed to connect to all addresses'
+        }
+      });
+      done();
+    } else {
+      done(new Error(`expected response to error: ${res}`));
+    }
+  }));
 
   it('should handle nested requests', (done) => {
     const client = getClient();
