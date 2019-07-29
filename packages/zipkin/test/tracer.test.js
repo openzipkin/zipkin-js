@@ -359,7 +359,7 @@ describe('Tracer', () => {
   });
 
   it('should make childId by passing parentId to createChildId', () => {
-    const tracer = new Tracer({ ctxImpl, recorder });
+    const tracer = new Tracer({ctxImpl, recorder});
 
     const parentTraceId = rootId;
 
@@ -373,7 +373,7 @@ describe('Tracer', () => {
   });
 
   it('should make parentId by calling createChildId with empty parameter', () => {
-    const tracer = new Tracer({ ctxImpl, recorder });
+    const tracer = new Tracer({ctxImpl, recorder});
 
     const newTraceId = tracer.createChildId();
 
