@@ -49,7 +49,7 @@ declare namespace zipkin {
     local<V>(name: string, callback: () => V): V;
     createRootId(isSampled?: option.IOption<boolean>, isDebug?: boolean): TraceId;
     /** Creates a child of the current trace ID or a new root span. */
-    createChildId(parentId: TraceId): TraceId;
+    createChildId(parentId?: TraceId): TraceId;
     letId<V>(traceId: TraceId, callback: () => V): V;
     setId(traceId: TraceId): void;
     recordAnnotation(annotation: IAnnotation, timestamp?: number): void;
