@@ -358,7 +358,7 @@ describe('Tracer', () => {
     expect(setDefaultTags.called).to.eql(true);
   });
 
-  it('should make childId by passing parentId to createChildId', () => {
+  it('should make a childId by passing parent traceId to createChildId', () => {
     const tracer = new Tracer({ctxImpl, recorder});
 
     const parentTraceId = rootId;
@@ -372,7 +372,7 @@ describe('Tracer', () => {
     expect(childTraceId.flags).to.eql(parentTraceId.flags);
   });
 
-  it('should make parentId by calling createChildId with empty parameter', () => {
+  it('should make a new rootId by calling createChildId with empty parameter', () => {
     const tracer = new Tracer({ctxImpl, recorder});
 
     const newTraceId = tracer.createChildId();
