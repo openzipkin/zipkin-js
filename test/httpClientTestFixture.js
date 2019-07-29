@@ -129,6 +129,21 @@ function setupBasicHttpClientTests({clientFunction, requestScoped = false}) {
       .then(() => tracer.expectNextSpanToEqual(testClient.successSpan({path})));
   });
 
+  it('should not report errors on 1xx', () => {
+    const path = '/weather/taipei';
+    return testClient.get({path})
+      .then(() => tracer.expectNextSpanToEqual({
+        name: 'get',
+        kind: 'CLIENT',
+        localEndpoint: {serviceName: localServiceName},
+        remoteEndpoint: {serviceName: remoteServiceName},
+        tags: {
+          'http.path': path,
+          'http.status_code': '101',
+        }
+      }));
+  });
+
   it('should report 401 in tags', () => {
     const path = '/weather/securedTown';
     return testClient.get({path})

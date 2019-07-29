@@ -2,6 +2,9 @@ const express = require('express');
 
 function middleware() {
   const api = express();
+  api.get('/weather/taipei', (req, res) => {
+    res.send(101);
+  });
   api.get('/weather/wuhan', (req, res) => {
     res.status(200).json(req.headers);
   });
