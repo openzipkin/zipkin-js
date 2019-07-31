@@ -1,9 +1,26 @@
 const {option: {Some, None}, Instrumentation} = require('zipkin');
 
+/**
+ * @typedef {Object} MiddlewareOptions
+ * @property {Object} tracer
+ * @property {string} serviceName
+ * @property {number} port
+ */
+
+/**
+ * @param {MiddlewareOptions}
+ * @return {ZipkinKoaMiddleware}
+ */
 module.exports = function zipkinMiddleware({tracer, serviceName, port = 0}) {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
 
-  return async function zipkinKoaMiddleware(ctx, next) {
+  /**
+   * @method
+   * @typedef {function} ZipkinKoaMiddleware
+   * @param {Object} ctx
+   * @param {function()} next
+   */
+  return function zipkinKoaMiddleware(ctx, next) {
     function readHeader(header) {
       const val = ctx.request.headers[header.toLowerCase()];
       if (val != null) {
@@ -12,15 +29,20 @@ module.exports = function zipkinMiddleware({tracer, serviceName, port = 0}) {
         return None;
       }
     }
-    tracer.scoped(() => {
+    return tracer.scoped(() => {
       const method = ctx.request.method.toUpperCase();
       const id = instrumentation.recordRequest(method, ctx.request.href, readHeader);
 
+      Object.defineProperty(ctx.request, '_trace_id', {configurable: false, get: () => id});
+
       const recordResponse = () => {
-        tracer.scoped(() => instrumentation.recordResponse(id, ctx.status));
+        tracer.scoped(() => {
+          tracer.recordRpc(instrumentation.spanNameFromRoute(method, ctx.routePath, ctx.status));
+          instrumentation.recordResponse(id, ctx.status);
+        });
       };
 
-      next()
+      return next()
         .then(recordResponse)
         .catch(recordResponse);
     });
