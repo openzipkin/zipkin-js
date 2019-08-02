@@ -36,8 +36,10 @@ module.exports = function koaMiddleware({tracer, serviceName, port = 0}) {
       Object.defineProperty(ctx.request, '_trace_id', {configurable: false, get: () => id});
 
       const recordResponse = () => {
-        tracer.scoped(() => {
-          tracer.recordRpc(instrumentation.spanNameFromRoute(method, ctx.routePath, ctx.status));
+        tracer.letId(id, () => {
+          // support koa-route and koa-router
+          const matchedPath = ctx.routePath || ctx._matchedRoute;
+          tracer.recordRpc(instrumentation.spanNameFromRoute(method, matchedPath, ctx.status));
           instrumentation.recordResponse(id, ctx.status);
         });
       };

@@ -38,6 +38,6 @@ describe('koa instrumentation - integration test', () => {
   serverFixture.setupAllHttpServerTests({
     middlewareFunction,
     httpsServerFunction,
-    routeBasedSpanName: false // todo: find out why tracer.recordRpc isn't working
+    routeBasedSpanName: true
   });
 });
