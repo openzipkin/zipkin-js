@@ -1,5 +1,5 @@
-const zipkinMiddleware = require('./koaMiddleware');
+const koaMiddleware = require('./koaMiddleware');
 
 module.exports = {
-  zipkinMiddleware
+  koaMiddleware
 };

@@ -1,4 +1,4 @@
-import {Handler} from 'express';
+import {Middleware} from 'koa';
 import {Tracer} from 'zipkin';
 
 /**
@@ -12,11 +12,6 @@ import {Tracer} from 'zipkin';
  * store the span id manually or use a CLSContext so that the annotations
  * go to the correct spans
  */
-export declare function expressMiddleware(
+export declare function koaMiddleware(
   options: {tracer: Tracer, port?: number}
-): Handler;
-
-export declare function wrapExpressHttpProxy(
-  proxy: (host: string, options?: any) => Handler,
-  options: {tracer: Tracer, remoteServiceName?: string}
-): (host: string, options?: any) => Handler;
+): Middleware;

@@ -11,7 +11,7 @@ const {option: {Some, None}, Instrumentation} = require('zipkin');
  * @param {MiddlewareOptions}
  * @return {ZipkinKoaMiddleware}
  */
-module.exports = function zipkinMiddleware({tracer, serviceName, port = 0}) {
+module.exports = function koaMiddleware({tracer, serviceName, port = 0}) {
   const instrumentation = new Instrumentation.HttpServer({tracer, serviceName, port});
 
   /**
