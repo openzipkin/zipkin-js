@@ -2,15 +2,19 @@ import {Middleware} from 'koa';
 import {Tracer} from 'zipkin';
 
 /**
- * When a request comes in, creates ServerRecv annotation and then passes
- * the request to the next middleware. When the final middleware finishes
- * the request, creates ServerSend annotation
+ * Creates a span id from the headers of an incoming request, or creates
+ * a root span id if appropriate headers are not present in the request.
  *
- * Sets the tracer.id to the span id prior to running the next middleware.
+ * Prior to invocation of next middleware records ServerRecv annotation.
+ * When the final middleware finishes, records ServerSend annotation.
  *
- * Note that if the next middleware makes async calls, it should either
- * store the span id manually or use a CLSContext so that the annotations
- * go to the correct spans
+ * Stores created span id in `_trace_id` property of `ctx.request`. If
+ * {ExplicitContext} implementation is used, be sure to pass the context
+ * to asynchronous callbacks that appear in other middleware using the
+ * `ctx.request._trace_id` property. This is necessary to have annotations
+ * recorded in correct spans.
+ *
+ * Alternatively, use {CLSContext} implementation.
  */
 export declare function koaMiddleware(
   options: {tracer: Tracer, port?: number}
