@@ -122,6 +122,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [grpc-client](packages/zipkin-instrumentation-grpc-client) (zipkin-instrumentation-grpc-client)
 - [axios](packages/zipkin-instrumentation-axiosjs) (zipkin-instrumentation-axiosjs)
 - [KafkaJS](packages/zipkin-instrumentation-kafkajs) (zipkin-instrumentation-kafkajs)
+- [koa](packages/zipkin-instrumentation-koa) (zipkin-instrumentation-koa)
 
 Every module has a README.md file that describes how to use it.
 
