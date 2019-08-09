@@ -11,3 +11,4 @@ packages/**/package-lock.json
 **/test-types/*.test.js
 **/tsr-declarations.js
 .idea/
+.DS_Store

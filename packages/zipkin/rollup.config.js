@@ -5,6 +5,7 @@ import replace from 'rollup-plugin-replace';
 import {terser} from 'rollup-plugin-terser';
 import globals from 'rollup-plugin-node-globals';
 import builtins from 'rollup-plugin-node-builtins';
+import del from 'rollup-plugin-delete';
 
 const basePlugins = [
   commonjs(),
@@ -22,7 +23,7 @@ export default [
   {
     input: 'src/index.ts',
     output: {file: 'lib/index.js', format: 'cjs'},
-    plugins: basePlugins,
+    plugins: basePlugins.concat([del({targets: 'lib/*'})]),
     external,
   },
 
@@ -30,7 +31,7 @@ export default [
   {
     input: 'src/index.ts',
     output: {file: 'es/index.js', format: 'es'},
-    plugins: basePlugins,
+    plugins: basePlugins.concat([del({targets: 'es/*'})]),
     external,
   },
 
@@ -48,6 +49,7 @@ export default [
       }),
       globals(),
       builtins(),
+      del({targets: 'dist/*'})
     ]),
   },
 
