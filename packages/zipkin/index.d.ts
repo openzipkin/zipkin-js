@@ -295,7 +295,8 @@ declare namespace zipkin {
      * @constructor
      * @param {Object} args
      * @param {Logger} args.logger logs the data to zipkin server
-     * @param {number} args.timeout timeout for reporting spans in **microseconds**
+     * @param {number} args.timeout timeout after which an unfinished span is
+     * flushed to zipkin in **microseconds**
      */
     constructor(args: { logger: Logger, timeout?: number });
     record: (rec: Record) => void;
