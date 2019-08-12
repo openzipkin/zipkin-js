@@ -85,7 +85,7 @@ class BatchRecorder {
           this._writeSpan(id, span);
         }
       });
-    }, 1000); // // every second, this will flush to zipkin any spans that have timed out
+    }, 1000); // every second, this will flush to zipkin any spans that have timed out
     if (timer.unref) { // unref might not be available in browsers
       timer.unref(); // Allows Node to terminate instead of blocking on timer
     }
