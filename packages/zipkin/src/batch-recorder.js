@@ -2,12 +2,6 @@ const {now} = require('./time');
 const {Span, Endpoint} = require('./model');
 
 /**
- * default timeout = 60 seconds (in microseconds)
- * @type {number}
- */
-const defaultTimeout = 60 * 1000000;
-
-/**
  * defaultTags property name
  * @type {symbol}
  */
@@ -55,6 +49,12 @@ class PartialSpan {
 }
 
 /**
+ * default timeout = 60 seconds (in microseconds)
+ * @type {number}
+ */
+const defaultTimeout = 60 * 1000000;
+
+/**
  * @class BatchRecorder
  */
 class BatchRecorder {
@@ -62,7 +62,7 @@ class BatchRecorder {
    * @constructor
    * @param {Object} options
    * @property {Logger} logger logs the data to zipkin server
-   * @property {number} timeout timeout for span in microseconds
+   * @property {number} timeout timeout for reporting spans in **microseconds**
    */
   constructor({logger, timeout = defaultTimeout}) {
     this.logger = logger;
@@ -82,7 +82,7 @@ class BatchRecorder {
           this._writeSpan(id, span);
         }
       });
-    }, 1000);
+    }, 1000); // runs every second
     if (timer.unref) { // unref might not be available in browsers
       timer.unref(); // Allows Node to terminate instead of blocking on timer
     }
