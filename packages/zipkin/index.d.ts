@@ -291,6 +291,15 @@ declare namespace zipkin {
   }
 
   class BatchRecorder implements Recorder {
+    /**
+     * @constructor
+     * @param {Object} args
+     * @param {Logger} args.logger logs the data to zipkin server
+     * @param {number} args.timeout timeout after which an unfinished span is
+     * flushed to zipkin in **microseconds**. Passing this value has
+     * implications in the reported data of the span so we discourage users
+     * to pass a value for it unless there is a good reason for.
+     */
     constructor(args: { logger: Logger, timeout?: number });
     record: (rec: Record) => void;
     flush: () => void;
