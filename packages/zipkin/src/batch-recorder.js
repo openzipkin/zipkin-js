@@ -63,7 +63,9 @@ class BatchRecorder {
    * @param {Object} options
    * @property {Logger} logger logs the data to zipkin server
    * @property {number} timeout timeout after which an unfinished span is
-   * flushed to zipkin in **microseconds**
+   * flushed to zipkin in **microseconds**. Passing this value has
+   * implications in the reported data of the span so we discourage users
+   * to pass a value for it unless there is a good reason for.
    */
   constructor({logger, timeout = defaultTimeout}) {
     this.logger = logger;
