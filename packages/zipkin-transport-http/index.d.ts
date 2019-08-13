@@ -1,6 +1,6 @@
-import {JsonEncoder, Logger, model} from 'zipkin';
 import {Agent as HttpAgent } from 'http';
 import {Agent as HttpsAgent} from 'https';
+import {JsonEncoder, Logger, model} from 'zipkin';
 
 type Agent = HttpAgent | HttpsAgent;
 
