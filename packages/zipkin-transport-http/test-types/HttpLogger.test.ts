@@ -24,14 +24,14 @@ describe('HttpLogger', () => {
   });
 
   it('should accept Http(s) Agent or function which returns Agent', () => {
-    const agents = [new HttpAgent(), new HttpsAgent(), () => new HttpAgent(), () => new HttpsAgent()]
+    const agents = [new HttpAgent(), new HttpsAgent(), () => new HttpAgent(), () => new HttpsAgent()];
 
     agents.forEach(agent => {
-      let options = {
+      const options = {
         endpoint: 'testEndpoint',
-        agent: agent,
+        agent
       };
-      let httpLogger: HttpLogger = new HttpLogger(options);
-    })
+      const httpLogger: HttpLogger = new HttpLogger(options);
+    });
   });
 });
