@@ -9,11 +9,13 @@ declare class HttpLogger implements Logger {
     endpoint: string,
     httpInterval?: number,
     jsonEncoder?: JsonEncoder,
-    httpTimeout?: number,
+    timeout?: number,
+    maxPayloadSize?: number,
     headers?: { [name: string]: any },
     agent?: Agent | (() => Agent),
     log?: Console
   });
+
   logSpan(span: model.Span): void;
 }
 export {HttpLogger};

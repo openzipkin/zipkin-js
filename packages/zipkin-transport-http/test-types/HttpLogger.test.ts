@@ -1,0 +1,37 @@
+import { expect } from 'chai';
+
+import {Agent as HttpAgent } from 'http';
+import {Agent as HttpsAgent} from 'https';
+import {jsonEncoder} from 'zipkin';
+
+import { HttpLogger } from 'zipkin-transport-http';
+
+describe('HttpLogger', () => {
+  it('should have correct type', () => {
+    const options = {
+      endpoint: 'testEndpoint',
+      httpInterval: 1000,
+      jsonEncoder: jsonEncoder.JSON_V1,
+      timeout: 0,
+      maxPayloadSize: 0,
+      headers: {},
+      agent: new HttpAgent(),
+      log: console
+    };
+    const httpLogger: HttpLogger = new HttpLogger(options);
+
+    expect(httpLogger.logSpan).to.be.a('function');
+  });
+
+  it('should accept Http(s) Agent or function which returns Agent', () => {
+    const agents = [new HttpAgent(), new HttpsAgent(), () => new HttpAgent(), () => new HttpsAgent()]
+
+    agents.forEach(agent => {
+      let options = {
+        endpoint: 'testEndpoint',
+        agent: agent,
+      };
+      let httpLogger: HttpLogger = new HttpLogger(options);
+    })
+  });
+});
