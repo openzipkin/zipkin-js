@@ -24,14 +24,18 @@ describe('HttpLogger', () => {
   });
 
   it('should accept Http(s) Agent or function which returns Agent', () => {
-    const agents = [new HttpAgent(), new HttpsAgent(), () => new HttpAgent(), () => new HttpsAgent()];
+    const agents = [new HttpAgent(), new HttpsAgent(), () => new HttpAgent(), () => new HttpsAgent(),
+      (url: URL) => new HttpAgent(), (url: URL) => new HttpsAgent(), null, undefined];
 
     agents.forEach(agent => {
       const options = {
         endpoint: 'testEndpoint',
         agent
       };
+
       const httpLogger: HttpLogger = new HttpLogger(options);
+
+      expect(httpLogger).to.have.property('agent', agent || null);
     });
   });
 });
