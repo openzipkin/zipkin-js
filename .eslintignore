@@ -4,5 +4,6 @@ lib
 es
 dist
 **/test-types/*.js
+**/tsr-declarations.js
 # this file crashes eslint
 packages/zipkin-instrumentation-request-promise/src/promise.js
