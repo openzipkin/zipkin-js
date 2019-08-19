@@ -13,6 +13,7 @@ class HttpLogger extends EventEmitter {
   constructor({
     endpoint,
     headers = {},
+    agent = null,
     httpInterval = 1000,
     jsonEncoder = JSON_V1,
     timeout = 0,
@@ -23,6 +24,7 @@ class HttpLogger extends EventEmitter {
     super(); // must be before any reference to *this*
     this.log = log;
     this.endpoint = endpoint;
+    this.agent = agent;
     this.maxPayloadSize = maxPayloadSize;
     this.queue = [];
     this.queueBytes = 0;
@@ -88,6 +90,7 @@ class HttpLogger extends EventEmitter {
         body: postBody,
         headers: self.headers,
         timeout: self.timeout,
+        agent: self.agent
       }).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
           const err = 'Unexpected response while sending Zipkin data, status:'
