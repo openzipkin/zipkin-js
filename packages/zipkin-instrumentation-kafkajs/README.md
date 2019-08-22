@@ -20,7 +20,7 @@ retry (perhaps pauses the consumer for a while) when exception is encountered ot
 ### Usage
 
 ```javascript
-const instrumentKafkaJs = require('zipkin-instrument-kafkajs');
+const instrumentKafkaJs = require('zipkin-instrumentation-kafkajs');
 
 const kafka = instrumentKafkaJs(new Kafka({
   clientId: 'my-app',
