@@ -12,7 +12,7 @@ npm install zipkin-instrumentation-axiosjs --save
 
 ## Usage
 
-You need to use `wrapAxios` fucntion to wrap the native `axios` instance, and the `axios` instance's type/functions/attributes are not affected. As a result, you can use `zipkinAxios` the same as `axios`
+You need to use `wrapAxios` function to wrap the native `axios` instance, and the `axios` instance's type/functions/attributes are not affected. As a result, you can use `zipkinAxios` the same as `axios`
 
 For example:
 
