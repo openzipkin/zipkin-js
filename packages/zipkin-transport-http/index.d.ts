@@ -5,9 +5,10 @@ import {URL} from 'url';
 import {JsonEncoder, Logger, model} from 'zipkin';
 
 type Agent = HttpAgent | HttpsAgent;
-type ErrorLogger = {
-  error: Function
-};
+
+interface ErrorLogger {
+  error(...args: any[]): void;
+}
 
 declare class HttpLogger implements Logger {
   /**
