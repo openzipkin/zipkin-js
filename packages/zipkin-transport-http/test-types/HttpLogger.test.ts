@@ -2,6 +2,8 @@ import { expect } from 'chai';
 
 import {Agent as HttpAgent } from 'http';
 import {Agent as HttpsAgent} from 'https';
+import * as noop from 'noop-logger';
+
 import {jsonEncoder} from 'zipkin';
 
 import { HttpLogger } from 'zipkin-transport-http';
@@ -36,6 +38,21 @@ describe('HttpLogger', () => {
       const httpLogger: HttpLogger = new HttpLogger(options);
 
       expect(httpLogger).to.have.property('agent', agent || null);
+    });
+  });
+
+  it('should accept loggers containing error function', () => {
+    const loggers = [console, noop, undefined];
+
+    loggers.forEach(log => {
+      const options = {
+        endpoint: 'testEndpoint',
+        log
+      };
+
+      const httpLogger: HttpLogger = new HttpLogger(options);
+
+      expect(httpLogger).to.have.property('log', log || console);
     });
   });
 });
