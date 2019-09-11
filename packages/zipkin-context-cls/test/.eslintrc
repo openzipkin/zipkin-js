@@ -4,5 +4,6 @@
   },
   "globals": {
     "expect": true
-  }
+  },
+  "parser": "babel-eslint"
 }

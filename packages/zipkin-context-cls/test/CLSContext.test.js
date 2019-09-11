@@ -80,4 +80,24 @@ describe('CLSContext', () => {
       setTimeout(callback, 10);
     });
   });
+  it('should support async-await', async () => {
+    const ctx = new CLSContext();
+
+    async function log() {
+      return ctx.getContext();
+    }
+
+    async function afn() {
+      const cid1 = await log(1);
+      const cid2 = await log(2);
+      return {cid1, cid2};
+    }
+
+    async function newP(id) {
+      const {cid1, cid2} = await ctx.letContext(id, () => afn());
+      expect(cid1).to.not.equal(null);
+      expect(cid2).to.not.equal(null);
+    }
+    await newP(1); // eslint-disable-line
+  });
 });
