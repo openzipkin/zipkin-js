@@ -34,14 +34,11 @@
     "@babel/register": "^7.3.3",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
-
     "express": "^4.17.0",
     "@types/express": "^4.17.0",
-
     "browserify": "^16.2.3",
     "browserslist": "^4.6.3",
     "caniuse-lite": "^1.0.30000978",
-
     "chai": "^3.5.0",
     "co": "^4.6.0",
     "co-mocha": "^1.2.1",
