@@ -90,9 +90,9 @@ after_success:
         git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
         git fetch
         git checkout -qf $TRAVIS_PULL_REQUEST_BRANCH
+        echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
+        ./node_modules/.bin/lerna publish --canary --yes
       fi
-      echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
-      yarn lerna publish prepatch --canary --preid alpha --yes
     fi
 
 notifications:
