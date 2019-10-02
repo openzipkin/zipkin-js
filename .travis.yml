@@ -84,10 +84,16 @@ addons:
       - clang
 
 after_success:
-  - echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
-  - git branch
-  - git checkout -b canary_release
-  - if [[ "${PUBLISH_CANARY}" == "true" ]]; then yarn lerna publish --canary minor --dist-tag canary --no-git-tag-version --yes; fi
+  - |
+    if [[ "${PUBLISH_CANARY}" == "true" ]]; then
+      if [[ ! -z "${TRAVIS_PULL_REQUEST_BRANCH}" ]]; then
+        git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+        git fetch
+        git checkout -qf $TRAVIS_PULL_REQUEST_BRANCH
+      fi
+      echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
+      yarn lerna publish prepatch --canary --preid alpha --yes
+    fi
 
 notifications:
   webhooks:

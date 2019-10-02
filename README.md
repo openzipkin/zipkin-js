@@ -230,7 +230,7 @@ In Chrome, open the url chrome://inspect/#devices and click "Open dedicated DevT
 
 #### Skip the first breakpoint
 
-The first breakpoint is just mocha (the test runner), skip it by clicking the play button:
+The first breakpoint is just `mocha` (the test runner), skip it by clicking the play button:
 
 <img width="664" alt="debugging" src="https://user-images.githubusercontent.com/64215/60378460-693cca00-9a55-11e9-9a6b-584907048ecc.png">
 
