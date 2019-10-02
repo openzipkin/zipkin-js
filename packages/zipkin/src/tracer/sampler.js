@@ -3,7 +3,7 @@ const {Some} = require('../option');
 // If no sample decision is already made (by a debug flag, or
 // the "sampled" property is set), it will use evaluator,
 // which is a function traceId => Boolean, and returns true if
-// the traceId should be sampled (stored in Zipkin).
+// the traceId should be sampled (stored in Zipkin server).
 class Sampler {
   constructor(evaluator) {
     this.evaluator = evaluator;

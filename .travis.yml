@@ -95,6 +95,15 @@ after_success:
       fi
     fi
 
+deploy:
+  - |
+    if [[ "${PUBLISH_CANARY}" == "true" ]]; then
+      if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
+        echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
+        ./node_modules/.bin/lerna publish --canary --yes
+      fi
+    fi
+
 notifications:
   webhooks:
     urls:
