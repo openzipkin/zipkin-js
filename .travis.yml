@@ -84,23 +84,14 @@ addons:
       - clang
 
 after_success:
-  - |
+  - | # we publish a canary relese on a new PR for author to test the changes
     if [[ "${PUBLISH_CANARY}" == "true" ]]; then
       if [[ ! -z "${TRAVIS_PULL_REQUEST_BRANCH}" ]]; then
         git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
         git fetch
         git checkout -qf $TRAVIS_PULL_REQUEST_BRANCH
         echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
-        ./node_modules/.bin/lerna publish --canary --yes
-      fi
-    fi
-
-deploy:
-  - |
-    if [[ "${PUBLISH_CANARY}" == "true" ]]; then
-      if [[ "${TRAVIS_BRANCH}" == "master" ]]; then
-        echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
-        ./node_modules/.bin/lerna publish --canary --yes
+        yarn lerna publish -- --canary --yes
       fi
     fi
 
