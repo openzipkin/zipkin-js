@@ -105,8 +105,8 @@ class BatchRecorder {
 
   _writeSpan(id, span, isNew = false) {
     // TODO(adriancole) refactor so this responsibility isn't in writeSpan
-    if (!isNew && this.partialSpans.get(id) === 'undefined') {
-      // Span not found.  Could have been expired.
+    if (!isNew && this.partialSpans.get(id) === undefined) {
+      // Span not found. Could have been expired.
       return;
     }
 
@@ -128,7 +128,9 @@ class BatchRecorder {
       span = this.partialSpans.get(id);
     } else {
       isNew = true;
-      span = new PartialSpan(id, timestamp + this.timeout);
+      // it can happen that timestamp is 0 hence this span will be always timed out
+      let timeoutTimestamp = (timestamp ? timestamp : now()) + this.timeout
+      span = new PartialSpan(id, timeoutTimestamp);
     }
     updater(span);
     if (span.shouldFlush) {
