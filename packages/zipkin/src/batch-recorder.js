@@ -129,7 +129,7 @@ class BatchRecorder {
     } else {
       isNew = true;
       // it can happen that timestamp is 0 hence this span will be always timed out
-      let timeoutTimestamp = (timestamp ? timestamp : now()) + this.timeout
+      const timeoutTimestamp = (timestamp || now()) + this.timeout;
       span = new PartialSpan(id, timeoutTimestamp);
     }
     updater(span);
