@@ -117,6 +117,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [restify](packages/zipkin-instrumentation-restify) (zipkin-instrumentation-restify)
 - [postgres](packages/zipkin-instrumentation-postgres) (zipkin-instrumentation-postgres)
 - [request](packages/zipkin-instrumentation-request) (zipkin-instrumentation-request)
+- [request-promise](packages/zipkin-instrumentation-request-promise) (zipkin-instrumentation-request-promise)
 - [connect](packages/zipkin-instrumentation-connect) (zipkin-instrumentation-connect)
 - [superagent](packages/zipkin-instrumentation-superagent) (zipkin-instrumentation-superagent)
 - [grpc-client](packages/zipkin-instrumentation-grpc-client) (zipkin-instrumentation-grpc-client)
