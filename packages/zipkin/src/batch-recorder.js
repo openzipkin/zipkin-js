@@ -18,7 +18,7 @@ class PartialSpan {
   /**
    * @constructor
    * @param {TraceId} traceId
-   * @param {timeoutTimestamp} after this moment, data should be forcibly flushed
+   * @param {number} timeoutTimestamp after this moment, data should be forcibly flushed
    */
   constructor(traceId, timeoutTimestamp) {
     this.traceId = traceId;
@@ -31,10 +31,13 @@ class PartialSpan {
   /**
    * Conditionally records the duration of the span, if it has a timestamp.
    *
-   * @param {finishTimestamp} time to calculate the duration from
+   * @param {number} finishTimestamp to calculate the duration from
    */
   setDuration(finishTimestamp) {
-    if (this.shouldFlush) return;
+    if (this.shouldFlush) {
+      return;
+    }
+
     this.shouldFlush = true; // even if we can't derive duration, we should report on finish
 
     const startTimestamp = this.delegate.timestamp;
@@ -70,6 +73,9 @@ class BatchRecorder {
   constructor({logger, timeout = defaultTimeout}) {
     this.logger = logger;
     this.timeout = timeout;
+    /**
+     * @type Map<string, PartialSpan>
+     */
     this.partialSpans = new Map();
     this[defaultTagsSymbol] = {};
 
@@ -105,7 +111,7 @@ class BatchRecorder {
 
   _writeSpan(id, span, isNew = false) {
     // TODO(adriancole) refactor so this responsibility isn't in writeSpan
-    if (!isNew && this.partialSpans.get(id) === undefined) {
+    if (!isNew && typeof (this.partialSpans.get(id)) === 'undefined') {
       // Span not found. Could have been expired.
       return;
     }
@@ -128,9 +134,7 @@ class BatchRecorder {
       span = this.partialSpans.get(id);
     } else {
       isNew = true;
-      // it can happen that timestamp is 0 hence this span will be always timed out
-      const timeoutTimestamp = (timestamp || now()) + this.timeout;
-      span = new PartialSpan(id, timeoutTimestamp);
+      span = new PartialSpan(id, timestamp + this.timeout);
     }
     updater(span);
     if (span.shouldFlush) {
