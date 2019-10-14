@@ -52,12 +52,25 @@ module.exports = function expressMiddleware({tracer, serviceName, port = 0}) {
 
       Object.defineProperty(req, '_trace_id', {configurable: false, get: () => id});
 
-      res.on('finish', () => tracer.letId(id, () => {
-        // if route is terminated on middleware req.route won't be available
-        const route = req.route && req.route.path;
-        tracer.recordRpc(instrumentation.spanNameFromRoute(req.method, route, res.statusCode));
-        instrumentation.recordResponse(id, res.statusCode);
-      }));
+      /**
+       * records response on finish or close (whichever happens first)
+       * @listens close
+       * @listens finish
+       */
+      const onCloseOrFinish = () => {
+        res.removeListener('close', onCloseOrFinish);
+        res.removeListener('finish', onCloseOrFinish);
+
+        tracer.letId(id, () => {
+          // if route is terminated on middleware req.route won't be available
+          const route = req.route && req.route.path;
+          tracer.recordRpc(instrumentation.spanNameFromRoute(req.method, route, res.statusCode));
+          instrumentation.recordResponse(id, res.statusCode);
+        });
+      };
+
+      res.once('close', onCloseOrFinish);
+      res.once('finish', onCloseOrFinish);
 
       next();
     }); // don't leak the trace ID from recordRequest
