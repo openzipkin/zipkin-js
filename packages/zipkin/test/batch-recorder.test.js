@@ -491,7 +491,7 @@ describe('Batch Recorder - integration test', () => {
     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 
-  it('should not log span that is not in the reference', () => {
+  it('should not log span that is not in partial spans list', () => {
     const span = {
       delegate: {
         timestamp: 1,
