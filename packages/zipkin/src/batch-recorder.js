@@ -158,7 +158,7 @@ class BatchRecorder {
   record(rec) {
     const id = rec.traceId;
 
-    this._updateSpanMap(id, rec.timestamp, (span) => {
+    this._updateSpanMap(id, rec.timestamp, (/** @type PartialSpan */ span) => {
       switch (rec.annotation.annotationType) {
         case 'ClientAddr':
           span.delegate.setKind('SERVER');
