@@ -85,6 +85,8 @@ addons:
 
 after_success:
   - | # we publish a canary relese on a new PR for author to test the changes
+    git status
+    echo ${TRAVIS_PULL_REQUEST_BRANCH}
     if [[ "${PUBLISH_CANARY}" == "true" ]]; then
       if [[ ! -z "${TRAVIS_PULL_REQUEST_BRANCH}" ]]; then
         git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
