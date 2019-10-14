@@ -22,6 +22,7 @@
     "lerna-clean": "lerna clean",
     "lerna-build": "lerna run build",
     "lerna-publish": "lerna publish",
+    "lerna-publish-ci": "lerna publish from-git --yes --npm-client yarn --npm-tag beta",
     "postinstall": "yarn lerna-build"
   },
   "author": "OpenZipkin <openzipkin.alt@gmail.com>",

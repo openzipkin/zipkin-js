@@ -79,6 +79,17 @@ addons:
       #- clang-3.7
       - clang
 
+before_deploy:
+  - echo "//registry.npmjs.org/:_authToken=\${NPM_AUTH_TOKEN}" >> $HOME/.npmrc 2> /dev/null
+
+deploy:
+  provider: script
+  script: "yarn run lerna-publish-ci"
+  skip_cleanup: true
+  on:
+    node: "9"
+    tags: false
+
 # === This is setup for automatic deploy to npm when we push tags.
 # === It's commented out because it probably won't work too well with Lerna.
 # (TODO: make a lerna deployer for Travis? https://github.com/travis-ci/dpl)
