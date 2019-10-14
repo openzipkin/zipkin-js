@@ -109,9 +109,9 @@ class BatchRecorder {
     span.delegate.setLocalEndpoint(span.localEndpoint);
   }
 
-  _writeSpan(id, span, isNew = false) {
+  _writeSpan(id, /** @type PartialSpan */ span, isNew = false) {
     // TODO(adriancole) refactor so this responsibility isn't in writeSpan
-    if (!isNew && typeof (this.partialSpans.get(id)) === 'undefined') {
+    if (!isNew && typeof this.partialSpans.get(id) === 'undefined') {
       // Span not found. Could have been expired.
       return;
     }

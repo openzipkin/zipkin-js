@@ -13,6 +13,10 @@ const TraceId = require('../src/tracer/TraceId');
 // This test makes data bugs easier to spot by representing transformations as v2 JSON
 describe('Batch Recorder - integration test', () => {
   let spans;
+
+  /**
+   * @type {BatchRecorder}
+   */
   let recorder;
 
   beforeEach(() => {
@@ -484,6 +488,17 @@ describe('Batch Recorder - integration test', () => {
       annotations: [{timestamp: 3, value: 'finish'}]
     });
 
+    expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
+  });
+
+  it('should not log span that is not in the reference', () => {
+    const span = {
+      delegate: {
+        timestamp: 1,
+        setLocalEndpoint: () => {}
+      }
+    };
+    recorder._writeSpan(rootId, span);
     expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
   });
 });
