@@ -91,7 +91,7 @@ after_success:
         git fetch
         git checkout -qf $TRAVIS_PULL_REQUEST_BRANCH
         echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
-        yarn lerna publish -- --canary --yes
+        yarn lerna publish -- --since master --canary --yes
       fi
     fi
 
