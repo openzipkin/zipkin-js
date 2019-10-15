@@ -89,7 +89,7 @@ deploy:
   script: "yarn lerna-publish-ci"
   skip_cleanup: true
   on:
-    branch: fix_deploy
+    branch: master
     node: "9"
     tags: false
     condition: $TEST_SUITE = "nodejs"
