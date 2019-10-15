@@ -80,12 +80,13 @@ addons:
       - clang
 
 before_deploy:
+  - yarn install
   - git checkout yarn.lock
   - echo "//registry.npmjs.org/:_authToken=\${NPM_AUTH_TOKEN}" >> $HOME/.npmrc 2> /dev/null
 
 deploy:
   provider: script
-  script: "lerna publish prerelease --canary --yes"
+  script: "yarn lerna-publish-ci"
   skip_cleanup: true
   on:
     branch: fix_deploy
