@@ -82,7 +82,7 @@ class HttpLogger extends EventEmitter {
     if (this.maxPayloadSize && this._getPayloadSize(encodedSpan) > this.maxPayloadSize) {
       this.processQueue();
       if (this._getPayloadSize(encodedSpan) > this.maxPayloadSize) {
-        // Payload size is too large even with an empty queue, can only drop
+        // Payload size is too large even with an empty queue, we can only drop
         const err = 'Zipkin span got dropped, reason: payload too large';
         if (this.errorListenerSet) this.emit('error', new Error(err));
         else this.log.error(err);
