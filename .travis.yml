@@ -85,7 +85,7 @@ before_deploy:
 deploy:
   provider: script
   script: "yarn run lerna-publish-ci"
-  skip_cleanup: true
+  skip_cleanup: false
   on:
     node: "9"
     tags: false
