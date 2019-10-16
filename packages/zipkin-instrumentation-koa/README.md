@@ -1,5 +1,7 @@
 # zipkin-instrumentation-koa
 
+![npm](https://img.shields.io/npm/dm/zipkin-instrumentation-koa.svg)
+
 Zipkin middleware for Koa 2.7+ that traces incoming HTTP requests.
 
 ## Installation
