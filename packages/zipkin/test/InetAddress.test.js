@@ -5,6 +5,10 @@ describe('InetAddress', () => {
     InetAddress.getLocalAddress();
   });
 
+  it('should return the same object reference for multiple calls (cached)', () => {
+    expect(InetAddress.getLocalAddress()).to.equal(InetAddress.getLocalAddress());
+  });
+
   it('should convert an IP address to integer representation', () => {
     const addr = new InetAddress('80.91.37.133');
     expect(addr.toInt()).to.equal(1348150661);
