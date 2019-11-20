@@ -338,6 +338,8 @@ declare namespace zipkin {
     logSpan(span: model.Span): void;
   }
 
+  type RequestSampler = (req: Request) => boolean;
+
   namespace Instrumentation {
     class HttpServer {
       constructor(args: {
@@ -345,7 +347,7 @@ declare namespace zipkin {
         port: number,
         serviceName?: string,
         host?: string,
-        serverTags?: {[key: string]: string}
+        requestSampler?: RequestSampler
       });
 
       recordRequest(

@@ -4,6 +4,7 @@ const InetAddress = require('../InetAddress');
 const TraceId = require('../tracer/TraceId');
 const parseRequestUrl = require('../parseUrl');
 const {Some, None} = require('../option');
+const http = require('http')
 
 function stringToBoolean(str) {
   return str === '1' || str === 'true';
@@ -30,12 +31,14 @@ class HttpServerInstrumentation {
     tracer = requiredArg('tracer'),
     serviceName = tracer.localEndpoint.serviceName,
     host,
-    port = requiredArg('port')
+    port = requiredArg('port'),
+    requestSampler
   }) {
     this.tracer = tracer;
     this.serviceName = serviceName;
     this.host = host && new InetAddress(host);
     this.port = port;
+    this.requestSampler = requestSampler;
   }
 
   _createIdFromHeaders(readHeader) {
@@ -61,9 +64,9 @@ class HttpServerInstrumentation {
         ? None : readHeader(Header.Sampled).map(stringToBoolean);
       const flags = readHeader(Header.Flags).flatMap(stringToIntOption).getOrElse(0);
       return new Some(this.tracer.createRootId(sampled, flags === 1));
-    } else {
-      return new Some(this.tracer.createRootId());
     }
+
+    return new Some(this.tracer.createRootId());
   }
 
   spanNameFromRoute(method, route, code) { // eslint-disable-line class-methods-use-this
@@ -76,6 +79,15 @@ class HttpServerInstrumentation {
   recordRequest(method, requestUrl, readHeader) {
     this._createIdFromHeaders(readHeader).ifPresent(id => this.tracer.setId(id));
     const {id} = this.tracer;
+    if (typeof this.requestSampler !== 'undefined') {
+      const req = new http.request(requestUrl, {method});
+      const sampled = this.requestSampler(req)
+      if (typeof sampled === 'boolean') { // we need to make sure sampling is not
+                                          // overriden by a non boolean
+        id._sampled = new Some(sampled);
+      }
+    }
+
     const {path} = parseRequestUrl(requestUrl);
 
     this.tracer.recordServiceName(this.serviceName);

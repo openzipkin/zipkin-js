@@ -109,7 +109,7 @@ class Tracer {
       sampled: parentId.sampled,
     });
     if (childId.sampled.present === false) {
-      childId._sampled = this.sampler.shouldSample(childId);
+      childId.shouldSample(this.sampler.shouldSample(childId));
     }
     return childId;
   }

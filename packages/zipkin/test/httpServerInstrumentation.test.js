@@ -6,6 +6,7 @@ const {JSON_V2} = require('../src/jsonEncoder');
 const {Some, None} = require('../src/option');
 const Tracer = require('../src/tracer');
 const {expectSpan} = require('../../../test/testFixture');
+const {Sampler, alwaysSample} = require('../src/tracer/sampler');
 
 describe('Http Server Instrumentation', () => {
   const serviceName = 'weather-api';
@@ -202,6 +203,17 @@ describe('Http Server Instrumentation', () => {
         expect(spans).to.be.empty; // eslint-disable-line no-unused-expressions
       }
     });
+  });
+
+  it('should override sampling decision by requestSampler', () => {
+    const path = '/weather/wuhan';
+    const requestSampler = (request) => false // eslint-disable-line no-unused-vars
+    instrumentation = new HttpServer({
+      tracer, host: '1.1.1.1', port: 80, requestSampler
+    });
+    const id = instrumentation.recordRequest('GET', `${baseURL}${path}`, () => None);
+    instrumentation.recordResponse(id, 200);
+    expect(id.sampled.value).to.equal(false);
   });
 
   it('should allow the host to be overridden', () => { // NOTE: this is actually IP as encoded
