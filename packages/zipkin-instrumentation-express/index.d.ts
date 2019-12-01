@@ -11,6 +11,10 @@ import {Tracer} from 'zipkin';
  * Note that if the next middleware makes async calls, it should either
  * store the span id manually or use a CLSContext so that the annotations
  * go to the correct spans
+ *
+ * @param {Object} options
+ * @property {Tracer} options.tracer
+ * @property {number} options.port
  */
 export declare function expressMiddleware(
   options: {tracer: Tracer, port?: number}

@@ -19,7 +19,7 @@ function formatRequestUrl(req) {
 /**
  * @typedef {Object} MiddlewareOptions
  * @property {Object} tracer
- * @property {string} serviceName
+ * @property {string} serviceName @deprecated use the localEndpoint in Tracer instead
  * @property {number} port
  */
 
