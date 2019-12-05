@@ -18,7 +18,8 @@ class PartialSpan {
   /**
    * @constructor
    * @param {TraceId} traceId
-   * @param {number} timeoutTimestamp after this moment, data should be forcibly flushed
+   * @param {number} timeoutTimestamp (epoch in microseconds) after this moment, data 
+   * should be forcibly flushed
    */
   constructor(traceId, timeoutTimestamp) {
     this.traceId = traceId;
@@ -31,7 +32,7 @@ class PartialSpan {
   /**
    * Conditionally records the duration of the span, if it has a timestamp.
    *
-   * @param {number} finishTimestamp to calculate the duration from
+   * @param {number} finishTimestamp (epoch in microseconds) to calculate the duration from
    */
   setDuration(finishTimestamp) {
     if (this.shouldFlush) {
@@ -64,8 +65,8 @@ class BatchRecorder {
   /**
    * @constructor
    * @param {Object} options
-   * @property {Logger} logger logs the data to zipkin server
-   * @property {number} timeout timeout after which an unfinished span is
+   * @param {Logger} options.logger logs the data to zipkin server
+   * @param {number} options.timeout timeout after which an unfinished span is
    * flushed to zipkin in **microseconds**. Passing this value has
    * implications in the reported data of the span so we discourage users
    * to pass a value for it unless there is a good reason for.
