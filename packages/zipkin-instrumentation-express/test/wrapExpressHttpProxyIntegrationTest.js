@@ -31,13 +31,13 @@ describe('express proxy instrumentation - integration test', () => {
       const zipkinProxy = wrapProxy(proxy, {tracer: tracer.tracer(), remoteServiceName});
       frontendApp.use(middleware({tracer: tracer.tracer()}));
       frontendApp.use(zipkinProxy(`127.0.0.1:${backend.address().port}`, {
-        decorateRequest: (proxyReq) => {
-          tracer.tracer().recordBinary('decorateRequest', '');
+        proxyReqOptDecorator: (proxyReq) => {
+          tracer.tracer().recordBinary('proxyReqOptDecorator', '');
           return proxyReq;
         },
-        intercept: (rsp, data, serverReq, res, callback) => {
-          tracer.tracer().recordBinary('intercept', '');
-          callback(null, data);
+        userResDecorator: (rsp, data, serverReq, res) => {
+          tracer.tracer().recordBinary('userResDecorator', '');
+          return data;
         }
       }));
 
@@ -61,8 +61,8 @@ describe('express proxy instrumentation - integration test', () => {
       tags: {
         'http.path': path,
         'http.status_code': '200',
-        intercept: '',
-        decorateRequest: ''
+        userResDecorator: '',
+        proxyReqOptDecorator: ''
       }
     });
   }
@@ -154,7 +154,7 @@ describe('express proxy instrumentation - integration test', () => {
         'http.path': path,
         'http.status_code': '500',
         error: '500', // TODO: better error message
-        decorateRequest: ''
+        proxyReqOptDecorator: ''
       }
     }));
   });
