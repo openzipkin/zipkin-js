@@ -4,6 +4,21 @@ sudo: required
 
 matrix:
   include:
+    - node_js: 8
+      env:
+        - CXX=clang-3.6
+        - KAFKA_PLEASE_LOG=verbose
+        - TEST_SUITE=nodejs
+
+    - name: 'browser'
+      node_js: 8
+      env:
+        - CXX=clang-3.6
+        - TEST_SUITE=browser
+      addons:
+        chrome: stable
+
+
     - node_js: 10
       env:
         - CXX=clang-3.6
@@ -57,7 +72,7 @@ before_install:
   - export PATH="$HOME/.yarn/bin:$PATH"
 
 install:
-  - yarn install
+  - yarn install --ignore-engines
 
 script:
   - yarn lint
