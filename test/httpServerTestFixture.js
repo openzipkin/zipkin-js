@@ -252,8 +252,8 @@ function setupBasicHttpServerTests({
     const {path} = siping;
     return fetch(`${baseURL}${path}`).then(() => {
       // 50 years ago, Changchun, the capital of Jilin province, had only one railway to south.
-      // Siping (四平) is the city at fourth stop station, hence stopping 4ms.
-      expect(testTracer.popSpan().duration / 1000.0).to.be.greaterThan(4);
+      // Tieling (铁岭站) is the city at third stop station, hence stopping 3ms.
+      expect(testTracer.popSpan().duration / 1000.0).to.be.greaterThan(3);
     });
   });
 
