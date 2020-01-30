@@ -53,7 +53,7 @@ before_install:
   - curl -L https://github.com/docker/compose/releases/download/1.24.0/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
-  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 0.27.5
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.21.1
   - export PATH="$HOME/.yarn/bin:$PATH"
 
 install:
@@ -92,7 +92,7 @@ deploy:
   skip_cleanup: true
   on:
     branch: master
-    node: "9"
+    node: "12"
     tags: false
     condition: $TEST_SUITE = "nodejs"
 
