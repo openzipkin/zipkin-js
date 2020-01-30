@@ -4,34 +4,6 @@ sudo: required
 
 matrix:
   include:
-    - node_js: 8
-      env:
-        - CXX=clang-3.6
-        - KAFKA_PLEASE_LOG=verbose
-        - TEST_SUITE=nodejs
-
-    - name: 'browser'
-      node_js: 8
-      env:
-        - CXX=clang-3.6
-        - TEST_SUITE=browser
-      addons:
-        chrome: stable
-        
-    - node_js: 9
-      env:
-        - CXX=clang-3.6
-        - KAFKA_PLEASE_LOG=verbose
-        - TEST_SUITE=nodejs
-
-    - name: 'browser'
-      node_js: 9
-      env:
-        - CXX=clang-3.6
-        - TEST_SUITE=browser
-      addons:
-        chrome: stable
-        
     - node_js: 10
       env:
         - CXX=clang-3.6
@@ -45,6 +17,36 @@ matrix:
         - TEST_SUITE=browser
       addons:
         chrome: stable
+
+    - node_js: 12
+      env:
+        - CXX=clang-3.6
+        - KAFKA_PLEASE_LOG=verbose
+        - TEST_SUITE=nodejs
+
+    - name: 'browser'
+      node_js: 12
+      env:
+        - CXX=clang-3.6
+        - TEST_SUITE=browser
+      addons:
+        chrome: stable
+
+    - node_js: 13
+      env:
+        - CXX=clang-3.6
+        - KAFKA_PLEASE_LOG=verbose
+        - TEST_SUITE=nodejs
+
+    - name: 'browser'
+      node_js: 13
+      env:
+        - CXX=clang-3.6
+        - TEST_SUITE=browser
+      addons:
+        chrome: stable
+
+
 
 before_install:
   - sudo rm /usr/local/bin/docker-compose
