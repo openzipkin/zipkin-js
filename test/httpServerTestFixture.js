@@ -190,14 +190,14 @@ function setupBasicHttpServerTests({
   };
   routes.push(shenzhen);
 
-  const siping = {
-    city: 'siping',
-    path: '/weather/siping',
+  const tieling = {
+    city: 'tieling',
+    path: '/weather/tieling',
     handle: (request, responseCallback) => new Promise(done => setTimeout(() => {
       responseCallback({body: done()});
     }, 4))
   };
-  routes.push(siping);
+  routes.push(tieling);
 
   const securedTown = {
     city: 'securedTown',
@@ -249,7 +249,7 @@ function setupBasicHttpServerTests({
   });
 
   it('should record a reasonably accurate span duration', () => {
-    const {path} = siping;
+    const {path} = tieling;
     return fetch(`${baseURL}${path}`).then(() => {
       // 50 years ago, Changchun, the capital of Jilin province, had only one railway to south.
       // Tieling (铁岭站) is the city at third stop station, hence stopping 3ms.
