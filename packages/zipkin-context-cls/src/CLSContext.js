@@ -1,8 +1,13 @@
-const {createNamespace, getNamespace} = require('continuation-local-storage');
+const cls = require('continuation-local-storage');
+const clsHooked = require('cls-hooked');
 
 module.exports = class CLSContext {
-  constructor(namespace = 'zipkin') {
-    this._session = getNamespace(namespace) || createNamespace(namespace);
+  constructor(namespace = 'zipkin', supportAsync = false) {
+    if (supportAsync) {
+      this._session = cls.getNamespace(namespace) || cls.createNamespace(namespace);
+    } else {
+      this._session = clsHooked.getNamespace(namespace) || clsHooked.createNamespace(namespace);
+    }
     const defaultContext = this._session.createContext();
     this._session.enter(defaultContext);
   }

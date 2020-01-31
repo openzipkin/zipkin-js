@@ -13,6 +13,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "continuation-local-storage": "^3.1.7"
+    "continuation-local-storage": "^3.1.7",
+    "cls-hooked": "^4.2.2"
   }
 }
