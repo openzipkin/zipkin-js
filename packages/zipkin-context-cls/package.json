@@ -16,7 +16,7 @@
     "cls-hooked": "^4.2.2"
   },
   "devDependencies": {
-    "babel-cli": "^6.23.0",
+    "babel-cli": "^7.0.0",
     "babel-eslint": "^8.2.2",
     "mocha": "^3.2.0"
   }
