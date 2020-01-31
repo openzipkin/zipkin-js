@@ -15,5 +15,8 @@
   "dependencies": {
     "continuation-local-storage": "^3.1.7",
     "cls-hooked": "^4.2.2"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.3.3"
   }
 }
