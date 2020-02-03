@@ -12,7 +12,7 @@ variable everywhere in your application code.
 const CLSContext = require('zipkin-context-cls');
 const tracer = new Tracer({
   ctxImpl: new CLSContext('zipkin'),
-  recorder, // typically Kafka or Scribe
+  recorder, // typically HTTP or Kafka
   localServiceName: 'service-a' // name of this application
 });
 ```
@@ -24,7 +24,20 @@ the drawback then is that you have to pass around a context object manually.
 
 ## A note on CLS context and Promises
 
-This package is not suitable if your code inside the context uses promises. The context is then not properly propagated. There is work underway called [async_hooks](https://nodejs.org/api/async_hooks.html), but is at the time of this writing (node v10) in Experimental state.
+By default, this package is not suitable if your code inside the context uses promises, however you can enable an experimental feature for async/await support by using [cls_hooked](https://github.com/jeff-lewis/cls-hooked) library which underneath uses [async_hooks](https://nodejs.org/api/async_hooks.html).
+
+```javascript
+const CLSContext = require('zipkin-context-cls');
+const tracer = new Tracer({
+  ctxImpl: new CLSContext('zipkin', true),
+  recorder,
+  localServiceName: 'service-a'
+});
+```
+
+At the time of this writing, `async_hooks` [have some performance implications](https://github.com/DataDog/dd-trace-js/issues/695) whose effect may vary depending on the node version.
+
+The underneath implementation for async_hooks may change, that is why we hide that with the opt-in parameter.
 
 ## A note on the workings of CLS context
 
