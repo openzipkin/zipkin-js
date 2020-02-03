@@ -1,6 +1,6 @@
 const CLSContext = require('../');
 
-const namespace = 'mynamespace'
+const namespace = 'mynamespace';
 
 function CLSContextPerAsync(supportAsync) {
   it('should start with context null', () => {
@@ -13,7 +13,7 @@ function CLSContextPerAsync(supportAsync) {
     ctx.letContext('tres-leches', () => {
       expect(ctx.getContext()).to.equal('tres-leches');
     });
-    ctx.setContext(null)
+    ctx.setContext(null);
   });
 
   it('should set an inner context with setContext', () => {
@@ -58,7 +58,7 @@ function CLSContextPerAsync(supportAsync) {
     expect(ctx.getContext()).to.equal(null);
   });
 
-  it('support nested contexts', () => {
+  it('supports nested contexts', () => {
     const ctx = new CLSContext(namespace, supportAsync);
     const finalReturnValue = ctx.letContext('lemon-pie', () => {
       expect(ctx.getContext()).to.equal('lemon-pie');
@@ -77,7 +77,7 @@ function CLSContextPerAsync(supportAsync) {
     const ctx = new CLSContext(namespace, supportAsync);
     function callback() {
       expect(ctx.getContext()).to.equal('brownie');
-      ctx.setContext(null)
+      ctx.setContext(null);
       done();
     }
     ctx.letContext('brownie', () => {
@@ -87,33 +87,40 @@ function CLSContextPerAsync(supportAsync) {
 }
 
 describe('CLSContext', () => {
-  
-  describe('without async support', function() {
+  describe('without async-await support', () => {
     CLSContextPerAsync(false);
-  })
+  });
 
-  describe('with async support', function() {
+  describe('with async-await support', () => {
     CLSContextPerAsync(true);
 
-    it('support async-await contexts', async () => {
+    it('supports async-await contexts', async() => {
       const ctx = new CLSContext(namespace, true);
-  
+      ctx.setContext('arroz-con-leche');
+
+      async function stall(stallTime) {
+        await new Promise(resolve => setTimeout(resolve, stallTime));
+      }
+
       async function getCtx() {
+        const durationInMs = Math.random() + 0.1;
+        await stall(durationInMs * 500);
         return ctx.getContext();
       }
-  
+
       async function callback() {
-        const ctx = await getCtx();
-        return ctx;
+        const obtainedContext = await getCtx();
+        return obtainedContext;
       }
-  
+
       async function fn() {
-        const ctx1 = await ctx.letContext("budin", () => callback());
-        const ctx2 = await ctx.letContext("torta-helada", () => callback());
-        expect(ctx1).to.equal("budin");
-        expect(ctx2).to.equal("torta-helada");
+        const ctx1 = await ctx.letContext('budin', () => callback());
+        const ctx2 = await ctx.letContext('torta-helada', () => callback());
+        expect(ctx1).to.equal('budin');
+        expect(ctx2).to.equal('torta-helada');
       }
+
       await fn(); // eslint-disable-line
     });
-  })
+  });
 });
