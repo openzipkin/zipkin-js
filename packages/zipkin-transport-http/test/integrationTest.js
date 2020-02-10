@@ -6,12 +6,17 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const HttpLogger = require('../src/HttpLogger');
 
-const mockPublisher = (serverExpectations) => {
+const mockPublisher = (serverExpectations, failFirstRequest = false) => {
   const app = express();
   app.use(bodyParser.json());
   app.post('/api/v1/spans', (req, res) => {
-    res.status(202).json({});
-    serverExpectations(req, res);
+    if (failFirstRequest && !app.firstRequestFailed) {
+      app.firstRequestFailed = true;
+      res.connection.end();
+    } else {
+      res.status(202).json({});
+      serverExpectations(req, res);
+    }
   });
   return app;
 };
@@ -189,7 +194,7 @@ describe('HTTP transport - integration test', () => {
       const httpLogger = new HttpLogger({
         endpoint: `http://localhost:${self.port}/api/v1/spans/causeerror`,
         jsonEncoder: JSON_V2,
-        httpInterval: 1
+        httpInterval: 1,
       });
 
       // if an error was emitted then this works
@@ -228,6 +233,24 @@ describe('HTTP transport - integration test', () => {
         endpoint: `http://localhost:${this.port}/api/v1/spans`,
         jsonEncoder: JSON_V2,
         httpInterval: 1
+      });
+
+      httpLogger.on('success', () => { self.server.close(done); });
+      triggerPublish(httpLogger);
+    });
+  });
+
+  it('should retry if request failed', function(done) {
+    const self = this;
+    const app = mockPublisher(() => {}, true);
+
+    this.server = app.listen(0, () => {
+      this.port = this.server.address().port;
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:${this.port}/api/v1/spans`,
+        jsonEncoder: JSON_V2,
+        httpInterval: 1,
+        tryOptions: {retryDelay: () => 1} // retry immediately because we are in a test
       });
 
       httpLogger.on('success', () => { self.server.close(done); });

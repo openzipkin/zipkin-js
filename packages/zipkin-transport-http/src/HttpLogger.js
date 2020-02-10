@@ -4,10 +4,18 @@ const globalFetch = (typeof window !== 'undefined' && window.fetch)
 
 // eslint-disable-next-line global-require
 const fetch = globalFetch || require('node-fetch');
-
+const fetchRetry = require('fetch-retry')(fetch);
 const {jsonEncoder: {JSON_V1}} = require('zipkin');
 
 const {EventEmitter} = require('events');
+
+const DEFAULT_TRY_OPTIONS = Object.freeze({
+  // retry on any network error, or > 408 or 5xx status codes
+  retryOn: (attempt, error, response) => error !== null
+    || response == null
+    || response.status >= 408,
+  retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
+});
 
 class HttpLogger extends EventEmitter {
   /**
@@ -31,7 +39,8 @@ class HttpLogger extends EventEmitter {
     timeout = 0,
     maxPayloadSize = 0,
     /* eslint-disable no-console */
-    log = console
+    log = console,
+    tryOptions = {},
   }) {
     super(); // must be before any reference to *this*
     this.log = log;
@@ -41,6 +50,7 @@ class HttpLogger extends EventEmitter {
     this.queue = [];
     this.queueBytes = 0;
     this.jsonEncoder = jsonEncoder;
+    this.tryOptions = {...DEFAULT_TRY_OPTIONS, ...tryOptions};
 
     this.errorListenerSet = false;
 
@@ -97,13 +107,16 @@ class HttpLogger extends EventEmitter {
     const self = this;
     if (self.queue.length > 0) {
       const postBody = `[${self.queue.join(',')}]`;
-      fetch(self.endpoint, {
+      const fetchOptions = {
         method: 'POST',
         body: postBody,
         headers: self.headers,
         timeout: self.timeout,
-        agent: self.agent
-      }).then((response) => {
+        agent: self.agent,
+        ...this.tryOptions,
+      };
+
+      fetchRetry(self.endpoint, fetchOptions).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
           const err = 'Unexpected response while sending Zipkin data, status:'
             + `${response.status}, body: ${postBody}`;
