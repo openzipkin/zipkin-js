@@ -29,6 +29,10 @@ class HttpLogger extends EventEmitter {
    * @param {Object<string, string>} options.headers Additional HTTP headers to be sent with span.
    * @param {Agent|Function} options.agent HTTP(S) agent to use for any networking related options.
    * @param {ErrorLogger} options.log Internal error logger used within the transport.
+   * @param {Object<string, any>} options.tryOptions
+   * @param {(attempt: number, error, response) => boolean} options.tryOptions.retryOn Decide retry
+   * @param {(attempt: number, error, response) => number} options.tryOptions.retryDelay Get delay
+   * @param {(url: string, options: object) => Promise<Response>} options.fetchImplementation
    */
   constructor({
     endpoint,
@@ -41,6 +45,7 @@ class HttpLogger extends EventEmitter {
     /* eslint-disable no-console */
     log = console,
     tryOptions = {},
+    fetchImplementation = fetchRetry,
   }) {
     super(); // must be before any reference to *this*
     this.log = log;
@@ -51,6 +56,7 @@ class HttpLogger extends EventEmitter {
     this.queueBytes = 0;
     this.jsonEncoder = jsonEncoder;
     this.tryOptions = {...DEFAULT_TRY_OPTIONS, ...tryOptions};
+    this.fetchImplementation = fetchImplementation;
 
     this.errorListenerSet = false;
 
@@ -116,7 +122,7 @@ class HttpLogger extends EventEmitter {
         ...this.tryOptions,
       };
 
-      fetchRetry(self.endpoint, fetchOptions).then((response) => {
+      this.fetchImplementation(self.endpoint, fetchOptions).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
           const err = 'Unexpected response while sending Zipkin data, status:'
             + `${response.status}, body: ${postBody}`;
