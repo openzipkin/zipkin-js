@@ -29,9 +29,6 @@ exports.register = (server, {tracer, serviceName, port = 0}) => {
     return h.continue;
   });
 
-  // server.decorate seems a better choice for scoping the handler with the current trace ID
-  // However, it seems only one decorator is permitted, and we don't want to break if the user
-  // supplied one. Hence, we use handlers instead.
   server.ext('onPreHandler', (request, h) => {
     const traceId = request._trace_id;
     if (traceId) tracer.setId(traceId); // manually start scope
