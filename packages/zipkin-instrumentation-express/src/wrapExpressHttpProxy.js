@@ -50,13 +50,13 @@ class ExpressHttpProxyInstrumentation {
 
 function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
   return function zipkinProxy(host, options = {}) {
-    function wrapDecorateRequest(instrumentation, decorateRequest) {
+    function wrapProxyReqOptDecorator(instrumentation, proxyReqOptDecorator) {
       return (proxyReq, serverReq) => {
         const serverTraceId = serverReq._trace_id;
         let wrappedProxyReq = proxyReq;
-        if (typeof decorateRequest === 'function') {
+        if (typeof proxyReqOptDecorator === 'function') {
           tracer.letId(serverTraceId, () => {
-            wrappedProxyReq = decorateRequest(proxyReq, serverReq);
+            wrappedProxyReq = proxyReqOptDecorator(proxyReq, serverReq);
           });
         }
 
@@ -64,19 +64,19 @@ function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
       };
     }
 
-    function wrapIntercept(instrumentation, intercept) {
-      return (rsp, data, serverReq, res, callback) => {
-        const instrumentedCallback = (err, rspd, sent) => {
-          instrumentation.recordResponse(rsp, serverReq._trace_id_proxy);
-          return callback(err, rspd, sent);
-        };
-
+    function wrapUserResDecorator(instrumentation, userResDecorator) {
+      return (rsp, data, serverReq, res) => {
         const serverTraceId = serverReq._trace_id;
-        if (typeof intercept === 'function') {
-          tracer.letId(serverTraceId,
-            () => intercept(rsp, data, serverReq, res, instrumentedCallback));
+        if (typeof userResDecorator === 'function') {
+          let decoratedResponse;
+          tracer.letId(serverTraceId, () => {
+            decoratedResponse = userResDecorator(rsp, data, serverReq, res);
+            instrumentation.recordResponse(rsp, serverReq._trace_id_proxy);
+          });
+          return decoratedResponse;
         } else {
-          instrumentedCallback(null, data);
+          instrumentation.recordResponse(rsp, serverReq._trace_id_proxy);
+          return data;
         }
       };
     }
@@ -87,11 +87,13 @@ function wrapProxy(proxy, {tracer, serviceName, remoteServiceName}) {
 
     const wrappedOptions = options;
 
-    const {decorateRequest} = wrappedOptions;
-    wrappedOptions.decorateRequest = wrapDecorateRequest(instrumentation, decorateRequest);
+    const {proxyReqOptDecorator} = wrappedOptions;
+    wrappedOptions.proxyReqOptDecorator = wrapProxyReqOptDecorator(
+      instrumentation, proxyReqOptDecorator
+    );
 
-    const {intercept} = wrappedOptions;
-    wrappedOptions.intercept = wrapIntercept(instrumentation, intercept);
+    const {userResDecorator} = wrappedOptions;
+    wrappedOptions.userResDecorator = wrapUserResDecorator(instrumentation, userResDecorator);
 
     return proxy(host, wrappedOptions);
   };
