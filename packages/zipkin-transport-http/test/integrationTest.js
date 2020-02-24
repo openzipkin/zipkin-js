@@ -4,14 +4,21 @@ const {
 } = require('zipkin');
 const express = require('express');
 const bodyParser = require('body-parser');
+const fetch = require('node-fetch');
+const fetchRetryBuilder = require('fetch-retry');
 const HttpLogger = require('../src/HttpLogger');
 
-const mockPublisher = (serverExpectations) => {
+const mockPublisher = (serverExpectations, failFirstRequest = false) => {
   const app = express();
   app.use(bodyParser.json());
   app.post('/api/v1/spans', (req, res) => {
-    res.status(202).json({});
-    serverExpectations(req, res);
+    if (failFirstRequest && !app.firstRequestFailed) {
+      app.firstRequestFailed = true;
+      res.connection.end();
+    } else {
+      res.status(202).json({});
+      serverExpectations(req, res);
+    }
   });
   return app;
 };
@@ -189,7 +196,7 @@ describe('HTTP transport - integration test', () => {
       const httpLogger = new HttpLogger({
         endpoint: `http://localhost:${self.port}/api/v1/spans/causeerror`,
         jsonEncoder: JSON_V2,
-        httpInterval: 1
+        httpInterval: 1,
       });
 
       // if an error was emitted then this works
@@ -228,6 +235,34 @@ describe('HTTP transport - integration test', () => {
         endpoint: `http://localhost:${this.port}/api/v1/spans`,
         jsonEncoder: JSON_V2,
         httpInterval: 1
+      });
+
+      httpLogger.on('success', () => { self.server.close(done); });
+      triggerPublish(httpLogger);
+    });
+  });
+
+  it('should retry with retryable fetch implementation', function(done) {
+    const self = this;
+
+    const fetchRetryOptions = Object.freeze({
+      // retry on any network error, or > 408 or 5xx status codes
+      retryOn: (attempt, error, response) => error !== null
+        || response == null
+        || response.status >= 408,
+      retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
+    });
+
+    const fetchImplementation = fetchRetryBuilder(fetch, fetchRetryOptions);
+    const app = mockPublisher(() => {}, true);
+
+    this.server = app.listen(0, () => {
+      this.port = this.server.address().port;
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:${this.port}/api/v1/spans`,
+        jsonEncoder: JSON_V2,
+        httpInterval: 1,
+        fetchImplementation
       });
 
       httpLogger.on('success', () => { self.server.close(done); });

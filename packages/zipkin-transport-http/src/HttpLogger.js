@@ -4,10 +4,11 @@ const globalFetch = (typeof window !== 'undefined' && window.fetch)
 
 // eslint-disable-next-line global-require
 const fetch = globalFetch || require('node-fetch');
-
 const {jsonEncoder: {JSON_V1}} = require('zipkin');
 
 const {EventEmitter} = require('events');
+
+const defaultFetchImpl = fetch;
 
 class HttpLogger extends EventEmitter {
   /**
@@ -21,6 +22,7 @@ class HttpLogger extends EventEmitter {
    * @param {Object<string, string>} options.headers Additional HTTP headers to be sent with span.
    * @param {Agent|Function} options.agent HTTP(S) agent to use for any networking related options.
    * @param {ErrorLogger} options.log Internal error logger used within the transport.
+   * @param {(url: string, options: object) => Promise<Response>} options.fetchImplementation
    */
   constructor({
     endpoint,
@@ -31,7 +33,8 @@ class HttpLogger extends EventEmitter {
     timeout = 0,
     maxPayloadSize = 0,
     /* eslint-disable no-console */
-    log = console
+    log = console,
+    fetchImplementation = defaultFetchImpl,
   }) {
     super(); // must be before any reference to *this*
     this.log = log;
@@ -41,6 +44,7 @@ class HttpLogger extends EventEmitter {
     this.queue = [];
     this.queueBytes = 0;
     this.jsonEncoder = jsonEncoder;
+    this.fetchImplementation = fetchImplementation;
 
     this.errorListenerSet = false;
 
@@ -97,13 +101,15 @@ class HttpLogger extends EventEmitter {
     const self = this;
     if (self.queue.length > 0) {
       const postBody = `[${self.queue.join(',')}]`;
-      fetch(self.endpoint, {
+      const fetchOptions = {
         method: 'POST',
         body: postBody,
         headers: self.headers,
         timeout: self.timeout,
-        agent: self.agent
-      }).then((response) => {
+        agent: self.agent,
+      };
+
+      this.fetchImplementation(self.endpoint, fetchOptions).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
           const err = 'Unexpected response while sending Zipkin data, status:'
             + `${response.status}, body: ${postBody}`;
