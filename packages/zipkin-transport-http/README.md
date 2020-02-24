@@ -1,5 +1,5 @@
 
-# Zipkin-transport-http
+# zipkin-transport-http
 
 ![npm](https://img.shields.io/npm/dm/zipkin-transport-http.svg)
 
@@ -28,6 +28,7 @@ const recorder = new BatchRecorder({
     maxPayloadSize: 0 // Max payload size for zipkin span. Optional (defaults to 0)
     agent: new http.Agent({keepAlive: true}), // Agent used for network related options. Optional (defaults to null)
     log: noop // Logger to use. Optional (defaults to console)
+    fetchImplementation: require('node-fetch') // Pluggable fetch implementation (defaults to global fetch or fallsback to node fetch)
   })
 });
 
@@ -37,13 +38,19 @@ const tracer = new Tracer({
   localServiceName: 'service-a' // name of this application
 });
 ```
+
 ## Options
+
 ### Required
+
 - **endpoint** - HTTP endpoint which spans will be sent.
+
 ### Optional
+
 - **agent** - HTTP(S) agent to use for any networking related options.
   - Takes an [http](https://nodejs.org/api/http.html#http_class_http_agent)/[https](https://nodejs.org/api/https.html) NodeJS Agent.
   - Defaults to null
+
 ```javascript
 // Example using a self-signed CA, along with cert/key for mTLS.
 new HttpLogger({
@@ -55,6 +62,7 @@ new HttpLogger({
   })
 })
 ```
+
 - **headers** - Any additional HTTP headers to be sent with span.
   - Will set `'Content-Type':  'application/json'` at a minimum
 - **httpInterval** - How often to sync spans.
@@ -69,27 +77,27 @@ new HttpLogger({
 - **timeout** - Timeout for HTTP Post when sending spans.
   - Defaults to 0 (Disabled)
 - **fetchImplementation** - The fetch API to be used for sending spans.
-  - Defaults to a pre-configured instance of `fetch-retry` package which retries failed requests "forever", with an exponential backoff.
-  - Example usage:
-      ```javascript
-      const {HttpLogger} = require('zipkin-transport-http');
-      const fetch = require('node-fetch');
-      const fetchRetryBuilder = require('fetch-retry');
+  - Defaults to default global fetch or fallsback to `node-fetch`.
+  - A different fetch implementation can be plugged to fulfill different requirements, for example one can use [fetch-retry](https://github.com/jonbern/fetch-retry) to allow retries and exponential back-off:
 
-      // this also shows the defaults that zipkin-transport-http will use internally when `fetchImplementation` is omitted.
-      const fetchRetryOptions = {
-        // retry on any network error, or > 408 or 5xx status codes
-        retryOn: (attempt, error, response) => error !== null
-          || response == null
-          || response.status >= 408,
-        retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
-      };
+    ```javascript
+    const {HttpLogger} = require('zipkin-transport-http');
+    const fetch = require('node-fetch');
+    const fetchRetryBuilder = require('fetch-retry');
 
-      const fetchImplementation = fetchRetryBuilder(fetch, fetchRetryOptions);
+    const fetchRetryOptions = {
+      // retry on any network error, or > 408 or 5xx status codes
+      retryOn: (attempt, error, response) => error !== null
+        || response == null
+        || response.status >= 408,
+      retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
+    };
 
-      const httpLogger = new HttpLogger({
-        endpoint: `http://localhost:9411/api/v1/spans`,
-        httpInterval: 1,
-        fetchImplementation
-      });
-      ```
+    const fetchImplementation = fetchRetryBuilder(fetch, fetchRetryOptions);
+
+    const httpLogger = new HttpLogger({
+      endpoint: `http://localhost:9411/api/v1/spans`,
+      httpInterval: 1,
+      fetchImplementation
+    });
+    ```

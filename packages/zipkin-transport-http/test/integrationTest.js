@@ -242,24 +242,7 @@ describe('HTTP transport - integration test', () => {
     });
   });
 
-  it('should retry if request failed', function(done) {
-    const self = this;
-    const app = mockPublisher(() => {}, true);
-
-    this.server = app.listen(0, () => {
-      this.port = this.server.address().port;
-      const httpLogger = new HttpLogger({
-        endpoint: `http://localhost:${this.port}/api/v1/spans`,
-        jsonEncoder: JSON_V2,
-        httpInterval: 1,
-      });
-
-      httpLogger.on('success', () => { self.server.close(done); });
-      triggerPublish(httpLogger);
-    });
-  });
-
-  it('should retry with custom fetch-retry as well', function(done) {
+  it('should retry with retryable fetch implementation', function(done) {
     const self = this;
 
     const fetchRetryOptions = Object.freeze({

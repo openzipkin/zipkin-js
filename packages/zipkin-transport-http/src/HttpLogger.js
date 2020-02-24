@@ -4,20 +4,11 @@ const globalFetch = (typeof window !== 'undefined' && window.fetch)
 
 // eslint-disable-next-line global-require
 const fetch = globalFetch || require('node-fetch');
-const fetchRetryBuilder = require('fetch-retry');
 const {jsonEncoder: {JSON_V1}} = require('zipkin');
 
 const {EventEmitter} = require('events');
 
-const DEFAULT_TRY_OPTIONS = Object.freeze({
-  // retry on any network error, or > 408 or 5xx status codes
-  retryOn: (attempt, error, response) => error !== null
-    || response == null
-    || response.status >= 408,
-  retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
-});
-
-const DEFAULT_FETCH_IMPLEMENTATION = fetchRetryBuilder(fetch, DEFAULT_TRY_OPTIONS);
+const defaultFetchImpl = fetch;
 
 class HttpLogger extends EventEmitter {
   /**
@@ -43,7 +34,7 @@ class HttpLogger extends EventEmitter {
     maxPayloadSize = 0,
     /* eslint-disable no-console */
     log = console,
-    fetchImplementation = DEFAULT_FETCH_IMPLEMENTATION,
+    fetchImplementation = defaultFetchImpl,
   }) {
     super(); // must be before any reference to *this*
     this.log = log;
