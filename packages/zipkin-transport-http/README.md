@@ -68,3 +68,28 @@ new HttpLogger({
   - Defaults to console
 - **timeout** - Timeout for HTTP Post when sending spans.
   - Defaults to 0 (Disabled)
+- **fetchImplementation** - The fetch API to be used for sending spans.
+  - Defaults to a pre-configured instance of `fetch-retry` package which retries failed requests "forever", with an exponential backoff.
+  - Example usage:
+      ```javascript
+      const {HttpLogger} = require('zipkin-transport-http');
+      const fetch = require('node-fetch');
+      const fetchRetryBuilder = require('fetch-retry');
+
+      // this also shows the defaults that zipkin-transport-http will use internally when `fetchImplementation` is omitted.
+      const fetchRetryOptions = {
+        // retry on any network error, or > 408 or 5xx status codes
+        retryOn: (attempt, error, response) => error !== null
+          || response == null
+          || response.status >= 408,
+        retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
+      };
+
+      const fetchImplementation = fetchRetryBuilder(fetch, fetchRetryOptions);
+
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:9411/api/v1/spans`,
+        httpInterval: 1,
+        fetchImplementation
+      });
+      ```
