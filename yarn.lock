@@ -4724,10 +4724,10 @@ fast-safe-stringify@^2.0.7:
   resolved "https://registry.yarnpkg.com/fast-safe-stringify/-/fast-safe-stringify-2.0.7.tgz#124aa885899261f68aedb42a7c080de9da608743"
   integrity sha512-Utm6CdzT+6xsDk2m8S6uL8VHxNwI6Jub+e9NYTcAms28T84pTa25GJQV9j0CY0N1rM8hK4x6grpF2BQf+2qwVA==
 
-fetch-retry@3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/fetch-retry/-/fetch-retry-3.0.1.tgz#6bc9bd8b39a44c6b033c767fd40d76cac413487e"
-  integrity sha512-RJaGP9bhfrjdI3xcdk41OPzMOceMak1irLubAjE/B2s6uESisPe+oPejEUqNF40rZeXlzBxABTs/Vw+FcIC2bg==
+fetch-retry@3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/fetch-retry/-/fetch-retry-3.1.0.tgz#53a25652adf56def526f9b6f6d749a5bebffd319"
+  integrity sha512-pHCYCq7g854KkebphR3tKb4M7TJK91ZI0K2BU82cWv+vNkFQn0PZZFrQd/mL+Ra/mj2HLZNvzkTRjPEq2Dh/Bg==
   dependencies:
     es6-promise "^4.2.8"
 

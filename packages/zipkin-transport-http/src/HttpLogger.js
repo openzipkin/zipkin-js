@@ -4,7 +4,7 @@ const globalFetch = (typeof window !== 'undefined' && window.fetch)
 
 // eslint-disable-next-line global-require
 const fetch = globalFetch || require('node-fetch');
-const fetchRetry = require('fetch-retry')(fetch);
+const fetchRetryBuilder = require('fetch-retry');
 const {jsonEncoder: {JSON_V1}} = require('zipkin');
 
 const {EventEmitter} = require('events');
@@ -16,6 +16,8 @@ const DEFAULT_TRY_OPTIONS = Object.freeze({
     || response.status >= 408,
   retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
 });
+
+const DEFAULT_FETCH_IMPLEMENTATION = fetchRetryBuilder(fetch, DEFAULT_TRY_OPTIONS);
 
 class HttpLogger extends EventEmitter {
   /**
@@ -29,9 +31,6 @@ class HttpLogger extends EventEmitter {
    * @param {Object<string, string>} options.headers Additional HTTP headers to be sent with span.
    * @param {Agent|Function} options.agent HTTP(S) agent to use for any networking related options.
    * @param {ErrorLogger} options.log Internal error logger used within the transport.
-   * @param {Object<string, any>} options.tryOptions
-   * @param {(attempt: number, error, response) => boolean} options.tryOptions.retryOn Decide retry
-   * @param {(attempt: number, error, response) => number} options.tryOptions.retryDelay Get delay
    * @param {(url: string, options: object) => Promise<Response>} options.fetchImplementation
    */
   constructor({
@@ -44,8 +43,7 @@ class HttpLogger extends EventEmitter {
     maxPayloadSize = 0,
     /* eslint-disable no-console */
     log = console,
-    tryOptions = {},
-    fetchImplementation = fetchRetry,
+    fetchImplementation = DEFAULT_FETCH_IMPLEMENTATION,
   }) {
     super(); // must be before any reference to *this*
     this.log = log;
@@ -55,7 +53,6 @@ class HttpLogger extends EventEmitter {
     this.queue = [];
     this.queueBytes = 0;
     this.jsonEncoder = jsonEncoder;
-    this.tryOptions = {...DEFAULT_TRY_OPTIONS, ...tryOptions};
     this.fetchImplementation = fetchImplementation;
 
     this.errorListenerSet = false;
@@ -119,7 +116,6 @@ class HttpLogger extends EventEmitter {
         headers: self.headers,
         timeout: self.timeout,
         agent: self.agent,
-        ...this.tryOptions,
       };
 
       this.fetchImplementation(self.endpoint, fetchOptions).then((response) => {
