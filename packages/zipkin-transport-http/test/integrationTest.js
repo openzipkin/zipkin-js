@@ -4,6 +4,8 @@ const {
 } = require('zipkin');
 const express = require('express');
 const bodyParser = require('body-parser');
+const fetch = require('node-fetch');
+const fetchRetryBuilder = require('fetch-retry');
 const HttpLogger = require('../src/HttpLogger');
 
 const mockPublisher = (serverExpectations, failFirstRequest = false) => {
@@ -250,7 +252,34 @@ describe('HTTP transport - integration test', () => {
         endpoint: `http://localhost:${this.port}/api/v1/spans`,
         jsonEncoder: JSON_V2,
         httpInterval: 1,
-        tryOptions: {retryDelay: () => 1} // retry immediately because we are in a test
+      });
+
+      httpLogger.on('success', () => { self.server.close(done); });
+      triggerPublish(httpLogger);
+    });
+  });
+
+  it('should retry with custom fetch-retry as well', function(done) {
+    const self = this;
+
+    const fetchRetryOptions = Object.freeze({
+      // retry on any network error, or > 408 or 5xx status codes
+      retryOn: (attempt, error, response) => error !== null
+        || response == null
+        || response.status >= 408,
+      retryDelay: tryIndex => 1000 ** tryIndex // with an exponentially growing backoff
+    });
+
+    const fetchImplementation = fetchRetryBuilder(fetch, fetchRetryOptions);
+    const app = mockPublisher(() => {}, true);
+
+    this.server = app.listen(0, () => {
+      this.port = this.server.address().port;
+      const httpLogger = new HttpLogger({
+        endpoint: `http://localhost:${this.port}/api/v1/spans`,
+        jsonEncoder: JSON_V2,
+        httpInterval: 1,
+        fetchImplementation
       });
 
       httpLogger.on('success', () => { self.server.close(done); });
