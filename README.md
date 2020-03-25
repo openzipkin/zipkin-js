@@ -83,10 +83,10 @@ Since some of the `zipkin-js` libraries are used in both the browser and Node.js
     "baseUrl": ".",
     "paths": {
       "node-fetch": [
-        "node_modules/empty-module/index.js"
+        "node_modules/empty/index.js"
       ],
       "os": [
-        "node_modules/empty-module/index.js"
+        "node_modules/empty/index.js"
       ],
     }
   }
