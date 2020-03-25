@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-http",
-  "version": "0.19.2",
+  "version": "0.20.0",
   "description": "Transports Zipkin trace data via HTTP",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -14,12 +14,12 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.19.2"
+    "zipkin": "^0.20.0"
   },
   "devDependencies": {
-    "node-fetch": "^2.3.0",
-    "fetch-retry": "3.1.0",
     "body-parser": "^1.15.2",
+    "fetch-retry": "3.1.0",
+    "node-fetch": "^2.3.0",
     "noop-logger": "^0.1.1"
   }
 }
