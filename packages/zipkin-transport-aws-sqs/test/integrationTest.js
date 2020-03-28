@@ -1,14 +1,10 @@
-/* eslint-disable no-console */
 import AWS from 'aws-sdk';
 
 const AWSMock = require('aws-sdk-mock');
 
 AWSMock.setSDKInstance(AWS);
 
-const {
-  Tracer, BatchRecorder, Annotation, ExplicitContext,
-  jsonEncoder: {JSON_V2}
-} = require('zipkin');
+const {Tracer, BatchRecorder, Annotation, ExplicitContext} = require('zipkin');
 const AwsSqsLogger = require('../src/AwsSqsLogger');
 
 const triggerPublish = (logger) => {
@@ -36,7 +32,7 @@ const triggerLargePublish = (logger) => {
     tracer.recordRpc('GET');
     tracer.recordBinary('http.url', 'http://example.com');
     tracer.recordBinary('http.response_code', '200');
-    for (let i = 0; i < 200; i += 1) {
+    for (let i = 0; i < 5000; i += 1) {
       tracer.recordAnnotation(new Annotation.Message(`Message ${i + 1}`));
     }
     tracer.recordAnnotation(new Annotation.ServerSend());
@@ -48,14 +44,13 @@ describe('AWS SQS transport - integration test', () => {
     this.slow(10 * 1000);
     this.timeout(60 * 1000);
     AWSMock.mock('SQS', 'sendMessage', (params) => {
-      const message = JSON.parse(params.MessageBody);
+      const message = JSON.parse(params.MessageBody)[0];
       expect(message.tags['http.url']).to.equal('http://example.com');
       expect(message.tags['http.response_code']).to.equal('200');
       expect(message.name).to.equal('get');
       expect(message.kind).to.equal('SERVER');
     });
     const awsSqsLogger = new AwsSqsLogger({
-      JSON_V2,
       pollerSeconds: 1,
       awsConfig: {
         region: 'eu-west-1',
@@ -69,11 +64,7 @@ describe('AWS SQS transport - integration test', () => {
   it('should emit an error when payload size is too large', function(done) {
     this.slow(10 * 1000);
     this.timeout(60 * 1000);
-    AWSMock.remock('SQS', 'sendMessage', (params, callback) => {
-      callback(new Error(), null);
-    });
     const awsSqsLogger = new AwsSqsLogger({
-      JSON_V2,
       pollerSeconds: 1,
       errorListenerSet: true,
       awsConfig: {
