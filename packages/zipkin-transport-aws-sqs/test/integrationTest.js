@@ -4,7 +4,9 @@ const AWSMock = require('aws-sdk-mock');
 
 AWSMock.setSDKInstance(AWS);
 
-const {Tracer, BatchRecorder, Annotation, ExplicitContext} = require('zipkin');
+const {
+  Tracer, BatchRecorder, Annotation, ExplicitContext
+} = require('zipkin');
 const AwsSqsLogger = require('../src/AwsSqsLogger');
 
 const triggerPublish = (logger) => {

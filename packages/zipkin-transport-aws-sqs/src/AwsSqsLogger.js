@@ -11,7 +11,7 @@ class AwsSqsLogger extends EventEmitter {
     this.queue = [];
     this.queueBytes = 0;
     this.errorListenerSet = false;
-    this.maxPayloadSize = 256 * 1024; //Max Payload size per message is 256KB, limit from AWS SQS
+    this.maxPayloadSize = 256 * 1024; // Max Payload size per message is 256KB, limit from AWS SQS
     this.queueUrl = options.queueUrl;
     this.encoder = JSON_V2;
     if (typeof options.awsConfig !== 'undefined') {
@@ -47,7 +47,7 @@ class AwsSqsLogger extends EventEmitter {
 
   logSpan(span) {
     const encodedSpan = this.encoder.encode(span);
-    let payloadSize = this._getPayloadSize(encodedSpan);
+    const payloadSize = this._getPayloadSize(encodedSpan);
     if (payloadSize >= this.maxPayloadSize) {
       this.processQueue();
       if (payloadSize > this.maxPayloadSize) {
@@ -75,9 +75,9 @@ class AwsSqsLogger extends EventEmitter {
       this.awsClient.sendMessage(body, (err, res) => {
         if (res) {
           this.emit('success', res);
-        } else{
+        } else {
           this.log.error(err);
-          if (this.errorListenerSet){
+          if (this.errorListenerSet) {
             this.emit('error', new Error(err));
           }
         }
