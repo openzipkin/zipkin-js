@@ -35,14 +35,13 @@ class AwsSqsLogger extends EventEmitter {
       : this.queueBytes + 2 + Math.min(this.queue.length - 1, 0);
   }
 
-  on(...args) {
-    const eventName = args[0];
+  on(eventName, listener) {
     // if the instance has an error handler set then we don't need to
     // skips error logging
     if (eventName.toLowerCase() === 'error') {
       this.errorListenerSet = true;
     }
-    super.on.apply(this, args);
+    super.on.call(this, eventName, listener);
   }
 
   logSpan(span) {
@@ -66,25 +65,28 @@ class AwsSqsLogger extends EventEmitter {
   }
 
   processQueue() {
-    if (this.queue.length !== 0) {
-      const body = {
-        MessageBody: `[${this.queue.join(',')}]`,
-        QueueUrl: this.queueUrl,
-        DelaySeconds: 0
-      };
-      this.awsClient.sendMessage(body, (err, res) => {
-        if (res) {
-          this.emit('success', res);
-        } else {
-          this.log.error(err);
-          if (this.errorListenerSet) {
-            this.emit('error', new Error(err));
-          }
-        }
-      });
-      this.queue.length = 0;
-      this.queueBytes = 0;
+    if (this.queue.length === 0) {
+      return undefined;
     }
+
+    const body = {
+      MessageBody: `[${this.queue.join(',')}]`,
+      QueueUrl: this.queueUrl,
+      DelaySeconds: 0
+    };
+    this.awsClient.sendMessage(body, (err, res) => {
+      if (res) {
+        this.emit('success', res);
+      } else {
+        this.log.error(err);
+        if (this.errorListenerSet) {
+          this.emit('error', new Error(err));
+        }
+      }
+    });
+    this.queue.length = 0;
+    this.queueBytes = 0;
+    return undefined;
   }
 }
 
