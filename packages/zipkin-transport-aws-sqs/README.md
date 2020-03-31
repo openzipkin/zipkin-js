@@ -27,7 +27,14 @@ let awsSqsLogger = new AwsSqsLogger({
                          log: noop // optional (defaults to console)
                        });
 // Builder Way
-awsSqsLogger = AwsSqsLogger.builder().queueUrl('http//...').build();
+awsSqsLogger = AwsSqsLogger.builder()
+                            .queueUrl('http//...')
+                            .endpointConfiguration(...) //optional
+                            .region('eu-west-1') //optional
+                            .credentialsProvider(new CredentialProviderChain(...)) //optional
+                            .delaySeconds(0) //optional
+                            .log(noop) //optional
+                            .build();
 
 const AwsSqsRecorder = new BatchRecorder({
   logger: awsSqsLogger
