@@ -3,21 +3,32 @@ const {jsonEncoder: {JSON_V2}} = require('zipkin');
 const {EventEmitter} = require('events');
 
 class AwsSqsLogger extends EventEmitter {
-  constructor(options) {
+  constructor(builder) {
     super();
-    this.log = options.log || console;
-    this.delaySeconds = options.delaySeconds || 0;
-    this.pollerSeconds = options.pollerSeconds || 100;
+    this.log = builder.log || console;
+    this.delaySeconds = builder.delaySeconds || 0;
+    this.pollerSeconds = builder.pollerSeconds || 100;
     this.queue = [];
     this.queueBytes = 0;
     this.errorListenerSet = false;
-    this.maxPayloadSize = 256 * 1024; // Max Payload size per message is 256KB, limit from AWS SQS
-    this.queueUrl = options.queueUrl;
-    this.encoder = JSON_V2;
-    if (typeof options.awsConfig !== 'undefined') {
-      AWS.config.update(options.awsConfig);
+    this.encoding = JSON_V2;
+    this.messageMaxBytes = 256 * 1024; // Max Payload size per message is 256KB, limit from AWS SQS
+    if (typeof builder.queueUrl !== 'undefined') {
+      this.queueUrl = builder.queueUrl;
+    } else {
+      throw new Error('queueUrl is mandatory');
     }
-    this.awsClient = new AWS.SQS();
+    const config = new AWS.Config();
+    if (typeof builder.region !== 'undefined') {
+      config.update({region: builder.region});
+    }
+    if (typeof builder.credentialsProvider !== 'undefined') {
+      config.update({credentialProvider: builder.credentialProvider});
+    }
+    if (typeof builder.endpointConfiguration !== 'undefined') {
+      config.update({endpoint: builder.endpointConfiguration});
+    }
+    this.awsClient = new AWS.SQS(config);
 
     const timer = setInterval(() => {
       this.processQueue();
@@ -25,6 +36,49 @@ class AwsSqsLogger extends EventEmitter {
     if (timer.unref) { // unref might not be available in browsers
       timer.unref(); // Allows Node to terminate instead of blocking on timer
     }
+  }
+
+  static builder() {
+    return new class Builder {
+      queueUrl(queueUrl) {
+        this.queueUrl = queueUrl;
+        return this;
+      }
+
+      region(region) {
+        this.region = region;
+        return this;
+      }
+
+      credentialsProvider(credentialsProvider) {
+        this.credentialsProvider = credentialsProvider;
+        return this;
+      }
+
+      endpointConfiguration(endpointConfiguration) {
+        this.endpointConfiguration = endpointConfiguration;
+        return this;
+      }
+
+      delaySeconds(delaySeconds) {
+        this.delaySeconds = delaySeconds;
+        return this;
+      }
+
+      pollerSeconds(pollerSeconds) {
+        this.pollerSeconds = pollerSeconds;
+        return this;
+      }
+
+      log(log) {
+        this.log = log;
+        return this;
+      }
+
+      build() {
+        return new AwsSqsLogger(this);
+      }
+    }();
   }
 
   _getPayloadSize(encodedSpan) {
@@ -45,11 +99,10 @@ class AwsSqsLogger extends EventEmitter {
   }
 
   logSpan(span) {
-    const encodedSpan = this.encoder.encode(span);
-    const payloadSize = this._getPayloadSize(encodedSpan);
-    if (payloadSize >= this.maxPayloadSize) {
+    const encodedSpan = this.encoding.encode(span);
+    if (this._getPayloadSize(encodedSpan) >= this.messageMaxBytes) {
       this.processQueue();
-      if (payloadSize > this.maxPayloadSize) {
+      if (this._getPayloadSize(encodedSpan) > this.messageMaxBytes) {
         // Payload size is too large even with an empty queue, we can only drop
         const err = 'Zipkin span got dropped, reason: payload too large';
         if (this.errorListenerSet) {
@@ -72,7 +125,7 @@ class AwsSqsLogger extends EventEmitter {
     const body = {
       MessageBody: `[${this.queue.join(',')}]`,
       QueueUrl: this.queueUrl,
-      DelaySeconds: 0
+      DelaySeconds: this.delaySeconds
     };
     this.awsClient.sendMessage(body, (err, res) => {
       if (res) {
@@ -84,6 +137,10 @@ class AwsSqsLogger extends EventEmitter {
         }
       }
     });
+    /*
+     array = [] creates a new array and assigns a reference to it.
+     array.length = 0 modifies the array itself.
+     */
     this.queue.length = 0;
     this.queueBytes = 0;
     return undefined;

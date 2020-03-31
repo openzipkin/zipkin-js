@@ -42,7 +42,7 @@ const triggerLargePublish = (logger) => {
 };
 
 describe('AWS SQS transport - integration test', () => {
-  it('should send trace data to AWS SQS: JSON_V2', function() {
+  it('should send trace data to AWS SQS', function() {
     this.slow(10 * 1000);
     this.timeout(60 * 1000);
     AWSMock.mock('SQS', 'sendMessage', (params) => {
