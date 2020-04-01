@@ -11,8 +11,7 @@ SQS is an alternative to kafka that is fully managed in the AWS cloud.
 ```javascript
 const {
   Tracer,
-  BatchRecorder,
-  jsonEncoder: {JSON_V2}
+  BatchRecorder
 } = require('zipkin');
 const {AwsSqsLogger} = require('zipkin-transport-aws-sqs');
 const noop = require('noop-logger');
