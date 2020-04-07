@@ -2,7 +2,7 @@ import AWS from 'aws-sdk';
 import {Logger, model} from 'zipkin';
 
 declare class AwsSqsLogger implements Logger {
-    constructor(builder: {
+    constructor(options: {
         queueUrl: string,
         credentialProvider?: AWS.CredentialProviderChain | undefined,
         endpointConfiguration?: AWS.Endpoint | undefined,

@@ -16,7 +16,6 @@ const {
 const {AwsSqsLogger} = require('zipkin-transport-aws-sqs');
 const noop = require('noop-logger');
 
-// Constructor Way
 let awsSqsLogger = new AwsSqsLogger({
                          queueUrl: "https://...", //mandatory
                          endpointConfiguration: AWS.Endpoint,// optional
@@ -25,15 +24,6 @@ let awsSqsLogger = new AwsSqsLogger({
                          delaySeconds: 0,// optional
                          log: noop // optional (defaults to console)
                        });
-// Builder Way
-awsSqsLogger = AwsSqsLogger.builder()
-                            .queueUrl('http//...')
-                            .endpointConfiguration(...) //optional
-                            .region('eu-west-1') //optional
-                            .credentialsProvider(new CredentialProviderChain(...)) //optional
-                            .delaySeconds(0) //optional
-                            .log(noop) //optional
-                            .build();
 
 const AwsSqsRecorder = new BatchRecorder({
   logger: awsSqsLogger
@@ -57,7 +47,7 @@ The credentials that your service has requires the following permissions in orde
 The message's binary data includes a list of spans. Supported encodings
 are the same as the http [POST /spans](http://zipkin.io/zipkin-api/#/paths/%252Fspans) body.
 
-Encoding defaults is JSON.
+Encoding defaults is JSON, now a days we only support this encoding.
 
 # Related work
 

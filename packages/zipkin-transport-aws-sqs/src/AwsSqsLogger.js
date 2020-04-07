@@ -3,30 +3,30 @@ const {jsonEncoder: {JSON_V2}} = require('zipkin');
 const {EventEmitter} = require('events');
 
 class AwsSqsLogger extends EventEmitter {
-  constructor(builder) {
+  constructor(options) {
     super();
-    this.log = builder.log || console;
-    this.delaySeconds = builder.delaySeconds || 0;
-    this.pollerSeconds = builder.pollerSeconds || 100;
+    this.log = options.log || console;
+    this.delaySeconds = options.delaySeconds || 0;
+    this.pollerSeconds = options.pollerSeconds || 100;
     this.queue = [];
     this.queueBytes = 0;
     this.errorListenerSet = false;
     this.encoding = JSON_V2;
     this.messageMaxBytes = 256 * 1024; // Max Payload size per message is 256KB, limit from AWS SQS
-    if (typeof builder.queueUrl !== 'undefined') {
-      this.queueUrl = builder.queueUrl;
+    if (typeof options.queueUrl !== 'undefined') {
+      this.queueUrl = options.queueUrl;
     } else {
       throw new Error('queueUrl is mandatory');
     }
     const config = new AWS.Config();
-    if (typeof builder.region !== 'undefined') {
-      config.update({region: builder.region});
+    if (typeof options.region !== 'undefined') {
+      config.update({region: options.region});
     }
-    if (typeof builder.credentialsProvider !== 'undefined') {
-      config.update({credentialProvider: builder.credentialProvider});
+    if (typeof options.credentialsProvider !== 'undefined') {
+      config.update({credentialProvider: options.credentialProvider});
     }
-    if (typeof builder.endpointConfiguration !== 'undefined') {
-      config.update({endpoint: builder.endpointConfiguration});
+    if (typeof options.endpointConfiguration !== 'undefined') {
+      config.update({endpoint: options.endpointConfiguration});
     }
     this.awsClient = new AWS.SQS(config);
 
@@ -36,49 +36,6 @@ class AwsSqsLogger extends EventEmitter {
     if (timer.unref) { // unref might not be available in browsers
       timer.unref(); // Allows Node to terminate instead of blocking on timer
     }
-  }
-
-  static builder() {
-    return new class Builder {
-      queueUrl(queueUrl) {
-        this.queueUrl = queueUrl;
-        return this;
-      }
-
-      region(region) {
-        this.region = region;
-        return this;
-      }
-
-      credentialsProvider(credentialsProvider) {
-        this.credentialsProvider = credentialsProvider;
-        return this;
-      }
-
-      endpointConfiguration(endpointConfiguration) {
-        this.endpointConfiguration = endpointConfiguration;
-        return this;
-      }
-
-      delaySeconds(delaySeconds) {
-        this.delaySeconds = delaySeconds;
-        return this;
-      }
-
-      pollerSeconds(pollerSeconds) {
-        this.pollerSeconds = pollerSeconds;
-        return this;
-      }
-
-      log(log) {
-        this.log = log;
-        return this;
-      }
-
-      build() {
-        return new AwsSqsLogger(this);
-      }
-    }();
   }
 
   _getPayloadSize(encodedSpan) {
