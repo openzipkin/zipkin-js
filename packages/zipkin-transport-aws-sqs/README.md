@@ -3,7 +3,7 @@
 ![npm](https://img.shields.io/npm/dm/zipkin-transport-aws-sqs.svg)
 
 This is a module that sends Zipkin trace data to Amazon SQS for collection and processing.
-SQS is an alternative to kafka that is fully managed in the AWS cloud.
+SQS is an alternative to Apache Kafka that is fully managed in the AWS cloud.
 ## Usage
 
 `npm install zipkin-transport-aws-sqs --save`
@@ -18,10 +18,10 @@ const noop = require('noop-logger');
 
 let awsSqsLogger = new AwsSqsLogger({
                          queueUrl: "https://...", //mandatory
-                         endpointConfiguration: AWS.Endpoint,// optional
+                         endpointConfiguration: AWS.Endpoint, // optional
                          region: 'eu-west-1', // optional, region string
-                         credentialProvider: AWS.CredentialProviderChain,// optional
-                         delaySeconds: 0,// optional
+                         credentialProvider: AWS.CredentialProviderChain, // optional
+                         delaySeconds: 0, // optional
                          log: noop // optional (defaults to console)
                        });
 
@@ -37,20 +37,18 @@ const tracer = new Tracer({
 ```
 ## Requirements
 
-The credentials that your service has requires the following permissions in order to function:
+AWS credentials will be loaded as described [here](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials.html). The credentials must have the following permissions:
 
 `sqs:DescribeStream` for health checking
 
 `sqs:PutRecord` for placing spans on the queue
 
 ## Message encoding
-The message's binary data includes a list of spans. Supported encodings
-are the same as the http [POST /spans](http://zipkin.io/zipkin-api/#/paths/%252Fspans) body.
-
-Encoding defaults is JSON, now a days we only support this encoding.
+The message's binary data includes a list of spans in the same JSON V2 format
+as the http [POST /spans](http://zipkin.io/zipkin-api/#/paths/%252Fspans) body.
 
 # Related work
 
 [collector-sqs](https://github.com/openzipkin/zipkin-aws/tree/master/collector-sqs)
 integrates with zipkin-server to pull spans off of an SQS queue instead
-of http or kafka.
+of HTTP or Kafka.

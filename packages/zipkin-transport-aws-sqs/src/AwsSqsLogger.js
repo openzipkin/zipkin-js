@@ -96,7 +96,7 @@ class AwsSqsLogger extends EventEmitter {
     });
     /*
      array = [] creates a new array and assigns a reference to it.
-     array.length = 0 modifies the array itself.
+     array.length = 0 just resets the size counter without clearing the backing storage, reducing GC.
      */
     this.queue.length = 0;
     this.queueBytes = 0;
