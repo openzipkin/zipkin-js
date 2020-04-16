@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-superagent",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "description": "Interceptor for superagent with Zipkin.js",
   "main": "lib/superagentPlugin.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.20.0"
+    "zipkin": "^0.21.0"
   },
   "devDependencies": {
     "nock": "^9.0.14",

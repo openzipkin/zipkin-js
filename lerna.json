@@ -1,6 +1,6 @@
 {
   "lerna": "3.16.5",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "command": {
     "run": {
       "npmClient": "yarn"
