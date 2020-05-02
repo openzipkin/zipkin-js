@@ -109,7 +109,9 @@ class HttpLogger extends EventEmitter {
         agent: self.agent,
       };
 
-      this.fetchImplementation(self.endpoint, fetchOptions).then((response) => {
+      const fetchImpl = this.fetchImplementation || defaultFetchImpl
+
+      fetchImpl(self.endpoint, fetchOptions).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
           const err = 'Unexpected response while sending Zipkin data, status:'
             + `${response.status}, body: ${postBody}`;
