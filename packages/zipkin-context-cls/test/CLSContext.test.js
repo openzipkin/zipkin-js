@@ -1,3 +1,4 @@
+const EventEmitter = require('events');
 const CLSContext = require('../');
 
 const namespace = 'mynamespace';
@@ -84,6 +85,59 @@ function CLSContextPerAsync(supportAsync) {
       setTimeout(callback, 10);
     });
   });
+
+  it('supports callbacks on eventEmitter', async() => {
+    const eventEmitter = new EventEmitter();
+    const ctx = new CLSContext(namespace, supportAsync);
+    // if you comment this out the tests will fail
+    // Apparently, it is necessary to explicitly register event emitters with context
+    ctx.bindEmitter(eventEmitter);
+    // const dbg = (...args) => console.log(...args);
+    // eslint-disable-next-line no-unused-vars
+    const dbg = (...args) => {};
+
+    function on(name) {
+      return new Promise(resolve => eventEmitter.on(name, resolve));
+    }
+
+    async function initialCallback() {
+      dbg('initial starting', ctx.getContext());
+      const concurrentRequestStarted = on('concurrentRequestStarted');
+      eventEmitter.emit('initialRequestStarted');
+      dbg('initial started', ctx.getContext());
+      await concurrentRequestStarted;
+      dbg('initial completing', ctx.getContext());
+      eventEmitter.emit('initialRequestComplete', ctx.getContext());
+    }
+
+    async function concurrentCallback() {
+      const initialRequestComplete = on('initialRequestComplete');
+      dbg('concurrent starting', ctx.getContext());
+      eventEmitter.emit('concurrentRequestStarted');
+      dbg('concurrent started', ctx.getContext());
+      await initialRequestComplete;
+      dbg('concurrent completing', ctx.getContext());
+      eventEmitter.emit('concurrentRequestComplete', ctx.getContext());
+      dbg('concurrent completed');
+    }
+
+    async function fn() {
+      const initialRequestComplete = on('initialRequestComplete');
+      const concurrentRequestComplete = on('concurrentRequestComplete');
+
+      ctx.letContext('budin', initialCallback);
+      ctx.letContext('torta-helada', concurrentCallback);
+
+      const ctx1 = await initialRequestComplete;
+      dbg('fn initial', ctx1);
+      const ctx2 = await concurrentRequestComplete;
+      dbg('fn concurrent', ctx2);
+      expect(ctx1).to.equal('budin');
+      expect(ctx2).to.equal('torta-helada');
+    }
+
+    await fn(); // eslint-disable-line
+  });
 }
 
 describe('CLSContext', () => {
@@ -93,34 +147,5 @@ describe('CLSContext', () => {
 
   describe('with async-await support', () => {
     CLSContextPerAsync(true);
-
-    it('supports async-await contexts', async() => {
-      const ctx = new CLSContext(namespace, true);
-      ctx.setContext('arroz-con-leche');
-
-      async function stall(stallTime) {
-        await new Promise(resolve => setTimeout(resolve, stallTime));
-      }
-
-      async function getCtx() {
-        const durationInMs = Math.random() + 0.1;
-        await stall(durationInMs * 500);
-        return ctx.getContext();
-      }
-
-      async function callback() {
-        const obtainedContext = await getCtx();
-        return obtainedContext;
-      }
-
-      async function fn() {
-        const ctx1 = await ctx.letContext('budin', () => callback());
-        const ctx2 = await ctx.letContext('torta-helada', () => callback());
-        expect(ctx1).to.equal('budin');
-        expect(ctx2).to.equal('torta-helada');
-      }
-
-      await fn(); // eslint-disable-line
-    });
   });
 });

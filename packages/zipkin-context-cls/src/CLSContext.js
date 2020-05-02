@@ -39,4 +39,8 @@ module.exports = class CLSContext {
       return callable();
     });
   }
+
+  bindEmitter(emitter) {
+    this._session.bindEmitter(emitter);
+  }
 };
