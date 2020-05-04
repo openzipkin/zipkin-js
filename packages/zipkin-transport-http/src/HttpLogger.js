@@ -109,7 +109,7 @@ class HttpLogger extends EventEmitter {
         agent: self.agent,
       };
 
-      const fetchImpl = this.fetchImplementation || defaultFetchImpl
+      const fetchImpl = this.fetchImplementation || defaultFetchImpl;
 
       fetchImpl(self.endpoint, fetchOptions).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
