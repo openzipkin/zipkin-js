@@ -58,7 +58,7 @@ class HttpLogger extends EventEmitter {
     this.timeout = timeout;
 
     const timer = setInterval(() => {
-      this.processQueue();
+      this.processQueue(this.fetchImplementation);
     }, httpInterval);
     if (timer.unref) { // unref might not be available in browsers
       timer.unref(); // Allows Node to terminate instead of blocking on timer
@@ -84,7 +84,7 @@ class HttpLogger extends EventEmitter {
   logSpan(span) {
     const encodedSpan = this.jsonEncoder.encode(span);
     if (this.maxPayloadSize && this._getPayloadSize(encodedSpan) > this.maxPayloadSize) {
-      this.processQueue();
+      this.processQueue(this.fetchImplementation);
       if (this._getPayloadSize(encodedSpan) > this.maxPayloadSize) {
         // Payload size is too large even with an empty queue, we can only drop
         const err = 'Zipkin span got dropped, reason: payload too large';
@@ -97,7 +97,7 @@ class HttpLogger extends EventEmitter {
     this.queueBytes += encodedSpan.length;
   }
 
-  processQueue() {
+  processQueue(fetchImpl) {
     const self = this;
     if (self.queue.length > 0) {
       const postBody = `[${self.queue.join(',')}]`;
@@ -108,8 +108,6 @@ class HttpLogger extends EventEmitter {
         timeout: self.timeout,
         agent: self.agent,
       };
-
-      const fetchImpl = this.fetchImplementation || defaultFetchImpl;
 
       fetchImpl(self.endpoint, fetchOptions).then((response) => {
         if (response.status !== 202 && response.status !== 200) {
