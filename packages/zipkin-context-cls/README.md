@@ -12,7 +12,7 @@ variable everywhere in your application code.
 const CLSContext = require('zipkin-context-cls');
 const tracer = new Tracer({
   ctxImpl: new CLSContext('zipkin'),
-  recorder, // typically Kafka or Scribe
+  recorder, // typically HTTP or Kafka
   localServiceName: 'service-a' // name of this application
 });
 ```
