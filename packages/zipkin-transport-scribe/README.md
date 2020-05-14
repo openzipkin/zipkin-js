@@ -1,4 +1,4 @@
-# Zipkin-transport-scribe
+# zipkin-transport-scribe
 
 ![npm](https://img.shields.io/npm/dm/zipkin-transport-scribe.svg)
 

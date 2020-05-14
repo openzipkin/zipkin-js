@@ -23,12 +23,13 @@ const axios = require('axios');
 const wrapAxios = require('zipkin-instrumentation-axiosjs');
 const { Tracer, ExplicitContext, ConsoleRecorder } = require('zipkin');
 
-const ctxImpl = new ExplicitContext();
+const ctxImpl = new ExplicitContext(); // the in-process context
 const recorder = new ConsoleRecorder();
 const localServiceName = 'service-a'; // name of this application
 const tracer = new Tracer({ ctxImpl, recorder, localServiceName });
 
-const remoteServiceName = 'weather-api';
+const remoteServiceName = 'weather-api'; // name of the application you are
+                                         // calling (optional)
 const zipkinAxios = wrapAxios(axios, { tracer, remoteServiceName });
 
 zipkinAxios.get('/user?ID=12345')
@@ -55,6 +56,7 @@ zipkinAxios.get('/user?ID=12345')
 ### Interceptors of Axios also supported
 
 You can intercept requests or responses before they are handled by then or catch.
+
 ```javascript
 // Add a request interceptor
 axios.interceptors.request.use(function (config) {
@@ -64,7 +66,7 @@ axios.interceptors.request.use(function (config) {
     // Do something with request error
     return Promise.reject(error);
   });
- 
+
 // Add a response interceptor
 axios.interceptors.response.use(function (response) {
     // Do something with response data
@@ -73,17 +75,4 @@ axios.interceptors.response.use(function (response) {
     // Do something with response error
     return Promise.reject(error);
   });
-```
-
-### The test cases all passed:
-```
- axios instrumentation - integration test
-    ✓ should add headers to requests
-    ✓ should support request shorthand (defaults to GET)
-    ✓ should support both url and uri options
-    ✓ should support promise callback
-    ✓ should report 404 when path does not exist
-    ✓ should report when service does not exist (41ms)
-    ✓ should report when service returns 400
-    ✓ should report when service returns 500
 ```

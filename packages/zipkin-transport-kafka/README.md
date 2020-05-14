@@ -1,4 +1,4 @@
-# Zipkin-transport-kafka
+# zipkin-transport-kafka
 
 ![npm](https://img.shields.io/npm/dm/zipkin-transport-kafka.svg)
 

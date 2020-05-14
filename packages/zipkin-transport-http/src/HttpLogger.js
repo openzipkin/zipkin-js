@@ -97,6 +97,9 @@ class HttpLogger extends EventEmitter {
     this.queueBytes += encodedSpan.length;
   }
 
+  // We need to receive the fetch implementation as argument to avoid the
+  // lose of context when compiling this with webpack and babel. See this
+  // PR for more details https://github.com/openzipkin/zipkin-js/pull/497
   processQueue(fetchImpl) {
     const self = this;
     if (self.queue.length > 0) {

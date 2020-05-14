@@ -1,4 +1,4 @@
-# Zipkin-transport-aws-sqs
+# zipkin-transport-aws-sqs
 
 ![npm](https://img.shields.io/npm/dm/zipkin-transport-aws-sqs.svg)
 
