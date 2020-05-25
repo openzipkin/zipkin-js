@@ -40,7 +40,12 @@ module.exports = class CLSContext {
     });
   }
 
-  bindEmitter(emitter) {
+  // _bindEmitter is exposed but not meant to be used.
+  // It was introduced in the aim to test the async/await support
+  // for CLSContext.
+  // See https://github.com/openzipkin/zipkin-js/pull/499 for more
+  // context
+  _bindEmitter(emitter) {
     this._session.bindEmitter(emitter);
   }
 };
