@@ -15,9 +15,9 @@ module.exports = class ExplicitContext {
     try {
       return callable();
     } finally {
-      const prevCtx = this.getContext();
+      const ctx = this.getContext();
 
-      this.setContext(prevCtx);
+      this.setContext(ctx);
     }
   }
 
