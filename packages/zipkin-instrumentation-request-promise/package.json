@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-request-promise",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "description": "Instrumentation for request-promise with Zipkin.js",
   "main": "lib/request.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "@types/request": "^2.0.8"
   },
   "dependencies": {
-    "zipkin": "^0.21.0"
+    "zipkin": "^0.21.1"
   },
   "devDependencies": {
     "@types/request": "^2.0.8",
