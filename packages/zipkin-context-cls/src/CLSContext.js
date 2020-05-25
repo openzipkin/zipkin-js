@@ -1,8 +1,13 @@
-const {createNamespace, getNamespace} = require('continuation-local-storage');
+const cls = require('continuation-local-storage');
+const clsHooked = require('cls-hooked');
 
 module.exports = class CLSContext {
-  constructor(namespace = 'zipkin') {
-    this._session = getNamespace(namespace) || createNamespace(namespace);
+  constructor(namespace = 'zipkin', supportAsyncAwait = false) {
+    if (supportAsyncAwait) {
+      this._session = clsHooked.getNamespace(namespace) || clsHooked.createNamespace(namespace);
+    } else {
+      this._session = cls.getNamespace(namespace) || cls.createNamespace(namespace);
+    }
     const defaultContext = this._session.createContext();
     this._session.enter(defaultContext);
   }
@@ -33,5 +38,14 @@ module.exports = class CLSContext {
       this.setContext(ctx);
       return callable();
     });
+  }
+
+  // _bindEmitter is exposed but not meant to be used.
+  // It was introduced in the aim to test the async/await support
+  // for CLSContext.
+  // See https://github.com/openzipkin/zipkin-js/pull/499 for more
+  // context
+  _bindEmitter(emitter) {
+    this._session.bindEmitter(emitter);
   }
 };
