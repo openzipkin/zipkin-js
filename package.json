@@ -129,7 +129,7 @@
     "tslint": "^5.0.0",
     "typescript": "^3.7.5",
     "uuid": "^3.2.1",
-    "yarn": "^1.17.2",
+    "yarn": "^1.17.2"
   },
   "workspaces": [
     "packages/*"
