@@ -1,4 +1,5 @@
 import {Tracer, ConsoleRecorder} from 'zipkin';
+// eslint-disable-next-line import/no-unresolved, import/no-extraneous-dependencies.
 import CLSContext from 'zipkin-context-cls';
 import uuid from 'uuid/v4';
 import express from 'express';
