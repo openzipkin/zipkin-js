@@ -1,9 +1,15 @@
 {
   "env": {
-    "mocha": true,
-    "node": true
+    "mocha": true
   },
   "globals": {
     "expect": true
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "paths": ["/"]
+      }
+    }
   }
 }
