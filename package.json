@@ -55,6 +55,7 @@
     "@babel/core": "^7.3.3",
     "@babel/plugin-transform-runtime": "^7.8.3",
     "@babel/polyfill": "^7.3.3",
+    "@babel/preset-env": "^7.3.3",
     "@babel/preset-typescript": "^7.3.3",
     "@babel/register": "^7.3.3",
     "@grpc/proto-loader": "^0.3.0",
