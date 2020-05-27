@@ -4,12 +4,5 @@
   },
   "globals": {
     "expect": true
-  },
-  "settings": {
-    "import/resolver": {
-      "node": {
-        "paths": ["/packages"]
-      }
-    }
-  }
+  }z
 }

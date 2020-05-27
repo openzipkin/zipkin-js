@@ -35,7 +35,7 @@
     "lint:es": "eslint packages",
     "fix-lint": "eslint packages --fix",
     "lint:ts": "tslint -c tslint.json -e './packages/**/node_modules/**/*.ts' './packages/**/*.ts'",
-    "lint": "npm-run-all --parallel lint:*",
+    "lint": "lerna bootstap && npm-run-all --parallel lint:*",
     "test:es": "npm run lerna-test",
     "test:ts": "tsr packages/*/test-types/*.test.ts --noAnnotate --libDeclarations && mocha --opts test/mocha-types.opts",
     "test": "npm run test:es && npm run test:ts",
