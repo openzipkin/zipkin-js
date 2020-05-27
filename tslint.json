@@ -33,6 +33,7 @@
     "no-bitwise": false,
     "no-empty": false,
     "unified-signatures": true,
-    "no-unused-expression": false
+    "no-unused-expression": false,
+    "moduleResolution": "node"
   }
 }
