@@ -13,10 +13,6 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.21.0"
-  },
-  "devDependencies": {
-    "@grpc/proto-loader": "^0.3.0",
-    "grpc": "^1.16.0"
+    "zipkin": "file:../zipkin"
   }
 }

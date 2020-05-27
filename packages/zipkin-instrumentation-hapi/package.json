@@ -16,10 +16,6 @@
     "@types/hapi": "^17.0.10"
   },
   "dependencies": {
-    "zipkin": "^0.21.0"
-  },
-  "devDependencies": {
-    "@types/hapi": "^18.0.2",
-    "hapi": "^18.1.0"
+    "zipkin": "file:../zipkin"
   }
 }

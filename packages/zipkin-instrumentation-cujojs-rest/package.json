@@ -14,9 +14,6 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.21.0"
-  },
-  "devDependencies": {
-    "rest": "^1.3.2"
+    "zipkin": "file:../zipkin"
   }
 }

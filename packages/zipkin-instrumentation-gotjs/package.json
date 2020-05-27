@@ -22,9 +22,6 @@
     "got": ">= 9.6.0"
   },
   "dependencies": {
-    "zipkin": "^0.21.0"
-  },
-  "devDependencies": {
-    "got": "^9.6.0"
+    "zipkin": "file:../zipkin"
   }
 }

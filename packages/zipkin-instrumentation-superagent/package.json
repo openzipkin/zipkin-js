@@ -13,10 +13,6 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.21.0"
-  },
-  "devDependencies": {
-    "nock": "^9.0.14",
-    "superagent": "^5.1.0"
+    "zipkin": "file:../zipkin"
   }
 }

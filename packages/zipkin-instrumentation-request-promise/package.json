@@ -16,17 +16,6 @@
     "@types/request": "^2.0.8"
   },
   "dependencies": {
-    "zipkin": "^0.21.0"
-  },
-  "devDependencies": {
-    "@types/request": "^2.0.8",
-    "asap": "^2.0.6",
-    "co": "^4.6.0",
-    "co-mocha": "^1.2.1",
-    "nock": "^9.0.14",
-    "request": "^2.83.0",
-    "request-promise": "^4.2.2",
-    "uuid": "^3.2.1",
-    "zipkin-context-cls": "^0.21.0"
+    "zipkin": "file:../zipkin"
   }
 }

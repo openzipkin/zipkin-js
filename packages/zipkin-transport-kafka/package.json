@@ -16,10 +16,7 @@
   "dependencies": {
     "@types/kafka-node": "^2.0.3",
     "kafka-node": "^2.6.1",
-    "zipkin": "^0.21.0",
-    "zipkin-encoder-thrift": "^0.21.0"
-  },
-  "devDependencies": {
-    "kafka-please": "^1.0.1"
+    "zipkin": "file:../zipkin",
+    "zipkin-encoder-thrift": "file:../zipkin-encoder-thrift"
   }
 }

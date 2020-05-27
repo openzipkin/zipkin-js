@@ -17,10 +17,6 @@
     "@types/request": "^2.0.8"
   },
   "dependencies": {
-    "zipkin": "^0.21.0"
-  },
-  "devDependencies": {
-    "@types/request": "^2.0.8",
-    "request": "^2.88.0"
+    "zipkin": "file:../zipkin"
   }
 }

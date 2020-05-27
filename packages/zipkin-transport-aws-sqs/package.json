@@ -15,8 +15,5 @@
   "dependencies": {
     "aws-sdk": "^2.7.0",
     "zipkin": "^0.19.2"
-  },
-  "devDependencies": {
-    "aws-sdk-mock": "^5.0.0"
   }
 }

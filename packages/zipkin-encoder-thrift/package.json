@@ -22,6 +22,6 @@
   "homepage": "https://github.com/openzipkin/zipkin-js#readme",
   "dependencies": {
     "thrift": "^0.11.0",
-    "zipkin": "^0.21.0"
+    "zipkin": "file:../zipkin"
   }
 }

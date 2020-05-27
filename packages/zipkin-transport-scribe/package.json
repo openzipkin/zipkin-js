@@ -16,7 +16,7 @@
   "dependencies": {
     "base64-js": "^1.2.1",
     "scribe": "0.0.9",
-    "zipkin": "^0.21.0",
-    "zipkin-encoder-thrift": "^0.21.0"
+    "zipkin": "file:../zipkin",
+    "zipkin-encoder-thrift": "file:../zipkin-encoder-thrift"
   }
 }
