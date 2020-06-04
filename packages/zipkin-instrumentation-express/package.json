@@ -1,6 +1,6 @@
 {
   "name": "zipkin-instrumentation-express",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "description": "Express middleware for instrumentation with Zipkin.js",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -14,7 +14,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/openzipkin/zipkin-js",
   "dependencies": {
-    "zipkin": "^0.21.0"
+    "zipkin": "^0.22.0"
   },
   "devDependencies": {
     "express-http-proxy": "^0.11.0",

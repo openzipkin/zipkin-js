@@ -1,6 +1,6 @@
 {
   "name": "zipkin-transport-aws-sqs",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "description": "Transports Zipkin trace data via AWS SQS to the collector",
   "main": "lib/index.js",
   "types": "index.d.ts",
