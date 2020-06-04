@@ -1784,9 +1784,9 @@
   integrity sha512-9NET910DNaIPngYnLLPeg+Ogzqsi9uM4mSboU5y6p8S5DzMTVEsJZrawi+BoDNUVBa2DhJqQYUFvMDfgU062LQ==
 
 "@sinonjs/commons@^1", "@sinonjs/commons@^1.6.0", "@sinonjs/commons@^1.7.0", "@sinonjs/commons@^1.7.2":
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.7.2.tgz#505f55c74e0272b43f6c52d81946bed7058fc0e2"
-  integrity sha512-+DUO6pnp3udV/v2VfUWgaY5BIE1IfT7lLfeDzPVeMT1XKkaAp9LgSI9x5RtrFQoZ9Oi0PgXQQHPaoKu7dCjVxw==
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.0.tgz#c8d68821a854c555bba172f3b06959a0039b236d"
+  integrity sha512-wEj54PfsZ5jGSwMX68G8ZXFawcSglQSXqCftWX3ec8MDUzQdHgcKvw97awHbY0efQEL5iKUOAmmVtoYgmrSG4Q==
   dependencies:
     type-detect "4.0.8"
 
@@ -2393,7 +2393,7 @@ arrify@^2.0.1:
   resolved "https://registry.yarnpkg.com/arrify/-/arrify-2.0.1.tgz#c9655e9331e0abcd588d2a7cad7e9956f66701fa"
   integrity sha512-3duEwti880xqi4eAMN8AyR4a0ByT90zoYdLlevfrvU43vb0YZwZVfxOgxWrLXXXpyugL0hNZc9G6BiB5B3nUug==
 
-asap@^2.0.0, asap@^2.0.6:
+asap@^2.0.0, asap@^2.0.4:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz#e50347611d7e690943208bbdafebcbc2fb866d46"
   integrity sha1-5QNHYR1+aQlDIIu9r+vLwvuGbUY=
@@ -2524,11 +2524,11 @@ aws-sdk-mock@^5.0.0:
     traverse "^0.6.6"
 
 aws-sdk@^2.637.0, aws-sdk@^2.7.0:
-  version "2.677.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.677.0.tgz#6106fa93e98e6357304f734a6d6b579303c6a474"
-  integrity sha512-vzQWRh1sgM0HRNmbLXgxnFPySLQrtSNgs9dNQsksGiYrJtf1wYjJSh4UHhekeyMuorQqef3m4AY0vFWsWyZSMg==
+  version "2.689.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.689.0.tgz#f8833031afd773bfc9503f8d6325186a985d019c"
+  integrity sha512-l9kbgZtIbR9dux4JHoxZ3vDWAfGtp34KpDDf5cwYHC5jDTTJoe6XhBBlEDSruwKh1+5DONpSZWNVhDZ6E02ojg==
   dependencies:
-    buffer "4.9.1"
+    buffer "4.9.2"
     events "1.1.1"
     ieee754 "1.1.13"
     jmespath "0.15.0"
@@ -2963,10 +2963,10 @@ buffer-xor@^1.0.3:
   resolved "https://registry.yarnpkg.com/buffer-xor/-/buffer-xor-1.0.3.tgz#26e61ed1422fb70dd42e6e36729ed51d855fe8d9"
   integrity sha1-JuYe0UIvtw3ULm42cp7VHYVf6Nk=
 
-buffer@4.9.1:
-  version "4.9.1"
-  resolved "https://registry.yarnpkg.com/buffer/-/buffer-4.9.1.tgz#6d1bb601b07a4efced97094132093027c95bc298"
-  integrity sha1-bRu2AbB6TvztlwlBMgkwJ8lbwpg=
+buffer@4.9.2:
+  version "4.9.2"
+  resolved "https://registry.yarnpkg.com/buffer/-/buffer-4.9.2.tgz#230ead344002988644841ab0244af8c44bbe3ef8"
+  integrity sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==
   dependencies:
     base64-js "^1.0.2"
     ieee754 "^1.1.4"
@@ -5103,12 +5103,7 @@ formatio@1.1.1:
   dependencies:
     samsam "~1.1"
 
-formidable@^1.2.0:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/formidable/-/formidable-1.2.2.tgz#bf69aea2972982675f00865342b982986f6b8dd9"
-  integrity sha512-V8gLm+41I/8kguQ4/o1D3RIHRmhYFG4pnNyonvua+40rqcEmT4+V71yaZ3B457xbbgCsCfjSPi65u/W6vK1U5Q==
-
-formidable@^1.2.1:
+formidable@^1.2.0, formidable@^1.2.1:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/formidable/-/formidable-1.2.2.tgz#bf69aea2972982675f00865342b982986f6b8dd9"
   integrity sha512-V8gLm+41I/8kguQ4/o1D3RIHRmhYFG4pnNyonvua+40rqcEmT4+V71yaZ3B457xbbgCsCfjSPi65u/W6vK1U5Q==
@@ -9316,7 +9311,7 @@ request-promise-core@1.1.3:
   dependencies:
     lodash "^4.17.15"
 
-request-promise@^4.2.2:
+request-promise@^4.2.5:
   version "4.2.5"
   resolved "https://registry.yarnpkg.com/request-promise/-/request-promise-4.2.5.tgz#186222c59ae512f3497dfe4d75a9c8461bd0053c"
   integrity sha512-ZgnepCykFdmpq86fKGwqntyTiUrHycALuGggpyCZwMvGaZWgxW6yagT0FHkgo5LzYvOaCNvxYwWYIjevSH1EDg==
@@ -9326,7 +9321,7 @@ request-promise@^4.2.2:
     stealthy-require "^1.1.1"
     tough-cookie "^2.3.3"
 
-request@^2.83.0, request@^2.88.0:
+request@^2.88.0, request@^2.88.2:
   version "2.88.2"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz#d73c918731cb5a87da047e207234146f664d12b3"
   integrity sha512-MsvtOrfG9ZcrOwAW+Qi+F6HbD0CWXEh9ou77uOb7FM2WPhwT7smM833PzanhJLsgXjN89Ir6V2PczXNnMpwKhw==

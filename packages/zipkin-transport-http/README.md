@@ -25,9 +25,9 @@ const recorder = new BatchRecorder({
     httpInterval: 1000, // How often to sync spans. Optional (defaults to 1000)
     headers: {'Authorization': 'secret'}, // Custom HTTP headers. Optional
     timeout: 1000, // Timeout for HTTP Post. Optional (defaults to 0)
-    maxPayloadSize: 0 // Max payload size for zipkin span. Optional (defaults to 0)
+    maxPayloadSize: 0, // Max payload size for zipkin span. Optional (defaults to 0)
     agent: new http.Agent({keepAlive: true}), // Agent used for network related options. Optional (defaults to null)
-    log: noop // Logger to use. Optional (defaults to console)
+    log: noop, // Logger to use. Optional (defaults to console)
     fetchImplementation: require('node-fetch') // Pluggable fetch implementation (defaults to global fetch or fallsback to node fetch)
   })
 });
