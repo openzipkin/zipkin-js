@@ -271,14 +271,6 @@ declare namespace zipkin {
     toInt(): number;
   }
 
-  namespace HttpHeaders {
-    const TraceId: string;
-    const SpanId: string;
-    const ParentSpanId: string;
-    const Sampled: string;
-    const Flags: string;
-  }
-
   interface Record {
     traceId: TraceId;
     timestamp: number;
@@ -339,13 +331,15 @@ declare namespace zipkin {
   }
 
   namespace Instrumentation {
+
     class HttpServer {
       constructor(args: {
         tracer: Tracer,
         port: number,
         serviceName?: string,
         host?: string,
-        serverTags?: {[key: string]: string}
+        serverTags?: {[key: string]: string},
+        propagation?: propagation.Propagation
       });
 
       recordRequest(
@@ -357,7 +351,7 @@ declare namespace zipkin {
     }
 
     class HttpClient {
-      constructor(args: { tracer: Tracer, serviceName?: string, remoteServiceName?: string });
+      constructor(args: { tracer: Tracer, serviceName?: string, remoteServiceName?: string, propagation?: propagation.Propagation });
 
       recordRequest<T>(
         request: T,
@@ -366,6 +360,25 @@ declare namespace zipkin {
       ): T;
       recordResponse(traceId: TraceId, statusCode: string): void;
       recordError(traceId: TraceId, error: Error): void;
+    }
+  }
+  namespace propagation {
+      class Headers {
+          TraceId: string;
+          SpanId: string;
+          ParentSpanId: string;
+          Sampled: string;
+          Flags: string;
+      }
+      interface Propagation {
+        headers: Headers;
+        extractor<T>(readHeader: <T> (header: string) => option.IOption<T>): TraceId;
+        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): RequestZipkinHeaders<T, H>;
+      }
+      class B3Propagation implements Propagation {
+        headers: Headers;
+        extractor<T>(readHeader: <T> (header: string) => option.IOption<T>): TraceId;
+        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): RequestZipkinHeaders<T, H>;
     }
   }
 }
