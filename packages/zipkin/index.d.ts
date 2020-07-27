@@ -39,7 +39,8 @@ declare namespace zipkin {
       localServiceName?: string,
       localEndpoint?: model.Endpoint,
       log?: Console,
-      defaultTags?: {}
+      defaultTags?: {},
+      propagation?: propagation.Propagation
     });
 
     /** Returns the current trace ID or a sentinel value indicating its absence. */
@@ -61,6 +62,11 @@ declare namespace zipkin {
     recordLocalAddr(inetAddress: InetAddress): void;
     recordBinary(key: string, value: boolean | string | number): void;
     writeIdToConsole(message: any): void;
+    /** Extract propagation ctx from request */
+    extractId(readHeader: <T> (header: string) => option.IOption<T>): void;
+    /** Injector propagation ctx from request */
+    injector(request: any): object;
+
   }
 
   class TraceId {
@@ -338,8 +344,7 @@ declare namespace zipkin {
         port: number,
         serviceName?: string,
         host?: string,
-        serverTags?: {[key: string]: string},
-        propagation?: propagation.Propagation
+        serverTags?: {[key: string]: string}
       });
 
       recordRequest(
@@ -363,22 +368,13 @@ declare namespace zipkin {
     }
   }
   namespace propagation {
-      class Headers {
-          TraceId: string;
-          SpanId: string;
-          ParentSpanId: string;
-          Sampled: string;
-          Flags: string;
-      }
       interface Propagation {
-        headers: Headers;
-        extractor<T>(readHeader: <T> (header: string) => option.IOption<T>): TraceId;
-        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): RequestZipkinHeaders<T, H>;
+        extractor<T>(tracer: Tracer, readHeader: <T> (header: string) => option.IOption<T>): TraceId;
+        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): object;
       }
       class B3Propagation implements Propagation {
-        headers: Headers;
-        extractor<T>(readHeader: <T> (header: string) => option.IOption<T>): TraceId;
-        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): RequestZipkinHeaders<T, H>;
+        extractor<T>(tracer: Tracer, readHeader: <T> (header: string) => option.IOption<T>): TraceId;
+        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): object;
     }
   }
 }

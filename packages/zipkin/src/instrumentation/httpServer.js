@@ -1,27 +1,6 @@
-import B3Propagation from '../propagation/b3propagation';
-
 const Annotation = require('../annotation');
-const Header = require('../httpHeaders');
 const InetAddress = require('../InetAddress');
-const TraceId = require('../tracer/TraceId');
 const parseRequestUrl = require('../parseUrl');
-const {Some, None} = require('../option');
-
-function stringToBoolean(str) {
-  return str === '1' || str === 'true';
-}
-
-function stringToIntOption(str) {
-  try {
-    return new Some(parseInt(str));
-  } catch (err) {
-    return None;
-  }
-}
-
-function containsRequiredHeaders(readHeader) {
-  return readHeader(Header.TraceId) !== None && readHeader(Header.SpanId) !== None;
-}
 
 function requiredArg(name) {
   throw new Error(`HttpServerInstrumentation: Missing required argument ${name}.`);
@@ -32,14 +11,12 @@ class HttpServerInstrumentation {
     tracer = requiredArg('tracer'),
     serviceName = tracer.localEndpoint.serviceName,
     host,
-    port = requiredArg('port'),
-    propagation = B3Propagation.DEFAULT
+    port = requiredArg('port')
   }) {
     this.tracer = tracer;
     this.serviceName = serviceName;
     this.host = host && new InetAddress(host);
     this.port = port;
-    this.propagation = propagation;
   }
 
   spanNameFromRoute(method, route, code) { // eslint-disable-line class-methods-use-this
@@ -50,7 +27,7 @@ class HttpServerInstrumentation {
   }
 
   recordRequest(method, requestUrl, readHeader) {
-    this.propagation.extractor(readHeader).ifPresent(id => this.tracer.setId(id));
+    this.tracer.extractId(readHeader);
     const {id} = this.tracer;
     const {path} = parseRequestUrl(requestUrl);
 
