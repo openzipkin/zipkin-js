@@ -275,7 +275,8 @@ class Tracer {
   }
 
   injector(request) {
-    return this._propagation.injector(request, this.id);
+    const headers = this._propagation.injector(request, this.id);
+    return Object.assign({}, request, {headers});
   }
 }
 

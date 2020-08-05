@@ -18,7 +18,7 @@ class ExpressHttpProxyInstrumentation {
       const clientTraceId = this.tracer.createChildId();
       this.tracer.setId(clientTraceId);
 
-      const proxyReqWithZipkinHeaders = Request.addZipkinHeaders(proxyReq, clientTraceId);
+      const proxyReqWithZipkinHeaders = this.tracer.injector(proxyReq);
       Object.defineProperty(serverReq, '_trace_id_proxy',
         {configurable: false, get: () => clientTraceId});
 

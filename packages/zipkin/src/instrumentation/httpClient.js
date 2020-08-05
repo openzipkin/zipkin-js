@@ -18,7 +18,6 @@ class HttpClientInstrumentation {
 
   recordRequest(request, url, method) {
     this.tracer.setId(this.tracer.createChildId());
-    const traceId = this.tracer.id;
     const {path} = parseRequestUrl(url);
 
     this.tracer.recordServiceName(this.serviceName);
@@ -32,8 +31,7 @@ class HttpClientInstrumentation {
         serviceName: this.remoteServiceName
       }));
     }
-    const headers = this.tracer.injector(request);
-    return Object.assign({}, request, {headers})
+    return this.tracer.injector(request);
   }
 
   recordResponse(traceId, statusCode) {
