@@ -1,4 +1,4 @@
-const {Request, Annotation} = require('zipkin');
+const {Annotation} = require('zipkin');
 const url = require('url');
 
 function getPathnameFromPath(path) {

@@ -1,4 +1,3 @@
-const {Request} = require('zipkin');
 const {
   recordConsumeStop, recordConsumeStart,
   recordProducerStart, recordProducerStop

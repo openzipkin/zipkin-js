@@ -14,7 +14,6 @@ function stringToIntOption(str) {
 }
 
 class B3Propagation {
-
   constructor() {
     this.headers = {
       TraceId: 'X-B3-TraceId',
@@ -43,7 +42,8 @@ class B3Propagation {
       });
 
       return new Some(tracer.join(parentId.getOrElse()));
-    } else if (readHeader(this.headers.Flags) !== None || readHeader(this.headers.Sampled) !== None) {
+    } else if (readHeader(this.headers.Flags) !== None
+      || readHeader(this.headers.Sampled) !== None) {
       const sampled = readHeader(this.headers.Sampled) === None
         ? None : readHeader(this.headers.Sampled).map(stringToBoolean);
       const flags = readHeader(this.headers.Flags).flatMap(stringToIntOption).getOrElse(0);
@@ -70,7 +70,6 @@ class B3Propagation {
     }
     return headers;
   }
-
 }
 
 module.exports = B3Propagation;
