@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 import { expect } from 'chai';
 import {option, Request, RequestZipkinHeaders, TraceId} from 'zipkin';
 

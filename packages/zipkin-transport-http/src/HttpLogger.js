@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 /* eslint-disable no-undef */
 const globalFetch = (typeof window !== 'undefined' && window.fetch)
   || (typeof global !== 'undefined' && global.fetch);

@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 import {assert} from 'chai';
 import nock from 'nock';
 import sinon from 'sinon';

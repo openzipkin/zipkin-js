@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const sinon = require('sinon');
 const lolex = require('lolex');
 const Promise = require('bluebird');

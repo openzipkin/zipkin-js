@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const BatchRecorder = require('../src/batch-recorder');
 const ExplicitContext = require('../src/explicit-context');
 const HttpClient = require('../src/instrumentation/httpClient');

@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 // defer lookup of node fetch until we know if we are node
 const wrapFetch = require('../src/wrapFetch');
 

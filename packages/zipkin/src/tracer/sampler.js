@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const {Some} = require('../option');
 // Determines whether or not a traceId should be sampled.
 // If no sample decision is already made (by a debug flag, or
