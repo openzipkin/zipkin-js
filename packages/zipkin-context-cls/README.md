@@ -2,7 +2,7 @@
 
 ![npm](https://img.shields.io/npm/dm/zipkin-context-cls.svg)
 
-This module implements a context API on top of [CLS/continuation-local-storage](https://github.com/othiym23/node-continuation-local-storage).
+This module implements a context API on top of [CLS/cls-hooked](https://github.com/jeff-lewis/cls-hooked).
 The primary objective of CLS is to implement a *transparent* context API, that is, you don't need to pass around a `ctx`
 variable everywhere in your application code.
 
@@ -19,7 +19,7 @@ const tracer = new Tracer({
 
 ## A note on CLS context vs. explicit context
 
-There are known issues and limitations with CLS, so some people might prefer to use `ExplicitContext` instead;
+There are known issues and limitations with CLS in nodejs, so some people might prefer to use `ExplicitContext` instead;
 the drawback then is that you have to pass around a context object manually.
 
 ## A note on CLS context and Promises

@@ -1,4 +1,3 @@
-//const { createNamespace, getNamespace } = require('continuation-local-storage');
 const { createNamespace, getNamespace } = require('cls-hooked');
 
 module.exports = class CLSContext {
