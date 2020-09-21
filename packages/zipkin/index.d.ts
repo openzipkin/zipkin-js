@@ -368,13 +368,21 @@ declare namespace zipkin {
     }
   }
   namespace propagation {
-      interface Propagation {
-        extractor<T>(tracer: Tracer, readHeader: <T> (header: string) => option.IOption<T>): TraceId;
-        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): object;
-      }
-      class B3Propagation implements Propagation {
-        extractor<T>(tracer: Tracer, readHeader: <T> (header: string) => option.IOption<T>): TraceId;
-        injector<T, H>(req: T & { headers?: any }, traceId: TraceId): object;
+    interface Setter {
+      put<R, K>(request: R, key: K, value: string): void;
+    }
+    interface Getter {
+      get<R, K>(request: R, key: K): string;
+    }
+    interface Propagation {
+      keys(): [];
+      extractor<R>(getter: Getter): TraceId;
+      injector<R, K>(setter: Setter): object;
+    }
+    class B3Propagation implements Propagation {
+      keys(): [];
+      extractor<R>(getter: Getter): TraceId;
+      injector<R, K>(setter: Setter): object;
     }
   }
 }
