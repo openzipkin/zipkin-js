@@ -29,6 +29,14 @@ declare namespace zipkin {
     const alwaysSample: (traceId: TraceId) => boolean;
   }
 
+  interface Injector<R> {
+    inject(context: Context<TraceId>, request: R): void;
+  }
+
+  interface Extractor<R> {
+    extract(request: R): TraceId;
+  }
+
   class Tracer {
     constructor(args: {
       ctxImpl: Context<TraceId>,
@@ -376,13 +384,13 @@ declare namespace zipkin {
     }
     interface Propagation {
       keys(): [];
-      extractor<R>(getter: Getter): TraceId;
-      injector<R, K>(setter: Setter): object;
+      extractor<R>(getter: Getter): Extractor<R>;
+      injector<R, K>(setter: Setter): Injector<R>;
     }
     class B3Propagation implements Propagation {
       keys(): [];
-      extractor<R>(getter: Getter): TraceId;
-      injector<R, K>(setter: Setter): object;
+      extractor<R>(getter: Getter): Extractor<R>;
+      injector<R, K>(setter: Setter): Injector<R>;
     }
   }
 }
