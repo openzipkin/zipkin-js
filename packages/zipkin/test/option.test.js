@@ -1,3 +1,4 @@
+const { expect } = require('chai');
 const option = require('../src/option');
 
 describe('option', () => {
@@ -137,6 +138,54 @@ describe('option', () => {
       it('should be false for Some', () => {
         const isEqual = option.None.equals(new option.Some(0));
         expect(isEqual).to.be.false; // eslint-disable-line no-unused-expressions
+      });
+    });
+
+    describe.only('poc', () => {
+      it('should match instance', () => {
+        // Same class from some other version.
+        class Some {
+          constructor(value) {
+            this.value = value;
+          }
+
+          get type() { // eslint-disable-line class-methods-use-this
+            return 'Some';
+          }
+
+          get present() { // eslint-disable-line class-methods-use-this
+            return true;
+          }
+
+          map(f) {
+            return new Some(f(this.value));
+          }
+
+          ifPresent(f) {
+            f(this.value);
+          }
+
+          flatMap(f) {
+            return f(this.value);
+          }
+
+          getOrElse() {
+            return this.value;
+          }
+
+          equals(other) {
+            return other instanceof Some && other.value === this.value;
+          }
+
+          toString() {
+            return `Some(${this.value})`;
+          }
+        }
+        const foo = new Some('foo');  // new version of some
+        const bar = new option.Some('foo'); // match with existing some
+
+        expect(option.isOptional(foo)).to.equals(option.isOptional(bar));
+        expect(bar.equals(foo)).to.be.true; // eslint-disable-line no-unused-expressions
       });
     });
   });
