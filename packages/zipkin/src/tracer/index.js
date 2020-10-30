@@ -1,3 +1,4 @@
+
 const isPromise = require('is-promise');
 const {None, Some} = require('../option');
 const {Sampler, alwaysSample} = require('./sampler');
@@ -8,6 +9,7 @@ const TraceId = require('./TraceId');
 const randomTraceId = require('./randomTraceId');
 const {now, hrtime} = require('../time');
 const {Endpoint} = require('../model');
+const {B3Propagation} = require('../propagation');
 
 
 function requiredArg(name) {
@@ -37,13 +39,15 @@ class Tracer {
     localEndpoint,
     /* eslint-disable no-console */
     log = console,
-    defaultTags
+    defaultTags,
+    propagation = new B3Propagation()
   }) {
     this.log = log;
     this.recorder = recorder;
     this.sampler = sampler;
     this.traceId128Bit = traceId128Bit;
     this.supportsJoin = supportsJoin;
+    this._propagation = propagation;
     if (localEndpoint) {
       this._localEndpoint = localEndpoint;
     } else {
@@ -264,6 +268,15 @@ class Tracer {
         this.recordBinary(tag, tags[tag]);
       }
     }
+  }
+
+  extractId(readHeader) {
+    this._propagation.extractor(this, readHeader).ifPresent(id => this.setId(id));
+  }
+
+  injector(request) {
+    const headers = this._propagation.injector(request, this.id);
+    return Object.assign({}, request, {headers});
   }
 }
 

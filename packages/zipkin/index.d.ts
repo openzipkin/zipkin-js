@@ -29,6 +29,14 @@ declare namespace zipkin {
     const alwaysSample: (traceId: TraceId) => boolean;
   }
 
+  interface Injector<R> {
+    inject(context: Context<TraceId>, request: R): void;
+  }
+
+  interface Extractor<R> {
+    extract(request: R): TraceId;
+  }
+
   class Tracer {
     constructor(args: {
       ctxImpl: Context<TraceId>,
@@ -39,7 +47,8 @@ declare namespace zipkin {
       localServiceName?: string,
       localEndpoint?: model.Endpoint,
       log?: Console,
-      defaultTags?: {}
+      defaultTags?: {},
+      propagation?: propagation.Propagation
     });
 
     /** Returns the current trace ID or a sentinel value indicating its absence. */
@@ -61,6 +70,11 @@ declare namespace zipkin {
     recordLocalAddr(inetAddress: InetAddress): void;
     recordBinary(key: string, value: boolean | string | number): void;
     writeIdToConsole(message: any): void;
+    /** Extract propagation ctx from request */
+    extractId(readHeader: <T> (header: string) => option.IOption<T>): void;
+    /** Injector propagation ctx from request */
+    injector(request: any): object;
+
   }
 
   class TraceId {
@@ -271,14 +285,6 @@ declare namespace zipkin {
     toInt(): number;
   }
 
-  namespace HttpHeaders {
-    const TraceId: string;
-    const SpanId: string;
-    const ParentSpanId: string;
-    const Sampled: string;
-    const Flags: string;
-  }
-
   interface Record {
     traceId: TraceId;
     timestamp: number;
@@ -339,6 +345,7 @@ declare namespace zipkin {
   }
 
   namespace Instrumentation {
+
     class HttpServer {
       constructor(args: {
         tracer: Tracer,
@@ -357,7 +364,7 @@ declare namespace zipkin {
     }
 
     class HttpClient {
-      constructor(args: { tracer: Tracer, serviceName?: string, remoteServiceName?: string });
+      constructor(args: { tracer: Tracer, serviceName?: string, remoteServiceName?: string});
 
       recordRequest<T>(
         request: T,
@@ -366,6 +373,24 @@ declare namespace zipkin {
       ): T;
       recordResponse(traceId: TraceId, statusCode: string): void;
       recordError(traceId: TraceId, error: Error): void;
+    }
+  }
+  namespace propagation {
+    interface Setter {
+      put<R, K>(request: R, key: K, value: string): void;
+    }
+    interface Getter {
+      get<R, K>(request: R, key: K): string;
+    }
+    interface Propagation {
+      keys(): [];
+      extractor<R>(getter: Getter): Extractor<R>;
+      injector<R, K>(setter: Setter): Injector<R>;
+    }
+    class B3Propagation implements Propagation {
+      keys(): [];
+      extractor<R>(getter: Getter): Extractor<R>;
+      injector<R, K>(setter: Setter): Injector<R>;
     }
   }
 }

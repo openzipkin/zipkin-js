@@ -1,5 +1,4 @@
 const Annotation = require('../annotation');
-const Request = require('../request');
 const parseRequestUrl = require('../parseUrl');
 
 function requiredArg(name) {
@@ -19,7 +18,6 @@ class HttpClientInstrumentation {
 
   recordRequest(request, url, method) {
     this.tracer.setId(this.tracer.createChildId());
-    const traceId = this.tracer.id;
     const {path} = parseRequestUrl(url);
 
     this.tracer.recordServiceName(this.serviceName);
@@ -33,8 +31,7 @@ class HttpClientInstrumentation {
         serviceName: this.remoteServiceName
       }));
     }
-
-    return Request.addZipkinHeaders(request, traceId);
+    return this.tracer.injector(request);
   }
 
   recordResponse(traceId, statusCode) {
