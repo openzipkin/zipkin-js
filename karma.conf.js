@@ -1,3 +1,4 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
 const path = require('path');
 const testMiddleware = require('./test/middleware');
 
@@ -15,7 +16,7 @@ module.exports = function(config) {
     failOnEmptyTestSuite: true,
     middleware: ['custom'],
     plugins: [
-    {
+      {
       // This allows http client tests that execute in the browser to be able to hit
       // endpoint needed for functional testing such as status code parsing.
       //
@@ -23,8 +24,8 @@ module.exports = function(config) {
       // unit tests themselves). Http client tests call relative paths to access these
       // endpoints. This is needed because unlike normal node.js tests, we can't start
       // a server listener for test endpoints inside the web browser.
-      'middleware:custom': ['factory', testMiddleware]
-    },
+        'middleware:custom': ['factory', testMiddleware]
+      },
       'karma-mocha',
       'karma-browserify',
       'karma-chai',
