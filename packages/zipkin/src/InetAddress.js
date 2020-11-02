@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 class InetAddress {
   constructor(addr) {
     this.addr = addr;

@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const hrTimeSupport = typeof process !== 'undefined' && process.hrtime;
 
 // since hrtime isn't available, we can ignore the input parameters

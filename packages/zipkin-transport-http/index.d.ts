@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 import {Agent as HttpAgent} from 'http';
 import {Agent as HttpsAgent} from 'https';
 import {URL} from 'url';

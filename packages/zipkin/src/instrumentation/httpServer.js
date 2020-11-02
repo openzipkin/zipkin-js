@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const Annotation = require('../annotation');
 const Header = require('../httpHeaders');
 const InetAddress = require('../InetAddress');

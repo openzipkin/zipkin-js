@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 import {Tracer, ConsoleRecorder} from 'zipkin';
 import CLSContext from 'zipkin-context-cls';
 import uuid from 'uuid/v4';

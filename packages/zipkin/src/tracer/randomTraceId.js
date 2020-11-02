@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 // === Generate a random 64-bit number in fixed-length hex format
 function randomTraceId() {
   const digits = '0123456789abcdef';

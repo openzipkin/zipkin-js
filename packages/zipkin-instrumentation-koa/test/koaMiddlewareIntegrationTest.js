@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const Koa = require('koa');
 const koaRoute = require('koa-route');
 const https = require('https');

@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const {Annotation, InetAddress} = require('zipkin');
 
 // TODO: function wrapPostgres(postgres, options = {})

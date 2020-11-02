@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 const {TBinaryProtocol, TBufferedTransport} = require('thrift');
 const {InetAddress} = require('zipkin');
 const thriftTypes = require('./gen-nodejs/zipkinCore_types');

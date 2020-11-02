@@ -1,3 +1,5 @@
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 /* eslint-disable */
 // lint disabled until we refactor this file to the point it doesn't crash, or obviate
 // by deleting this file.

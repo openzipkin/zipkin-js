@@ -1,6 +1,5 @@
-/**
- * @class ConsoleRecorder
- */
+// Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0.
+
 class ConsoleRecorder {
   /* eslint-disable no-console */
   constructor(logger = console.log) {

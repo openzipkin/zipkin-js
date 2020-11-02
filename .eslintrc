@@ -14,10 +14,13 @@
       "ignore": ["url"] }
     ],
     "no-return-assign": "off",
-    "radix": ["error", "as-needed"]
-  },
+    "radix": ["error", "as-needed"],
+    "header/header": [2, "line", [{"pattern": " Copyright 2020 The OpenZipkin Authors; licensed to You under the Apache License, Version 2.0."}]]},
   "env": {
     "node": true,
     "jasmine": true
-  }
+  },
+  "plugins": [
+    "header"
+  ]
 }
