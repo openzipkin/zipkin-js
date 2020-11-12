@@ -39,6 +39,8 @@ class Tracer {
     localEndpoint,
     /* eslint-disable no-console */
     log = console,
+    // defaultTags allows the user to pass tahs that should be added to all spans by
+    // default.
     defaultTags
   }) {
     this.log = log;
