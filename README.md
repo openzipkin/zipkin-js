@@ -110,7 +110,7 @@ At the time of writing, zipkin-js instruments these libraries:
 - [cujojs/rest](packages/zipkin-instrumentation-cujojs-rest) (zipkin-instrumentation-cujojs-rest)
 - [express](packages/zipkin-instrumentation-express) (zipkin-instrumentation-express)
 - [fetch](packages/zipkin-instrumentation-fetch) (zipkin-instrumentation-fetch)
-- [got](packages/zipkin-instrumentation-got) (zipkin-instrumentation-gotjs)
+- [got](packages/zipkin-instrumentation-gotjs) (zipkin-instrumentation-gotjs)
 - [hapi](packages/zipkin-instrumentation-hapi) (zipkin-instrumentation-hapi)
 - [memcached](packages/zipkin-instrumentation-memcached) (zipkin-instrumentation-memcached)
 - [redis](packages/zipkin-instrumentation-redis) (zipkin-instrumentation-redis)
