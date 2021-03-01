@@ -86,7 +86,7 @@ declare namespace zipkin {
     toString(): string;
   }
 
-  const createNoopTracer: () => void;
+  const createNoopTracer: () => Tracer;
   const randomTraceId: () => string;
 
   namespace option {
