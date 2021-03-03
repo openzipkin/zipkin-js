@@ -39,6 +39,8 @@ class Tracer {
     localEndpoint,
     /* eslint-disable no-console */
     log = console,
+    // defaultTags custom tags to add to all sampled spans. Defaults to empty.
+    // default.
     defaultTags
   }) {
     this.log = log;
