@@ -46,9 +46,14 @@ module.exports = function koaMiddleware({tracer, serviceName, port = 0}) {
         });
       };
 
+      const recordError = (err) => {
+        recordResponse()
+        throw err
+      }
+
       return next()
         .then(recordResponse)
-        .catch(recordResponse);
+        .catch(recordError)
     });
   };
 };
